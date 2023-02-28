@@ -19,7 +19,7 @@ import multiprocessing
 import sys
 import os
 import platform
-
+import re
 
 script_dir = None
 
@@ -33,6 +33,25 @@ def script_path(*args):
 
 def top_level_path(*args):
     return os.path.join(*((os.path.join(os.path.dirname(__file__), '..', '..'),) + args))
+
+
+def gnutls_version():
+    ret = {}
+    gnutls = "/usr/include/gnutls/gnutls.h"
+    with open(gnutls) as fd:
+        for l in fd.readlines():
+            m = re.match(r'#define\s+GNUTLS_VERSION_([A-Z]+)\s+(\d+)', l)
+            if m:
+                key, value = m.group(1), m.group(2)
+                ret[key.lower()] = int(value)
+        fd.close()
+    return ret
+
+
+def use_openssl_backend():
+    v = gnutls_version()
+    # Use Open SSL if gnu TLS version is less then 3.6.13
+    return v["major"] * 100000 + v["minor"] * 1000 + v["patch"] < 3 * 100000 + 6 * 1000 + 13
 
 
 def init(jhbuildrc_globals, jhbuild_platform):
@@ -100,3 +119,7 @@ def init(jhbuildrc_globals, jhbuild_platform):
         jhbuild_enable_thunder = os.environ['JHBUILD_ENABLE_THUNDER'].lower()
         if jhbuild_enable_thunder == 'yes' or jhbuild_enable_thunder == '1' or jhbuild_enable_thunder == 'true':
             jhbuildrc_globals['conditions'].add('Thunder')
+
+    if use_openssl_backend():
+        jhbuildrc_globals['conditions'].add('use_openssl_backend')
+

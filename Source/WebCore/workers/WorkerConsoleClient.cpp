@@ -99,4 +99,6 @@ void WorkerConsoleClient::recordEnd(JSC::JSGlobalObject*, Ref<ScriptArguments>&&
 
 void WorkerConsoleClient::screenshot(JSC::JSGlobalObject*, Ref<ScriptArguments>&&) { }
 
+void WorkerConsoleClient::bindingCalled(JSC::JSGlobalObject*, const String&, const String&) { }
+
 } // namespace WebCore

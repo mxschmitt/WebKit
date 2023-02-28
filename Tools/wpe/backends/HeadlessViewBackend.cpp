@@ -52,3 +52,4 @@ void HeadlessViewBackend::dispatchFullscreenEvent()
 #endif
 
 } // namespace WPEToolingBackends
+

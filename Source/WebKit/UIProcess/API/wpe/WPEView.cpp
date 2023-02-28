@@ -76,7 +76,9 @@ View::View(struct wpe_view_backend* backend, const API::PageConfiguration& baseC
     if (preferences) {
         preferences->setAcceleratedCompositingEnabled(true);
         preferences->setForceCompositingMode(true);
-        preferences->setThreadedScrollingEnabled(true);
+        // Playwright override begin
+        preferences->setThreadedScrollingEnabled(false);
+        // Playwright override end
         preferences->setWebGLEnabled(true);
     }
 

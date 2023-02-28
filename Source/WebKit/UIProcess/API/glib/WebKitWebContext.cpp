@@ -413,9 +413,18 @@ static void webkitWebContextSetProperty(GObject* object, guint propID, const GVa
     }
 }
 
+static int webkitWebContext = 0;
+
+int webkitWebContextExistingCount()
+{
+    return webkitWebContext;
+}
+
 static void webkitWebContextConstructed(GObject* object)
 {
     G_OBJECT_CLASS(webkit_web_context_parent_class)->constructed(object);
+
+    ++webkitWebContext;
 
     GUniquePtr<char> bundleFilename(g_build_filename(injectedBundleDirectory(), INJECTED_BUNDLE_FILENAME, nullptr));
 
@@ -473,6 +482,8 @@ static void webkitWebContextConstructed(GObject* object)
 
 static void webkitWebContextDispose(GObject* object)
 {
+    --webkitWebContext;
+
     WebKitWebContextPrivate* priv = WEBKIT_WEB_CONTEXT(object)->priv;
     if (!priv->clientsDetached) {
         priv->clientsDetached = true;

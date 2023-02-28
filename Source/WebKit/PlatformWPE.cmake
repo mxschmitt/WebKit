@@ -203,6 +203,7 @@ set(WPE_API_INSTALLED_HEADERS
     ${DERIVED_SOURCES_WPE_API_DIR}/WebKitEnumTypes.h
     ${DERIVED_SOURCES_WPE_API_DIR}/WebKitVersion.h
     ${WEBKIT_DIR}/UIProcess/API/wpe/WebKitColor.h
+    ${WEBKIT_DIR}/UIProcess/API/wpe/WebKitPointerLockPermissionRequest.h
     ${WEBKIT_DIR}/UIProcess/API/wpe/WebKitRectangle.h
     ${WEBKIT_DIR}/UIProcess/API/wpe/WebKitWebViewBackend.h
 )
@@ -342,6 +343,7 @@ list(APPEND WebKit_INCLUDE_DIRECTORIES
     "${WEBKIT_DIR}/UIProcess/Launcher/libwpe"
     "${WEBKIT_DIR}/UIProcess/Notifications/glib/"
     "${WEBKIT_DIR}/UIProcess/geoclue"
+    "${WEBKIT_DIR}/UIProcess/glib"
     "${WEBKIT_DIR}/UIProcess/gstreamer"
     "${WEBKIT_DIR}/UIProcess/linux"
     "${WEBKIT_DIR}/UIProcess/soup"
@@ -365,7 +367,16 @@ list(APPEND WebKit_SYSTEM_INCLUDE_DIRECTORIES
     ${GIO_UNIX_INCLUDE_DIRS}
     ${GLIB_INCLUDE_DIRS}
     ${LIBSOUP_INCLUDE_DIRS}
+# Playwright begin
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/include"
+# Playwright end
 )
+
+# Playwright begin
+list(APPEND WebKit_PRIVATE_INCLUDE_DIRECTORIES
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libwebm"
+)
+# Playwright end
 
 list(APPEND WebKit_LIBRARIES
     Cairo::Cairo

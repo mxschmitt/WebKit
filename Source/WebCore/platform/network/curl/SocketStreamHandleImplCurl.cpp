@@ -44,7 +44,7 @@
 
 namespace WebCore {
 
-SocketStreamHandleImpl::SocketStreamHandleImpl(const URL& url, SocketStreamHandleClient& client, const StorageSessionProvider* provider)
+SocketStreamHandleImpl::SocketStreamHandleImpl(const URL& url, bool ignoreCertificateErrors, SocketStreamHandleClient& client, const StorageSessionProvider* provider)
     : SocketStreamHandle(url, client)
     , m_storageSessionProvider(provider)
     , m_scheduler(CurlContext::singleton().streamScheduler())
@@ -53,7 +53,7 @@ SocketStreamHandleImpl::SocketStreamHandleImpl(const URL& url, SocketStreamHandl
     if (m_url.protocolIs("wss"_s) && DeprecatedGlobalSettings::allowsAnySSLCertificate())
         CurlContext::singleton().sslHandle().setIgnoreSSLErrors(true);
 
-    m_streamID = m_scheduler.createStream(m_url, *this);
+    m_streamID = m_scheduler.createStream(m_url, ignoreCertificateErrors, *this);
 }
 
 SocketStreamHandleImpl::~SocketStreamHandleImpl()

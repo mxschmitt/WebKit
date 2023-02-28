@@ -75,7 +75,7 @@ header: <WebCore/Pasteboard.h>
 #if PLATFORM(MAC)
     String userVisibleForm
 #endif
-#if PLATFORM(GTK)
+#if PLATFORM(GTK) || PLATFORM(WPE)
     String markup
 #endif
 };
