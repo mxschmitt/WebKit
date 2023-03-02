@@ -209,6 +209,14 @@
                 { "name": "uuid", "type": "string" }
             ],
             "description": "Cancels a current running download."
+        },
+        {
+            "name": "clearMemoryCache",
+            "description": "Clears brsowser memory cache.",
+            "async": true,
+            "parameters": [
+                { "name": "browserContextId", "$ref": "ContextID", "optional": false, "description": "Browser context id." }
+            ]
         }
     ],
     "events": [

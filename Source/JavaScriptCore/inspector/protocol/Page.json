@@ -375,10 +375,6 @@
             ]
         },
         {
-            "name": "clearMemoryCache",
-            "description": "Clears browser memory cache."
-        },
-        {
             "name": "setTouchEmulationEnabled",
             "description": "Enables touch events on platforms that lack them.",
             "parameters": [
