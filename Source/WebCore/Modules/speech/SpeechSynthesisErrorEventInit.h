@@ -28,6 +28,7 @@
 #if ENABLE(SPEECH_SYNTHESIS)
 
 #include "SpeechSynthesisEventInit.h"
+#include "SpeechSynthesisErrorCode.h"
 
 namespace WebCore {
 

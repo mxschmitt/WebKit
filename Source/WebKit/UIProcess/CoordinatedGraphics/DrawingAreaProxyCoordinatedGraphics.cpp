@@ -32,18 +32,28 @@
 #include "DrawingAreaProxyMessages.h"
 #include "LayerTreeContext.h"
 #include "UpdateInfo.h"
+#include "WebPageInspectorController.h"
 #include "WebPageProxy.h"
 #include "WebPreferences.h"
 #include "WebProcessProxy.h"
 #include <WebCore/PlatformDisplay.h>
 #include <WebCore/Region.h>
+#include <wtf/Vector.h>
 
 #if PLATFORM(GTK)
+#include "WebKitWebViewBasePrivate.h"
 #include <gtk/gtk.h>
 #endif
 
 #if USE(GLIB_EVENT_LOOP)
 #include <wtf/glib/RunLoopSourcePriority.h>
+#endif
+
+#if PLATFORM(WIN)
+#include <cairo-win32.h>
+#include <windows.h>
+#include <WebCore/HWndDC.h>
+#include <WebCore/RefPtrCairo.h>
 #endif
 
 namespace WebKit {
@@ -114,12 +124,21 @@ void DrawingAreaProxyCoordinatedGraphics::paint(BackingStore::PlatformGraphicsCo
 
 void DrawingAreaProxyCoordinatedGraphics::sizeDidChange()
 {
+    for (auto& value : m_callbacks)
+        value();
+    m_callbacks.clear();
+
     backingStoreStateDidChange(RespondImmediately);
 }
 
 void DrawingAreaProxyCoordinatedGraphics::deviceScaleFactorDidChange()
 {
     backingStoreStateDidChange(RespondImmediately);
+}
+
+void DrawingAreaProxyCoordinatedGraphics::waitForSizeUpdate(Function<void ()>&& callback)
+{
+    m_callbacks.append(WTFMove(callback));
 }
 
 void DrawingAreaProxyCoordinatedGraphics::waitForBackingStoreUpdateOnNextPaint()
@@ -243,6 +262,45 @@ void DrawingAreaProxyCoordinatedGraphics::targetRefreshRateDidChange(unsigned ra
 {
     m_webPageProxy.send(Messages::DrawingArea::TargetRefreshRateDidChange(rate), m_identifier);
 }
+
+#if PLATFORM(WIN)
+void DrawingAreaProxyCoordinatedGraphics::didChangeAcceleratedCompositingMode(bool enabled)
+{
+    m_isInAcceleratedCompositingMode = enabled;
+}
+#endif
+
+#if !PLATFORM(WPE)
+void DrawingAreaProxyCoordinatedGraphics::captureFrame()
+{
+    RefPtr<cairo_surface_t> surface;
+#if PLATFORM(WIN)
+    HWndDC dc;
+    if (m_isInAcceleratedCompositingMode) {
+        dc.setHWnd(m_webPageProxy.viewWidget());
+        surface = adoptRef(cairo_win32_surface_create(dc));
+#else
+    if (isInAcceleratedCompositingMode()) {
+#  if PLATFORM(GTK)
+        AcceleratedBackingStore* backingStore = webkitWebViewBaseGetAcceleratedBackingStore(WEBKIT_WEB_VIEW_BASE(m_webPageProxy.viewWidget()));
+        if (!backingStore)
+            return;
+
+        surface = backingStore->surface();
+#  else
+        fprintf(stderr, "captureFrame() is not supported in accelerated compositing mode on this platform.\n");
+#  endif
+#endif
+    } else if (m_backingStore) {
+        surface = m_backingStore->surface();
+    }
+
+    if (!surface)
+        return;
+
+    m_webPageProxy.inspectorController().didPaint(surface.get());
+}
+#endif
 
 #if !PLATFORM(WPE)
 void DrawingAreaProxyCoordinatedGraphics::incorporateUpdate(const UpdateInfo& updateInfo)

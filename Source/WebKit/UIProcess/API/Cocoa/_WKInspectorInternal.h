@@ -29,6 +29,8 @@
 #import "WebInspectorUIProxy.h"
 #import <wtf/WeakObjCPtr.h>
 
+#import <wtf/WeakObjCPtr.h>
+
 namespace WebKit {
 
 template<> struct WrapperTraits<WebInspectorUIProxy> {

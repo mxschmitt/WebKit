@@ -36,6 +36,11 @@
 #import <pal/cocoa/CoreMLSoftLink.h>
 #import <pal/cocoa/NaturalLanguageSoftLink.h>
 
+#include <wtf/CrossThreadCopier.h>
+#include <wtf/CompletionHandler.h>
+
+#include <wtf/RunLoop.h>
+
 static NSString *const classifierInputFeatureKey = @"text";
 static NSString *const classifierOutputFeatureKey = @"label";
 

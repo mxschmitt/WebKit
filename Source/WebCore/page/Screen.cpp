@@ -125,6 +125,9 @@ int Screen::availLeft() const
     if (isLoadingInHeadlessMode(*frame))
         return 0;
 
+    if (frame->hasScreenSizeOverride())
+        return 0;
+
     return static_cast<int>(screenAvailableRect(frame->view()).x());
 }
 
@@ -138,6 +141,9 @@ int Screen::availTop() const
         ResourceLoadObserver::shared().logScreenAPIAccessed(*frame->document(), ScreenAPIsAccessed::AvailTop);
 
     if (isLoadingInHeadlessMode(*frame))
+        return 0;
+
+    if (frame->hasScreenSizeOverride())
         return 0;
 
     return static_cast<int>(screenAvailableRect(frame->view()).y());
@@ -155,6 +161,9 @@ int Screen::availHeight() const
     if (isLoadingInHeadlessMode(*frame))
         return static_cast<int>(frame->screenSize().height());
 
+    if (frame->hasScreenSizeOverride())
+        return static_cast<int>(frame->screenSize().height());
+
     return static_cast<int>(screenAvailableRect(frame->view()).height());
 }
 
@@ -168,6 +177,9 @@ int Screen::availWidth() const
         ResourceLoadObserver::shared().logScreenAPIAccessed(*frame->document(), ScreenAPIsAccessed::AvailWidth);
 
     if (isLoadingInHeadlessMode(*frame))
+        return static_cast<int>(frame->screenSize().width());
+
+    if (frame->hasScreenSizeOverride())
         return static_cast<int>(frame->screenSize().width());
 
     return static_cast<int>(screenAvailableRect(frame->view()).width());

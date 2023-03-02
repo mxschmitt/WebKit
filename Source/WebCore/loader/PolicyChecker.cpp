@@ -46,6 +46,7 @@
 #include "HTMLFormElement.h"
 #include "HTMLFrameOwnerElement.h"
 #include "HTMLPlugInElement.h"
+#include "InspectorInstrumentation.h"
 #include "Logging.h"
 #include "ThreadableBlobRegistry.h"
 #include "URLKeepingBlobAlive.h"

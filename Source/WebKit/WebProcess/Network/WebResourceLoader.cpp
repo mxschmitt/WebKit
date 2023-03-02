@@ -197,9 +197,6 @@ void WebResourceLoader::didReceiveResponse(ResourceResponse&& response, PrivateR
             }
 
             m_coreLoader->didReceiveResponse(inspectorResponse, [this, protectedThis = WTFMove(protectedThis), interceptedRequestIdentifier, policyDecisionCompletionHandler = WTFMove(policyDecisionCompletionHandler), overrideData = WTFMove(overrideData)]() mutable {
-                if (policyDecisionCompletionHandler)
-                    policyDecisionCompletionHandler();
-
                 if (!m_coreLoader || !m_coreLoader->identifier()) {
                     m_interceptController.continueResponse(interceptedRequestIdentifier);
                     return;
@@ -217,6 +214,8 @@ void WebResourceLoader::didReceiveResponse(ResourceResponse&& response, PrivateR
                 }
             });
         });
+        if (policyDecisionCompletionHandler)
+          policyDecisionCompletionHandler();
         return;
     }
 

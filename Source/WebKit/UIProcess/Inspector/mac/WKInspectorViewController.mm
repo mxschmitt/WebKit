@@ -30,6 +30,7 @@
 
 #import "APINavigation.h"
 #import <WebKit/WKFrameInfo.h>
+#import "WKContextMenuItemTypes.h"
 #import "WKInspectorResourceURLSchemeHandler.h"
 #import "WKInspectorWKWebView.h"
 #import <WebKit/WKNavigationAction.h>

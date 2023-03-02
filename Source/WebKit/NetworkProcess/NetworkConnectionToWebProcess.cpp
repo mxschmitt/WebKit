@@ -84,6 +84,11 @@
 #include <WebCore/SameSiteInfo.h>
 #include <WebCore/SecurityPolicy.h>
 
+#if PLATFORM(COCOA)
+#include "NetworkDataTaskCocoa.h"
+#include "NetworkSessionCocoa.h"
+#endif
+
 #if ENABLE(APPLE_PAY_REMOTE_UI)
 #include "WebPaymentCoordinatorProxyMessages.h"
 #endif
@@ -490,6 +495,10 @@ void NetworkConnectionToWebProcess::createSocketStream(URL&& url, String cachePa
     if (auto* session = networkSession())
         acceptInsecureCertificates = session->shouldAcceptInsecureCertificatesForWebSockets();
 #endif
+    if (auto* session = networkSession()) {
+        if (session->ignoreCertificateErrors())
+            acceptInsecureCertificates = true;
+    }
     m_networkSocketStreams.add(identifier, NetworkSocketStream::create(m_networkProcess.get(), WTFMove(url), m_sessionID, cachePartition, identifier, m_connection, WTFMove(token), acceptInsecureCertificates));
 }
 
@@ -1033,6 +1042,14 @@ void NetworkConnectionToWebProcess::clearPageSpecificData(PageIdentifier pageID)
     if (auto* storageSession = networkProcess().storageSession(m_sessionID))
         storageSession->clearPageSpecificDataForResourceLoadStatistics(pageID);
 #endif
+}
+
+void NetworkConnectionToWebProcess::setCookieFromResponse(const URL& firstParty, const SameSiteInfo& sameSiteInfo, const URL& url, const String& setCookieValue)
+{
+    auto* networkStorageSession = storageSession();
+    if (!networkStorageSession)
+        return;
+    networkStorageSession->setCookiesFromResponse(firstParty, sameSiteInfo, url, setCookieValue);
 }
 
 #if ENABLE(TRACKING_PREVENTION)

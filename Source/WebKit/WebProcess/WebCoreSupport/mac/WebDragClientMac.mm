@@ -132,7 +132,8 @@ static WebCore::CachedImage* cachedImage(Element& element)
 
 void WebDragClient::declareAndWriteDragImage(const String& pasteboardName, Element& element, const URL& url, const String& label, Frame*)
 {
-    ASSERT(pasteboardName == String(NSPasteboardNameDrag));
+    if (pasteboardName != String(NSPasteboardNameDrag))
+        return;
 
     WebCore::CachedImage* image = cachedImage(element);
 
