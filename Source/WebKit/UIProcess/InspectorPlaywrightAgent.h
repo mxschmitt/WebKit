@@ -97,6 +97,7 @@ private:
     Inspector::Protocol::ErrorStringOr<void> setLanguages(Ref<JSON::Array>&& languages, const String& browserContextID) override;
     Inspector::Protocol::ErrorStringOr<void> setDownloadBehavior(const String& behavior, const String& downloadPath, const String& browserContextID) override;
     Inspector::Protocol::ErrorStringOr<void> cancelDownload(const String& uuid) override;
+    void clearMemoryCache(const String& browserContextID, Ref<ClearMemoryCacheCallback>&&) override;
 
     // DownloadInstrumentation
     void downloadCreated(const String& uuid, const WebCore::ResourceRequest&, const FrameInfoData& frameInfoData, WebPageProxy* page, RefPtr<DownloadProxy> download) override;

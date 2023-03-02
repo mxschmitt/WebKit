@@ -929,6 +929,22 @@ Inspector::Protocol::ErrorStringOr<void> InspectorPlaywrightAgent::cancelDownloa
     return { };
 }
 
+void InspectorPlaywrightAgent::clearMemoryCache(const String& browserContextID, Ref<ClearMemoryCacheCallback>&& callback)
+{
+    if (!m_isEnabled) {
+        callback->sendSuccess();
+        return;
+    }
+    auto browserContext = getExistingBrowserContext(browserContextID);
+    if (!browserContext) {
+        callback->sendSuccess();
+        return;
+    }
+    browserContext->dataStore->removeData(WebKit::WebsiteDataType::MemoryCache, -WallTime::infinity(), [callback] {
+        callback->sendSuccess();
+    });
+}
+
 BrowserContext* InspectorPlaywrightAgent::getExistingBrowserContext(const String& browserContextID)
 {
     BrowserContext* browserContext = m_browserContexts.get(browserContextID);

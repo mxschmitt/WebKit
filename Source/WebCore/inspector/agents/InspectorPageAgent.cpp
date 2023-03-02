@@ -63,7 +63,6 @@
 #include "InspectorOverlay.h"
 #include "InstrumentingAgents.h"
 #include "MIMETypeRegistry.h"
-#include "MemoryCache.h"
 #include "Page.h"
 #include "PageRuntimeAgent.h"
 #include "PlatformScreen.h"
@@ -1431,12 +1430,6 @@ Protocol::ErrorStringOr<void> InspectorPageAgent::setTimeZone(const String& time
     if (!success)
         return makeUnexpected("Invalid time zone " + timeZone);
 
-    return { };
-}
-
-Protocol::ErrorStringOr<void> InspectorPageAgent::clearMemoryCache()
-{
-    MemoryCache::singleton().evictResources(m_inspectedPage.sessionID());
     return { };
 }
 
