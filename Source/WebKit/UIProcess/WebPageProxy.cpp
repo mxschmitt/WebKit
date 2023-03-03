@@ -9142,7 +9142,6 @@ void WebPageProxy::gamepadActivity(const Vector<std::optional<GamepadData>>& gam
 bool WebPageProxy::shouldSendAutomationCredentialsForProtectionSpace(const WebProtectionSpace& protectionSpace)
 {
     if (m_authOriginForAutomation.has_value() && !m_authOriginForAutomation.value().isEmpty()) {
-        auto protocol = m_authOriginForAutomation.value().protocol();
         switch (protectionSpace.serverType()) {
             case WebCore::ProtectionSpace::ServerType::HTTP:
                 if (m_authOriginForAutomation.value().protocol() != "http"_s)
