@@ -369,6 +369,7 @@ WebKeyboardEvent WebEventFactory::createWebKeyboardEvent(const GdkEvent* event, 
         WTFMove(preeditUnderlines),
         WTFMove(preeditSelectionRange),
         WTFMove(commands),
+        false,
         isGdkKeyCodeFromKeyPad(keyval)
         );
 }

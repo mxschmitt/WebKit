@@ -30,6 +30,7 @@
 #include <WebCore/LibWebRTCMacros.h>
 #include <optional>
 #include <wtf/Forward.h>
+#include <optional>
 
 ALLOW_COMMA_BEGIN
 

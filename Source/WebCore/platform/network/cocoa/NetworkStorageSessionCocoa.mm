@@ -481,6 +481,22 @@ void NetworkStorageSession::setCookiesFromDOM(const URL& firstParty, const SameS
     END_BLOCK_OBJC_EXCEPTIONS
 }
 
+void NetworkStorageSession::setCookiesFromResponse(const URL& firstParty, const SameSiteInfo& sameSiteInfo, const URL& url, const String& setCookieValue)
+{
+    Vector<String> cookieValues = setCookieValue.split('\n');
+    size_t count = cookieValues.size();
+    auto* cookies = [NSMutableArray arrayWithCapacity:count];
+    for (const auto& cookieValue : cookieValues) {
+        NSString* cookieString = (NSString *)cookieValue;
+        NSString* cookieKey = @"Set-Cookie";
+        NSDictionary* headers = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObject:cookieString] forKeys:[NSArray arrayWithObject:cookieKey]];
+        NSArray<NSHTTPCookie*>* parsedCookies = [NSHTTPCookie cookiesWithResponseHeaderFields:headers forURL:(NSURL *)url];
+        [cookies addObject:parsedCookies[0]];
+    }
+    NSURL *cookieURL = url;
+    setHTTPCookiesForURL(cookieStorage().get(), cookies, cookieURL, firstParty, sameSiteInfo);
+}
+
 static NSHTTPCookieAcceptPolicy httpCookieAcceptPolicy(CFHTTPCookieStorageRef cookieStorage)
 {
     ASSERT(hasProcessPrivilege(ProcessPrivilege::CanAccessRawCookies));

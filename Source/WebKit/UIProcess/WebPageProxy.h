@@ -39,6 +39,7 @@
 #include "GeolocationPermissionRequestManagerProxy.h"
 #include "HiddenPageThrottlingAutoIncreasesCounter.h"
 #include "IdentifierTypes.h"
+#include "InspectorDialogAgent.h"
 #include "LayerTreeContext.h"
 #include "MediaKeySystemPermissionRequestManagerProxy.h"
 #include "MediaPlaybackState.h"
@@ -150,8 +151,11 @@
 #include "EndowmentStateTracker.h"
 #endif
 
+OBJC_CLASS NSPasteboard;
+
 #if ENABLE(DRAG_SUPPORT)
 #include <WebCore/DragActions.h>
+#include <WebCore/DragData.h>
 #endif
 
 #if ENABLE(TOUCH_EVENTS)
@@ -172,6 +176,14 @@
 
 #if PLATFORM(GTK)
 #include "ArgumentCodersGtk.h"
+#endif
+
+#if PLATFORM(WPE)
+#include "ArgumentCodersWPE.h"
+#endif
+
+#if PLATFORM(GTK) || PLATFORM(WPE)
+#include <WebCore/SelectionData.h>
 #endif
 
 #if ENABLE(WIRELESS_PLAYBACK_TARGET) && !PLATFORM(IOS_FAMILY)
@@ -261,6 +273,7 @@ class CertificateInfo;
 class Cursor;
 class DataSegment;
 class DragData;
+typedef HashMap<unsigned, Vector<String>> DragDataMap;
 class FloatRect;
 class FontAttributeChanges;
 class FontChanges;
@@ -268,7 +281,6 @@ class GraphicsLayer;
 class IntSize;
 class ProtectionSpace;
 class RunLoopObserver;
-class SelectionData;
 class SharedBuffer;
 class SpeechRecognitionRequest;
 class TextIndicator;
@@ -565,6 +577,8 @@ public:
     void setControlledByAutomation(bool);
 
     WebPageInspectorController& inspectorController() { return *m_inspectorController; }
+    InspectorDialogAgent* inspectorDialogAgent() { return m_inspectorDialogAgent; }
+    void setInspectorDialogAgent(InspectorDialogAgent * dialogAgent) { m_inspectorDialogAgent = dialogAgent; }
 
 #if PLATFORM(IOS_FAMILY)
     void showInspectorIndication();
@@ -677,6 +691,11 @@ public:
 
     void setPageLoadStateObserver(std::unique_ptr<PageLoadState::Observer>&&);
 
+    void setAuthCredentialsForAutomation(std::optional<WebCore::Credential>&&, std::optional<URL>&&);
+    void setPermissionsForAutomation(const HashMap<String, HashSet<String>>&);
+    void setActiveForAutomation(std::optional<bool> active);
+    void logToStderr(const String& str);
+
     void initializeWebPage();
     void setDrawingArea(std::unique_ptr<DrawingAreaProxy>&&);
 
@@ -701,6 +720,7 @@ public:
     void closePage();
 
     void addPlatformLoadParameters(WebProcessProxy&, LoadParameters&);
+    RefPtr<API::Navigation> loadRequestForInspector(WebCore::ResourceRequest&&, WebFrameProxy*);
     RefPtr<API::Navigation> loadRequest(WebCore::ResourceRequest&&, WebCore::ShouldOpenExternalURLsPolicy = WebCore::ShouldOpenExternalURLsPolicy::ShouldAllowExternalSchemesButNotAppLinks, API::Object* userData = nullptr);
     RefPtr<API::Navigation> loadFile(const String& fileURL, const String& resourceDirectoryURL, bool isAppInitiated = true, API::Object* userData = nullptr);
     RefPtr<API::Navigation> loadData(const IPC::DataReference&, const String& MIMEType, const String& encoding, const String& baseURL, API::Object* userData = nullptr, WebCore::ShouldOpenExternalURLsPolicy = WebCore::ShouldOpenExternalURLsPolicy::ShouldNotAllow);
@@ -1253,6 +1273,7 @@ public:
 #endif
 
     void pageScaleFactorDidChange(double);
+    void viewScaleFactorDidChange(double);
     void pluginScaleFactorDidChange(double);
     void pluginZoomFactorDidChange(double);
 
@@ -1343,13 +1364,19 @@ public:
     void didStartDrag();
     void dragCancelled();
     void setDragCaretRect(const WebCore::IntRect&);
+    void setInterceptDrags(bool shouldIntercept);
+    bool cancelDragIfNeeded();
 #if PLATFORM(COCOA)
     void startDrag(const WebCore::DragItem&, const ShareableBitmapHandle& dragImageHandle);
     void setPromisedDataForImage(const String& pasteboardName, const SharedMemory::Handle& imageHandle, const String& filename, const String& extension,
         const String& title, const String& url, const String& visibleURL, const SharedMemory::Handle& archiveHandle, const String& originIdentifier);
+    void releaseInspectorDragPasteboard();
 #endif
-#if PLATFORM(GTK)
+#if PLATFORM(GTK) || PLATFORM(WPE)
     void startDrag(WebCore::SelectionData&&, OptionSet<WebCore::DragOperation>, const ShareableBitmapHandle& dragImage, WebCore::IntPoint&& dragImageHotspot);
+#endif
+#if PLATFORM(WIN)
+    void startDrag(WebCore::DragDataMap&& dragDataMap);
 #endif
 #endif
 
@@ -1574,6 +1601,7 @@ public:
     void setViewportSizeForCSSViewportUnits(const WebCore::FloatSize&);
     WebCore::FloatSize viewportSizeForCSSViewportUnits() const { return valueOrDefault(m_viewportSizeForCSSViewportUnits); }
 
+    bool shouldSendAutomationCredentialsForProtectionSpace(const WebProtectionSpace&);
     void didReceiveAuthenticationChallengeProxy(Ref<AuthenticationChallengeProxy>&&, NegotiatedLegacyTLS);
     void negotiatedLegacyTLS();
     void didNegotiateModernTLS(const URL&);
@@ -1608,6 +1636,8 @@ public:
 
 #if PLATFORM(COCOA) || PLATFORM(GTK)
     RefPtr<ViewSnapshot> takeViewSnapshot(std::optional<WebCore::IntRect>&&);
+#elif PLATFORM(WPE)
+    RefPtr<ViewSnapshot> takeViewSnapshot(std::optional<WebCore::IntRect>&&) { return nullptr; }
 #endif
 
 #if ENABLE(WEB_CRYPTO)
@@ -2859,6 +2889,7 @@ private:
     String m_overrideContentSecurityPolicy;
 
     RefPtr<WebInspectorUIProxy> m_inspector;
+    InspectorDialogAgent* m_inspectorDialogAgent { nullptr };
 
 #if PLATFORM(COCOA)
     WeakObjCPtr<WKWebView> m_cocoaView;
@@ -3136,6 +3167,20 @@ private:
     unsigned m_currentDragNumberOfFilesToBeAccepted { 0 };
     WebCore::IntRect m_currentDragCaretRect;
     WebCore::IntRect m_currentDragCaretEditableElementRect;
+    bool m_interceptDrags { false };
+    OptionSet<WebCore::DragOperation> m_dragSourceOperationMask;
+    WebCore::IntPoint m_lastMousePositionForDrag;
+    int m_dragEventsQueued = 0;
+#if PLATFORM(COCOA)
+    std::optional<String> m_dragSelectionData;
+    String m_overrideDragPasteboardName;
+#endif
+#if PLATFORM(GTK) || PLATFORM(WPE)
+    std::optional<WebCore::SelectionData> m_dragSelectionData;
+#endif
+#if PLATFORM(WIN)
+    std::optional<WebCore::DragDataMap> m_dragSelectionData;
+#endif
 #endif
 
     PageLoadState m_pageLoadState;
@@ -3350,6 +3395,10 @@ private:
         RefPtr<API::Object> messageBody;
     };
     Vector<InjectedBundleMessage> m_pendingInjectedBundleMessages;
+    std::optional<WebCore::Credential> m_credentialsForAutomation;
+    std::optional<URL> m_authOriginForAutomation;
+    HashMap<String, HashSet<String>> m_permissionsForAutomation;
+    std::optional<bool> m_activeForAutomation;
         
 #if PLATFORM(IOS_FAMILY) && ENABLE(DEVICE_ORIENTATION)
     std::unique_ptr<WebDeviceOrientationUpdateProviderProxy> m_webDeviceOrientationUpdateProviderProxy;

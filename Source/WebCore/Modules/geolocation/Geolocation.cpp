@@ -362,8 +362,9 @@ bool Geolocation::shouldBlockGeolocationRequests()
     bool isSecure = SecurityOrigin::isSecure(document()->url()) || document()->isSecureContext();
     bool hasMixedContent = !document()->foundMixedContent().isEmpty();
     bool isLocalOrigin = securityOrigin()->isLocal();
+    bool isPotentiallyTrustworthy = securityOrigin()->isPotentiallyTrustworthy();
     if (document()->canAccessResource(ScriptExecutionContext::ResourceType::Geolocation) != ScriptExecutionContext::HasResourceAccess::No) {
-        if (isLocalOrigin || (isSecure && !hasMixedContent))
+        if (isLocalOrigin || isPotentiallyTrustworthy || (isSecure && !hasMixedContent))
             return false;
     }
 

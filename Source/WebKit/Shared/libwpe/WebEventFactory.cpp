@@ -125,6 +125,7 @@ WebKeyboardEvent WebEventFactory::createWebKeyboardEvent(struct wpe_input_keyboa
         handledByInputMethod,
         WTFMove(preeditUnderlines),
         WTFMove(preeditSelectionRange),
+        false,
         isWPEKeyCodeFromKeyPad(event->key_code)
         );
 }

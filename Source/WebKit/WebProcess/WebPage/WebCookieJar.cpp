@@ -38,6 +38,7 @@
 #include <WebCore/FrameDestructionObserverInlines.h>
 #include <WebCore/FrameLoader.h>
 #include <WebCore/FrameLoaderClient.h>
+#include <WebCore/ResourceLoader.h>
 #include <WebCore/Settings.h>
 #include <WebCore/StorageSessionProvider.h>
 
@@ -256,6 +257,12 @@ void WebCookieJar::setRawCookie(const WebCore::Document& document, const Cookie&
 void WebCookieJar::deleteCookie(const WebCore::Document& document, const URL& url, const String& cookieName, CompletionHandler<void()>&& completionHandler)
 {
     WebProcess::singleton().ensureNetworkProcessConnection().connection().sendWithAsyncReply(Messages::NetworkConnectionToWebProcess::DeleteCookie(url, cookieName), WTFMove(completionHandler));
+}
+
+void WebCookieJar::setCookieFromResponse(ResourceLoader& loader, const String& setCookieValue)
+{
+    const auto& request = loader.request();
+    WebProcess::singleton().ensureNetworkProcessConnection().connection().send(Messages::NetworkConnectionToWebProcess::SetCookieFromResponse(request.firstPartyForCookies(), SameSiteInfo::create(request), request.url(), setCookieValue), 0);
 }
 
 } // namespace WebKit

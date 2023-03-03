@@ -25,6 +25,7 @@
 
 #include "config.h"
 #include "PlatformScreen.h"
+#include "DeprecatedGlobalSettings.h"
 
 #if PLATFORM(COCOA)
 
@@ -72,3 +73,25 @@ const ScreenData* screenData(PlatformDisplayID screenDisplayID)
 } // namespace WebCore
 
 #endif // PLATFORM(COCOA)
+
+#if ENABLE(TOUCH_EVENTS)
+namespace WebCore {
+
+static std::optional<bool> screenHasTouchDeviceOverride = std::nullopt;
+void setScreenHasTouchDeviceOverride(bool value) {
+  screenHasTouchDeviceOverride = value;
+}
+
+bool screenHasTouchDevice() {
+    if (screenHasTouchDeviceOverride)
+        return screenHasTouchDeviceOverride.value();
+    return platformScreenHasTouchDevice();
+}
+bool screenIsTouchPrimaryInputDevice() {
+    if (screenHasTouchDeviceOverride)
+        return screenHasTouchDeviceOverride.value();
+    return platformScreenIsTouchPrimaryInputDevice();
+}
+
+} // namespace WebCore
+#endif
