@@ -37,6 +37,7 @@
 #include "QuotaIncreaseRequestIdentifier.h"
 #include "RTCDataChannelRemoteManagerProxy.h"
 #include "SandboxExtension.h"
+#include "StorageNamespaceIdentifier.h"
 #include "WebPageProxyIdentifier.h"
 #include "WebResourceLoadStatisticsStore.h"
 #include "WebsiteData.h"
@@ -84,6 +85,7 @@ class SessionID;
 
 namespace WebCore {
 class CertificateInfo;
+struct Cookie;
 class CurlProxySettings;
 class ProtectionSpace;
 class NetworkStorageSession;
@@ -202,6 +204,8 @@ public:
     void prefetchDNS(const String&);
 
     void addWebsiteDataStore(WebsiteDataStoreParameters&&);
+
+    void setIgnoreCertificateErrors(PAL::SessionID, bool);
 
 #if ENABLE(TRACKING_PREVENTION)
     void clearPrevalentResource(PAL::SessionID, RegistrableDomain&&, CompletionHandler<void()>&&);

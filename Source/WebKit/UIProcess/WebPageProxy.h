@@ -26,10 +26,199 @@
 #pragma once
 
 #include "APIObject.h"
+<<<<<<< HEAD
 #include "MessageReceiver.h"
 #include "MessageSender.h"
+=======
+#include "Connection.h"
+#include "ContentAsStringIncludesChildFrames.h"
+#include "ContextMenuContextData.h"
+#include "DataReference.h"
+#include "DownloadID.h"
+#include "DragControllerAction.h"
+#include "EditingRange.h"
+#include "EditorState.h"
+#include "FocusedElementInformation.h"
+#include "GeolocationIdentifier.h"
+#include "GeolocationPermissionRequestManagerProxy.h"
+#include "HiddenPageThrottlingAutoIncreasesCounter.h"
+#include "IdentifierTypes.h"
+#include "InspectorDialogAgent.h"
+#include "LayerTreeContext.h"
+#include "MediaKeySystemPermissionRequestManagerProxy.h"
+#include "MediaPlaybackState.h"
+#include "MessageSender.h"
+#include "NavigatingToAppBoundDomain.h"
+#include "NetworkResourceLoadIdentifier.h"
+#include "PDFPluginIdentifier.h"
+#include "PageLoadState.h"
+#include "PasteboardAccessIntent.h"
+#include "ProcessTerminationReason.h"
+#include "ProcessThrottler.h"
+#include "SandboxExtension.h"
+#include "ScrollingAccelerationCurve.h"
+#include "ShareableBitmap.h"
+#include "ShareableResource.h"
+#include "SpeechRecognitionPermissionRequest.h"
+#include "SyntheticEditingCommandType.h"
+#include "SystemPreviewController.h"
+#include "TransactionID.h"
+#include "UserMediaPermissionRequestManagerProxy.h"
+#include "VisibleContentRectUpdateInfo.h"
+#include "VisibleWebPageCounter.h"
+#include "WKBase.h"
+#include "WKPagePrivate.h"
+#include "WebColorPicker.h"
+#include "WebContextMenuItemData.h"
+#include "WebCoreArgumentCoders.h"
+#include "WebDataListSuggestionsDropdown.h"
+#include "WebNotificationManagerMessageHandler.h"
+#include "WebPageCreationParameters.h"
+#include "WebPageDiagnosticLoggingClient.h"
+#include "WebPageInjectedBundleClient.h"
+#include "WebPageProxyIdentifier.h"
+#include "WebPaymentCoordinatorProxy.h"
+#include "WebPopupMenuProxy.h"
+#include "WebPreferences.h"
+#include "WebProtectionSpace.h"
+#include "WebURLSchemeHandlerIdentifier.h"
+#include "WebUndoStepID.h"
+#include "WebsitePoliciesData.h"
+#include "WindowKind.h"
+#include <WebCore/AlternativeTextClient.h>
+#include <WebCore/AutoplayEvent.h>
+#include <WebCore/Color.h>
+#include <WebCore/Credential.h>
+#include <WebCore/DiagnosticLoggingClient.h>
+#include <WebCore/DictationContext.h>
+#include <WebCore/DragActions.h>
+#include <WebCore/EventTrackingRegions.h>
+#include <WebCore/ExceptionDetails.h>
+#include <WebCore/FocusDirection.h>
+#include <WebCore/FontAttributes.h>
+#include <WebCore/FrameLoaderTypes.h>
+#include <WebCore/GlobalFrameIdentifier.h>
+#include <WebCore/InputMode.h>
+#include <WebCore/LayoutPoint.h>
+#include <WebCore/LayoutSize.h>
+#include <WebCore/LocalFrameView.h> // FIXME: Move LayoutViewportConstraint to its own file and stop including this.
+#include <WebCore/MediaControlsContextMenuItem.h>
+#include <WebCore/MediaProducer.h>
+#include <WebCore/PageIdentifier.h>
+#include <WebCore/PlatformEvent.h>
+#include <WebCore/PlatformLayerIdentifier.h>
+#include <WebCore/PlatformScreen.h>
+#include <WebCore/PlatformSpeechSynthesisUtterance.h>
+#include <WebCore/PlatformSpeechSynthesizer.h>
+#include <WebCore/PointerID.h>
+#include <WebCore/RectEdges.h>
+#include <WebCore/RegistrableDomain.h>
+#include <WebCore/RunJavaScriptParameters.h>
+#include <WebCore/ScrollTypes.h>
+#include <WebCore/SearchPopupMenu.h>
+#include <WebCore/TextChecking.h>
+#include <WebCore/TextGranularity.h>
+#include <WebCore/TextManipulationController.h>
+#include <WebCore/TextManipulationItem.h>
+#include <WebCore/TranslationContextMenuInfo.h>
+#include <WebCore/UserInterfaceLayoutDirection.h>
+#include <WebCore/UserMediaClient.h>
+#include <WebCore/ViewportArguments.h>
+#include <memory>
+#include <pal/HysteresisActivity.h>
+#include <wtf/CompletionHandler.h>
+#include <wtf/FileSystem.h>
+#include <wtf/HashMap.h>
+#include <wtf/HashSet.h>
+#include <wtf/Logger.h>
+#include <wtf/MonotonicTime.h>
+>>>>>>> 778891c307ac (chore(webkit): bootstrap build #1821)
 #include <wtf/ProcessID.h>
 #include <wtf/UniqueRef.h>
+<<<<<<< HEAD
+=======
+#include <wtf/Vector.h>
+#include <wtf/text/WTFString.h>
+
+#if ENABLE(WIRELESS_PLAYBACK_TARGET)
+#include <WebCore/MediaPlaybackTargetContext.h>
+#endif
+
+#if PLATFORM(IOS_FAMILY)
+#include "DynamicViewportSizeUpdate.h"
+#include "GestureTypes.h"
+#include "WebAutocorrectionContext.h"
+#include <WebCore/InspectorOverlay.h>
+#endif
+
+#if PLATFORM(MACCATALYST)
+#include "EndowmentStateTracker.h"
+#endif
+
+OBJC_CLASS NSPasteboard;
+
+#if ENABLE(DRAG_SUPPORT)
+#include <WebCore/DragActions.h>
+#include <WebCore/DragData.h>
+#endif
+
+#if ENABLE(TOUCH_EVENTS)
+#include "NativeWebTouchEvent.h"
+#endif
+
+#if PLATFORM(COCOA)
+#include "NetworkConnectionIntegrityHelpers.h"
+#include "PlaybackSessionContextIdentifier.h"
+#include <wtf/WeakObjCPtr.h>
+#endif
+
+#if HAVE(TOUCH_BAR)
+#include "TouchBarMenuData.h"
+#include "TouchBarMenuItemData.h"
+#endif
+
+#if PLATFORM(GTK)
+#include "ArgumentCodersGtk.h"
+#endif
+
+#if PLATFORM(WPE)
+#include "ArgumentCodersWPE.h"
+#endif
+
+#if PLATFORM(GTK) || PLATFORM(WPE)
+#include <WebCore/SelectionData.h>
+#endif
+
+#if ENABLE(WIRELESS_PLAYBACK_TARGET) && !PLATFORM(IOS_FAMILY)
+#include <WebCore/MediaPlaybackTargetPicker.h>
+#include <WebCore/WebMediaSessionManagerClient.h>
+#endif
+
+#if HAVE(APP_SSO)
+#include "SOAuthorizationLoadPolicy.h"
+#endif
+
+#if ENABLE(ATTACHMENT_ELEMENT)
+#include <WebCore/PromisedAttachmentInfo.h>
+#endif
+
+#if ENABLE(MEDIA_USAGE)
+#include <WebCore/MediaSessionIdentifier.h>
+#endif
+
+#if ENABLE(WEBXR) && !USE(OPENXR)
+#include "PlatformXRSystem.h"
+#endif
+
+#if ENABLE(ARKIT_INLINE_PREVIEW)
+#include "ModelElementController.h"
+#include "ModelIdentifier.h"
+#endif
+
+#if PLATFORM(GTK) || PLATFORM(WPE)
+#include <WebCore/ResourceLoaderIdentifier.h>
+#endif
+>>>>>>> 778891c307ac (chore(webkit): bootstrap build #1821)
 
 namespace API {
 class Attachment;
@@ -88,8 +277,12 @@ class Cursor;
 class DataSegment;
 class DestinationColorSpace;
 class DragData;
+<<<<<<< HEAD
 class FloatPoint;
 class FloatQuad;
+=======
+typedef HashMap<unsigned, Vector<String>> DragDataMap;
+>>>>>>> 778891c307ac (chore(webkit): bootstrap build #1821)
 class FloatRect;
 class FloatSize;
 class FontAttributeChanges;
@@ -113,10 +306,13 @@ class ResourceLoader;
 class ResourceRequest;
 class ResourceResponse;
 class RunLoopObserver;
+<<<<<<< HEAD
 class SecurityOrigin;
 class SecurityOriginData;
 class SelectionData;
 class SelectionGeometry;
+=======
+>>>>>>> 778891c307ac (chore(webkit): bootstrap build #1821)
 class SharedBuffer;
 class SpeechRecognitionRequest;
 class SubstituteData;
@@ -562,6 +758,8 @@ public:
     void setControlledByAutomation(bool);
 
     WebPageInspectorController& inspectorController() { return *m_inspectorController; }
+    InspectorDialogAgent* inspectorDialogAgent() { return m_inspectorDialogAgent; }
+    void setInspectorDialogAgent(InspectorDialogAgent * dialogAgent) { m_inspectorDialogAgent = dialogAgent; }
 
 #if PLATFORM(IOS_FAMILY)
     void showInspectorIndication();
@@ -677,6 +875,11 @@ public:
 
     void setPageLoadStateObserver(std::unique_ptr<PageLoadStateObserverBase>&&);
 
+    void setAuthCredentialsForAutomation(std::optional<WebCore::Credential>&&, std::optional<URL>&&);
+    void setPermissionsForAutomation(const HashMap<String, HashSet<String>>&);
+    void setActiveForAutomation(std::optional<bool> active);
+    void logToStderr(const String& str);
+
     void initializeWebPage();
     void setDrawingArea(std::unique_ptr<DrawingAreaProxy>&&);
 
@@ -701,8 +904,13 @@ public:
     void closePage();
 
     void addPlatformLoadParameters(WebProcessProxy&, LoadParameters&);
+<<<<<<< HEAD
     RefPtr<API::Navigation> loadRequest(WebCore::ResourceRequest&&);
     RefPtr<API::Navigation> loadRequest(WebCore::ResourceRequest&&, WebCore::ShouldOpenExternalURLsPolicy, API::Object* userData = nullptr);
+=======
+    RefPtr<API::Navigation> loadRequestForInspector(WebCore::ResourceRequest&&, WebFrameProxy*);
+    RefPtr<API::Navigation> loadRequest(WebCore::ResourceRequest&&, WebCore::ShouldOpenExternalURLsPolicy = WebCore::ShouldOpenExternalURLsPolicy::ShouldAllowExternalSchemesButNotAppLinks, API::Object* userData = nullptr);
+>>>>>>> 778891c307ac (chore(webkit): bootstrap build #1821)
     RefPtr<API::Navigation> loadFile(const String& fileURL, const String& resourceDirectoryURL, bool isAppInitiated = true, API::Object* userData = nullptr);
     RefPtr<API::Navigation> loadData(const IPC::DataReference&, const String& MIMEType, const String& encoding, const String& baseURL, API::Object* userData = nullptr);
     RefPtr<API::Navigation> loadData(const IPC::DataReference&, const String& MIMEType, const String& encoding, const String& baseURL, API::Object* userData, WebCore::ShouldOpenExternalURLsPolicy);
@@ -1268,6 +1476,7 @@ public:
 #endif
 
     void pageScaleFactorDidChange(double);
+    void viewScaleFactorDidChange(double);
     void pluginScaleFactorDidChange(double);
     void pluginZoomFactorDidChange(double);
 
@@ -1358,13 +1567,24 @@ public:
     void didStartDrag();
     void dragCancelled();
     void setDragCaretRect(const WebCore::IntRect&);
+    void setInterceptDrags(bool shouldIntercept);
+    bool cancelDragIfNeeded();
 #if PLATFORM(COCOA)
     void startDrag(const WebCore::DragItem&, const ShareableBitmapHandle& dragImageHandle);
+<<<<<<< HEAD
     void setPromisedDataForImage(const String& pasteboardName, const SharedMemoryHandle& imageHandle, const String& filename, const String& extension,
         const String& title, const String& url, const String& visibleURL, const SharedMemoryHandle& archiveHandle, const String& originIdentifier);
+=======
+    void setPromisedDataForImage(const String& pasteboardName, const SharedMemory::Handle& imageHandle, const String& filename, const String& extension,
+        const String& title, const String& url, const String& visibleURL, const SharedMemory::Handle& archiveHandle, const String& originIdentifier);
+    void releaseInspectorDragPasteboard();
+>>>>>>> 778891c307ac (chore(webkit): bootstrap build #1821)
 #endif
-#if PLATFORM(GTK)
+#if PLATFORM(GTK) || PLATFORM(WPE)
     void startDrag(WebCore::SelectionData&&, OptionSet<WebCore::DragOperation>, const ShareableBitmapHandle& dragImage, WebCore::IntPoint&& dragImageHotspot);
+#endif
+#if PLATFORM(WIN)
+    void startDrag(WebCore::DragDataMap&& dragDataMap);
 #endif
 #endif
 
@@ -1588,6 +1808,7 @@ public:
     void setViewportSizeForCSSViewportUnits(const WebCore::FloatSize&);
     WebCore::FloatSize viewportSizeForCSSViewportUnits() const;
 
+    bool shouldSendAutomationCredentialsForProtectionSpace(const WebProtectionSpace&);
     void didReceiveAuthenticationChallengeProxy(Ref<AuthenticationChallengeProxy>&&, NegotiatedLegacyTLS);
     void negotiatedLegacyTLS();
     void didNegotiateModernTLS(const URL&);
@@ -1622,6 +1843,8 @@ public:
 
 #if PLATFORM(COCOA) || PLATFORM(GTK)
     RefPtr<ViewSnapshot> takeViewSnapshot(std::optional<WebCore::IntRect>&&);
+#elif PLATFORM(WPE)
+    RefPtr<ViewSnapshot> takeViewSnapshot(std::optional<WebCore::IntRect>&&) { return nullptr; }
 #endif
 
 #if ENABLE(WEB_CRYPTO)
@@ -2838,6 +3061,7 @@ private:
     String m_overrideContentSecurityPolicy;
 
     RefPtr<WebInspectorUIProxy> m_inspector;
+    InspectorDialogAgent* m_inspectorDialogAgent { nullptr };
 
 #if ENABLE(FULLSCREEN_API)
     std::unique_ptr<WebFullScreenManagerProxy> m_fullScreenManager;
@@ -3023,6 +3247,25 @@ private:
     std::optional<WebCore::DragOperation> m_currentDragOperation;
     bool m_currentDragIsOverFileInput { false };
     unsigned m_currentDragNumberOfFilesToBeAccepted { 0 };
+<<<<<<< HEAD
+=======
+    WebCore::IntRect m_currentDragCaretRect;
+    WebCore::IntRect m_currentDragCaretEditableElementRect;
+    bool m_interceptDrags { false };
+    OptionSet<WebCore::DragOperation> m_dragSourceOperationMask;
+    WebCore::IntPoint m_lastMousePositionForDrag;
+    int m_dragEventsQueued = 0;
+#if PLATFORM(COCOA)
+    std::optional<String> m_dragSelectionData;
+    String m_overrideDragPasteboardName;
+#endif
+#if PLATFORM(GTK) || PLATFORM(WPE)
+    std::optional<WebCore::SelectionData> m_dragSelectionData;
+#endif
+#if PLATFORM(WIN)
+    std::optional<WebCore::DragDataMap> m_dragSelectionData;
+#endif
+>>>>>>> 778891c307ac (chore(webkit): bootstrap build #1821)
 #endif
 
     bool m_mainFrameHasHorizontalScrollbar { false };
@@ -3190,6 +3433,10 @@ private:
         RefPtr<API::Object> messageBody;
     };
     Vector<InjectedBundleMessage> m_pendingInjectedBundleMessages;
+    std::optional<WebCore::Credential> m_credentialsForAutomation;
+    std::optional<URL> m_authOriginForAutomation;
+    HashMap<String, HashSet<String>> m_permissionsForAutomation;
+    std::optional<bool> m_activeForAutomation;
         
 #if PLATFORM(IOS_FAMILY) && ENABLE(DEVICE_ORIENTATION)
     std::unique_ptr<WebDeviceOrientationUpdateProviderProxy> m_webDeviceOrientationUpdateProviderProxy;

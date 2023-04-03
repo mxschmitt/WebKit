@@ -2313,6 +2313,11 @@ WebCore::DestinationColorSpace WebViewImpl::colorSpace()
         if (!m_colorSpace)
             m_colorSpace = [NSColorSpace sRGBColorSpace];
     }
+    // Playwright begin
+    // window.colorSpace is sometimes null on popup windows in headless mode
+    if (!m_colorSpace)
+        return WebCore::DestinationColorSpace::SRGB();
+    // Playwright end
 
     ASSERT(m_colorSpace);
     return WebCore::DestinationColorSpace { [m_colorSpace CGColorSpace] };
@@ -4399,6 +4404,18 @@ static RetainPtr<CGImageRef> takeWindowSnapshot(CGSWindowID windowID, bool captu
     ALLOW_DEPRECATED_DECLARATIONS_END
 }
 
+// Paywright begin
+RetainPtr<CGImageRef> WebViewImpl::takeSnapshotForAutomation() {
+    NSWindow *window = [m_view window];
+
+    CGSWindowID windowID = (CGSWindowID)window.windowNumber;
+    if (!windowID || !window.isVisible)
+        return nullptr;
+
+    return takeWindowSnapshot(windowID, true);
+}
+// Paywright end
+
 RefPtr<ViewSnapshot> WebViewImpl::takeViewSnapshot()
 {
     NSWindow *window = [m_view window];
@@ -5019,11 +5036,11 @@ static Vector<WebCore::CompositionHighlight> compositionHighlights(NSAttributedS
     Vector<WebCore::CompositionHighlight> highlights;
     [string enumerateAttributesInRange:NSMakeRange(0, string.length) options:0 usingBlock:[&highlights](NSDictionary<NSAttributedStringKey, id> *attributes, NSRange range, BOOL *) {
         std::optional<WebCore::Color> backgroundHighlightColor;
-        if (CocoaColor *backgroundColor = attributes[NSBackgroundColorAttributeName])
+        if (WebCore::CocoaColor *backgroundColor = attributes[NSBackgroundColorAttributeName])
             backgroundHighlightColor = WebCore::colorFromCocoaColor(backgroundColor);
 
         std::optional<WebCore::Color> foregroundHighlightColor;
-        if (CocoaColor *foregroundColor = attributes[NSForegroundColorAttributeName])
+        if (WebCore::CocoaColor *foregroundColor = attributes[NSForegroundColorAttributeName])
             foregroundHighlightColor = WebCore::colorFromCocoaColor(foregroundColor);
 
         highlights.append({ static_cast<unsigned>(range.location), static_cast<unsigned>(NSMaxRange(range)), backgroundHighlightColor, foregroundHighlightColor });

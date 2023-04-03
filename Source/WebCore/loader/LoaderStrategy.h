@@ -86,6 +86,7 @@ public:
 
     virtual bool isOnLine() const = 0;
     virtual void addOnlineStateChangeListener(Function<void(bool)>&&) = 0;
+    virtual void setEmulateOfflineState(bool) {};
 
     virtual bool shouldPerformSecurityChecks() const { return false; }
     virtual bool havePerformedSecurityChecks(const ResourceResponse&) const { return false; }

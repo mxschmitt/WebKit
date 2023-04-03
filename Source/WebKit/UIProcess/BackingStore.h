@@ -51,6 +51,7 @@ public:
 
 #if USE(CAIRO)
     typedef cairo_t* PlatformGraphicsContext;
+    cairo_surface_t* surface() const;
 #endif
 
     void paint(PlatformGraphicsContext, const WebCore::IntRect&);

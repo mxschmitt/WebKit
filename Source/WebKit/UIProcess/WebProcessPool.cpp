@@ -369,17 +369,31 @@ void WebProcessPool::setAutomationClient(std::unique_ptr<API::AutomationClient>&
         m_automationClient = WTFMove(automationClient);
 }
 
+<<<<<<< HEAD
+=======
+void WebProcessPool::setCustomWebContentServiceBundleIdentifier(const String& customWebContentServiceBundleIdentifier)
+{
+    // Guard against API misuse.
+    if (!customWebContentServiceBundleIdentifier.isAllASCII())
+        CRASH();
+
+    m_configuration->setCustomWebContentServiceBundleIdentifier(customWebContentServiceBundleIdentifier);
+}
+
+/* playwright revert fb205fb */
+>>>>>>> 778891c307ac (chore(webkit): bootstrap build #1821)
 void WebProcessPool::setOverrideLanguages(Vector<String>&& languages)
 {
-    WebKit::setOverrideLanguages(WTFMove(languages));
+    m_configuration->setOverrideLanguages(WTFMove(languages));
 
     LOG_WITH_STREAM(Language, stream << "WebProcessPool is setting OverrideLanguages: " << languages);
-    sendToAllProcesses(Messages::WebProcess::UserPreferredLanguagesChanged(overrideLanguages()));
+    sendToAllProcesses(Messages::WebProcess::UserPreferredLanguagesChanged(m_configuration->overrideLanguages()));
 #if USE(SOUP)
     for (auto networkProcess : NetworkProcessProxy::allNetworkProcesses())
-        networkProcess->send(Messages::NetworkProcess::UserPreferredLanguagesChanged(overrideLanguages()), 0);
+        networkProcess->send(Messages::NetworkProcess::UserPreferredLanguagesChanged(m_configuration->overrideLanguages()), 0);
 #endif
 }
+/* end playwright revert fb205fb */
 
 void WebProcessPool::fullKeyboardAccessModeChanged(bool fullKeyboardAccessEnabled)
 {
@@ -516,6 +530,14 @@ void WebProcessPool::establishRemoteWorkerContextConnectionToNetworkProcess(Remo
 
     RefPtr<WebProcessProxy> requestingProcess = requestingProcessIdentifier ? WebProcessProxy::processForIdentifier(*requestingProcessIdentifier) : nullptr;
     WebProcessPool* processPool = requestingProcess ? &requestingProcess->processPool() : processPools()[0];
+    // Playwright begin
+    for (auto& process : websiteDataStore->processes()) {
+        if (process.processPoolIfExists()) {
+            processPool = process.processPoolIfExists();
+            break;
+        }
+    }
+    // Playwright end
     ASSERT(processPool);
 
     WebProcessProxy* remoteWorkerProcessProxy { nullptr };
@@ -813,7 +835,7 @@ void WebProcessPool::initializeNewWebProcess(WebProcessProxy& process, WebsiteDa
 #endif
 
     parameters.cacheModel = LegacyGlobalSettings::singleton().cacheModel();
-    parameters.overrideLanguages = overrideLanguages();
+    parameters.overrideLanguages = configuration().overrideLanguages(); /* playwright revert fb205fb */
     LOG_WITH_STREAM(Language, stream << "WebProcessPool is initializing a new web process with overrideLanguages: " << parameters.overrideLanguages);
 
     parameters.urlSchemesRegisteredAsEmptyDocument = copyToVector(m_schemesToRegisterAsEmptyDocument);

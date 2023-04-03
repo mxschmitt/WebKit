@@ -137,9 +137,7 @@ public:
 
     WEBCORE_EXPORT VisiblePosition selectionExtentRespectingEditingBoundary(const VisibleSelection&, const LayoutPoint&, Node*);
 
-#if ENABLE(DRAG_SUPPORT)
     void updateSelectionForMouseDrag();
-#endif
 
 #if ENABLE(PAN_SCROLLING)
     void didPanScrollStart();
@@ -401,10 +399,8 @@ private:
     bool startKeyboardScrollAnimationOnRenderBoxAndItsAncestors(ScrollDirection, ScrollGranularity, RenderBox*, bool isKeyRepeat);
     bool startKeyboardScrollAnimationOnEnclosingScrollableContainer(ScrollDirection, ScrollGranularity, Node*, bool isKeyRepeat);
 
-#if ENABLE(DRAG_SUPPORT)
     bool handleMouseDraggedEvent(const MouseEventWithHitTestResults&, CheckDragHysteresis = ShouldCheckDragHysteresis);
     bool shouldAllowMouseDownToStartDrag() const;
-#endif
 
     WEBCORE_EXPORT bool handleMouseReleaseEvent(const MouseEventWithHitTestResults&);
 
@@ -506,10 +502,8 @@ private:
     void defaultTabEventHandler(KeyboardEvent&);
     void defaultArrowEventHandler(FocusDirection, KeyboardEvent&);
 
-#if ENABLE(DRAG_SUPPORT)
     OptionSet<DragSourceAction> updateDragSourceActionsAllowed() const;
     bool supportsSelectionUpdatesOnMouseDrag() const;
-#endif
 
     // The following are called at the beginning of handleMouseUp and handleDrag.  
     // If they return true it indicates that they have consumed the event.
@@ -517,8 +511,9 @@ private:
 
 #if ENABLE(DRAG_SUPPORT)
     bool eventLoopHandleMouseDragged(const MouseEventWithHitTestResults&);
-    void updateSelectionForMouseDrag(const HitTestResult&);
 #endif
+
+    void updateSelectionForMouseDrag(const HitTestResult&);
 
     enum class SetOrClearLastScrollbar { Clear, Set };
     void updateLastScrollbarUnderMouse(Scrollbar*, SetOrClearLastScrollbar);
@@ -612,8 +607,8 @@ private:
     Timer m_autoHideCursorTimer;
 #endif
 
-#if ENABLE(DRAG_SUPPORT)
     LayoutPoint m_dragStartPosition;
+#if ENABLE(DRAG_SUPPORT)
     std::optional<SimpleRange> m_dragStartSelection;
     RefPtr<Element> m_dragTarget;
     bool m_mouseDownMayStartDrag { false };

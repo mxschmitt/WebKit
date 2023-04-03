@@ -1417,6 +1417,10 @@ struct WebCore::WindowFeatures {
 
     bool fullscreen;
     bool dialog;
+
+    bool noopener;
+    bool noreferrer;
+    Vector<String> additionalFeatures;
 };
 
 [Nested] enum class WebCore::CompositionUnderlineColor : bool
@@ -1872,6 +1876,9 @@ class WebCore::AuthenticationChallenge {
 class WebCore::DragData {
 #if PLATFORM(COCOA)
     String pasteboardName();
+#endif
+#if PLATFORM(WIN)
+    WebCore::DragDataMap dragDataMap();
 #endif
     WebCore::IntPoint clientPosition();
     WebCore::IntPoint globalPosition();
@@ -2368,6 +2375,7 @@ enum class WebCore::ResourceLoadPriority : uint8_t {
     AtomString m_httpStatusText;
     AtomString m_httpVersion;
     WebCore::HTTPHeaderMap m_httpHeaderFields;
+    WebCore::HTTPHeaderMap m_httpRequestHeaderFields;
     Box<WebCore::NetworkLoadMetrics> m_networkLoadMetrics;
 
     short m_httpStatusCode;

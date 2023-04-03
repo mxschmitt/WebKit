@@ -751,7 +751,7 @@ void NetworkSessionCocoa::setClientAuditToken(const WebCore::AuthenticationChall
 
     if ([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust]) {
         sessionCocoa->setClientAuditToken(challenge);
-        if (NetworkSessionCocoa::allowsSpecificHTTPSCertificateForHost(challenge))
+        if (sessionCocoa->ignoreCertificateErrors() || sessionCocoa->allowsSpecificHTTPSCertificateForHost(challenge))
             return completionHandler(NSURLSessionAuthChallengeUseCredential, [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust]);
 
         NSURLSessionTaskTransactionMetrics *metrics = task._incompleteTaskMetrics.transactionMetrics.lastObject;
@@ -1082,6 +1082,13 @@ ALLOW_DEPRECATED_DECLARATIONS_END
         networkDataTask->checkTAO(resourceResponse);
 
         resourceResponse.setDeprecatedNetworkLoadMetrics(WebCore::copyTimingData(taskMetrics, networkDataTask->networkLoadMetrics()));
+
+        __block WebCore::HTTPHeaderMap requestHeaders;
+        NSURLSessionTaskTransactionMetrics *m = dataTask._incompleteTaskMetrics.transactionMetrics.lastObject;
+        [m.request.allHTTPHeaderFields enumerateKeysAndObjectsUsingBlock:^(NSString *name, NSString *value, BOOL *) {
+            requestHeaders.set(String(name), String(value));
+        }];
+        resourceResponse.m_httpRequestHeaderFields = WTFMove(requestHeaders);
 
         networkDataTask->didReceiveResponse(WTFMove(resourceResponse), negotiatedLegacyTLS, privateRelayed, [completionHandler = makeBlockPtr(completionHandler), taskIdentifier](WebCore::PolicyAction policyAction) {
 #if !LOG_DISABLED

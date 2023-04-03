@@ -36,6 +36,11 @@
 #include <wtf/HashMap.h>
 #include <wtf/Lock.h>
 #include <wtf/ThreadSafeRefCounted.h>
+#include <WebCore/PageIdentifier.h>
+#include <WebCore/RectEdges.h>
+
+#include "NativeWebWheelEvent.h"
+#include "WebPage.h"
 
 namespace WebCore {
 class PlatformWheelEvent;
@@ -79,18 +84,27 @@ public:
     void windowScreenDidChange(WebCore::PlatformDisplayID, std::optional<WebCore::FramesPerSecond>);
 
 private:
-    OptionSet<WheelEventProcessingSteps> determineWheelEventProcessing(const WebCore::PlatformWheelEvent&, WebCore::RectEdges<bool> rubberBandableEdges);
+    OptionSet<WebCore::WheelEventProcessingSteps> determineWheelEventProcessing(const WebCore::PlatformWheelEvent&, WebCore::RectEdges<bool> rubberBandableEdges);
 
+<<<<<<< HEAD
     void scrollingThreadHandleWheelEvent(const WebWheelEvent&, RectEdges<bool> rubberBandableEdges);
     WebCore::WheelEventHandlingResult internalHandleWheelEvent(const WebCore::PlatformWheelEvent&, OptionSet<WheelEventProcessingSteps>);
+=======
+    WebCore::WheelEventHandlingResult scrollingThreadHandleWheelEvent(const WebWheelEvent&, WebCore::RectEdges<bool> rubberBandableEdges);
+    WebCore::WheelEventHandlingResult internalHandleWheelEvent(const WebCore::PlatformWheelEvent&, OptionSet<WebCore::WheelEventProcessingSteps>);
+>>>>>>> 778891c307ac (chore(webkit): bootstrap build #1821)
 
     WebCore::PlatformWheelEvent filteredWheelEvent(const WebCore::PlatformWheelEvent&);
 
     void wheelEventHysteresisUpdated(PAL::HysteresisState);
 
     void willHandleWheelEvent(const WebWheelEvent&);
+<<<<<<< HEAD
     void continueWheelEventHandling(WheelEventHandlingResult);
     void wheelEventWasHandledByScrollingThread(WheelEventHandlingResult);
+=======
+    void wheelEventWasHandledByScrollingThread(WebCore::WheelEventHandlingResult);
+>>>>>>> 778891c307ac (chore(webkit): bootstrap build #1821)
 
     DisplayLink* displayLink() const;
 
