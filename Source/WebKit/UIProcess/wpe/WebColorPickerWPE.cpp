@@ -39,7 +39,7 @@ Ref<WebColorPickerWPE> WebColorPickerWPE::create(WebPageProxy& page, const Color
 }
 
 WebColorPickerWPE::WebColorPickerWPE(WebPageProxy& page, const Color& initialColor, const IntRect&)
-    : WebColorPicker(&page)
+    : WebColorPicker(&page.colorPickerClient())
 {
 }
 

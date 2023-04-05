@@ -30,6 +30,7 @@
 
 //#include "ArgumentCodersWPE.h"
 #include "ShareableBitmap.h"
+#include "MessageSenderInlines.h"
 #include "WebPage.h"
 #include "WebPageProxyMessages.h"
 #include <WebCore/DataTransfer.h>

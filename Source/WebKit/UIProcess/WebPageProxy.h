@@ -37,8 +37,17 @@
 #include "WebPageDiagnosticLoggingClient.h"
 #include "WebPageInjectedBundleClient.h"
 #include "WebPreferences.h"
+#include "ViewSnapshotStore.h"
 
 OBJC_CLASS NSPasteboard;
+
+#if PLATFORM(WPE)
+#include "ArgumentCodersWPE.h"
+#endif
+
+#if PLATFORM(GTK) || PLATFORM(WPE)
+#include <WebCore/SelectionData.h>
+#endif
 
 namespace API {
 class Attachment;
