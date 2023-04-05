@@ -24,6 +24,7 @@
  */
 
 #include "config.h"
+#include "MessageSenderInlines.h"
 #include "WebPageInspectorInputAgent.h"
 
 #include "NativeWebKeyboardEvent.h"
@@ -33,6 +34,7 @@
 #include "WebPageProxy.h"
 #include <wtf/MathExtras.h>
 #include <wtf/HexNumber.h>
+#include <WebCore/Scrollbar.h>
 
 #include "WebPageMessages.h"
 

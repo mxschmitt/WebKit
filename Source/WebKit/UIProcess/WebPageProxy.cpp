@@ -171,6 +171,7 @@
 #include <WebCore/DeprecatedGlobalSettings.h>
 #include <WebCore/DiagnosticLoggingClient.h>
 #include <WebCore/DiagnosticLoggingKeys.h>
+#include <WebCore/DiagnosticLoggingResultType.h>
 #include <WebCore/DragController.h>
 #include <WebCore/DragData.h>
 #include <WebCore/ElementContext.h>
@@ -1483,7 +1484,7 @@ RefPtr<API::Navigation> WebPageProxy::loadRequestForInspector(WebCore::ResourceR
     loadParameters.request = WTFMove(request);
     loadParameters.shouldOpenExternalURLsPolicy = WebCore::ShouldOpenExternalURLsPolicy::ShouldNotAllow;
     loadParameters.shouldTreatAsContinuingLoad = ShouldTreatAsContinuingLoad::No;
-    m_process->send(Messages::WebPage::LoadRequestInFrameForInspector(loadParameters, frame->frameID()),  m_webPageID);
+    m_process->send(Messages::WebPage::LoadRequestInFrameForInspector(loadParameters, frame->frameID()), internals().webPageID);
     return navigation;
 }
 
@@ -2056,7 +2057,7 @@ void WebPageProxy::setPermissionsForAutomation(const HashMap<String, HashSet<Str
 
 void WebPageProxy::setActiveForAutomation(std::optional<bool> active) {
     m_activeForAutomation = active;
-    OptionSet<ActivityState::Flag> state;
+    OptionSet<ActivityState> state;
     state.add(ActivityState::IsFocused);
     state.add(ActivityState::WindowIsActive);
     state.add(ActivityState::IsVisible);
@@ -2301,22 +2302,19 @@ bool WebPageProxy::isViewWindowActive() const
 void WebPageProxy::updateActivityState(OptionSet<ActivityState> flagsToUpdate)
 {
     bool wasVisible = isViewVisible();
-<<<<<<< HEAD
     internals().activityState.remove(flagsToUpdate);
-=======
-    m_activityState.remove(flagsToUpdate);
 
 
     if (m_activeForAutomation) {
         if (*m_activeForAutomation) {
             if (flagsToUpdate & ActivityState::IsFocused)
-                m_activityState.add(ActivityState::IsFocused);
+                internals().activityState.add(ActivityState::IsFocused);
             if (flagsToUpdate & ActivityState::WindowIsActive)
-                m_activityState.add(ActivityState::WindowIsActive);
+                internals().activityState.add(ActivityState::WindowIsActive);
             if (flagsToUpdate & ActivityState::IsVisible)
-                m_activityState.add(ActivityState::IsVisible);
+                internals().activityState.add(ActivityState::IsVisible);
             if (flagsToUpdate & ActivityState::IsVisibleOrOccluded)
-                m_activityState.add(ActivityState::IsVisibleOrOccluded);
+                internals().activityState.add(ActivityState::IsVisibleOrOccluded);
         }
         flagsToUpdate.remove(ActivityState::IsFocused);
         flagsToUpdate.remove(ActivityState::WindowIsActive);
@@ -2324,7 +2322,6 @@ void WebPageProxy::updateActivityState(OptionSet<ActivityState> flagsToUpdate)
         flagsToUpdate.remove(ActivityState::IsVisibleOrOccluded);
     }
 
->>>>>>> 778891c307ac (chore(webkit): bootstrap build #1821)
     if (flagsToUpdate & ActivityState::IsFocused && pageClient().isViewFocused())
         internals().activityState.add(ActivityState::IsFocused);
     if (flagsToUpdate & ActivityState::WindowIsActive && pageClient().isViewWindowActive())
@@ -3040,7 +3037,7 @@ void WebPageProxy::didPerformDragControllerAction(std::optional<WebCore::DragOpe
     setDragCaretRect(insertionRect);
     pageClient().didPerformDragControllerAction();
     m_dragEventsQueued--;
-    if (m_dragEventsQueued == 0 && m_mouseEventQueue.isEmpty())
+    if (m_dragEventsQueued == 0 && internals().mouseEventQueue.isEmpty())
         m_inspectorController->didProcessAllPendingMouseEvents();
 
 }
@@ -3243,12 +3240,7 @@ void WebPageProxy::processNextQueuedMouseEvent()
             sandboxExtensions = SandboxExtension::createHandlesForMachLookup({ "com.apple.iconservices"_s, "com.apple.iconservices.store"_s }, process().auditToken(), SandboxExtension::MachBootstrapOptions::EnableMachBootstrap);
 #endif
 
-<<<<<<< HEAD
-    LOG_WITH_STREAM(MouseHandling, stream << "UIProcess: sent mouse event " << eventType << " (queue size " << internals().mouseEventQueue.size() << ")");
-    m_process->recordUserGestureAuthorizationToken(event.authorizationToken());
-    send(Messages::WebPage::MouseEvent(event, sandboxExtensions));
-=======
-        LOG_WITH_STREAM(MouseHandling, stream << "UIProcess: sent mouse event " << eventType << " (queue size " << m_mouseEventQueue.size() << ")");
+        LOG_WITH_STREAM(MouseHandling, stream << "UIProcess: sent mouse event " << eventType << " (queue size " << internals().mouseEventQueue.size() << ")");
         m_process->recordUserGestureAuthorizationToken(event.authorizationToken());
         send(Messages::WebPage::MouseEvent(event, sandboxExtensions));
     } else {
@@ -3271,7 +3263,6 @@ void WebPageProxy::processNextQueuedMouseEvent()
         }
         didReceiveEvent(eventType, true);
     }
->>>>>>> 778891c307ac (chore(webkit): bootstrap build #1821)
 }
 
 void WebPageProxy::doAfterProcessingAllPendingMouseEvents(WTF::Function<void ()>&& action)
@@ -3558,19 +3549,11 @@ void WebPageProxy::updateTouchEventTracking(const WebTouchEvent& touchStartEvent
     }
 #else
     UNUSED_PARAM(touchStartEvent);
-<<<<<<< HEAD
     internals().touchEventTracking.touchForceChangedTracking = TrackingType::Synchronous;
     internals().touchEventTracking.touchStartTracking = TrackingType::Synchronous;
     internals().touchEventTracking.touchMoveTracking = TrackingType::Synchronous;
     internals().touchEventTracking.touchEndTracking = TrackingType::Synchronous;
 #endif // ENABLE(ASYNC_SCROLLING)
-=======
-    m_touchAndPointerEventTracking.touchForceChangedTracking = TrackingType::Synchronous;
-    m_touchAndPointerEventTracking.touchStartTracking = TrackingType::Synchronous;
-    m_touchAndPointerEventTracking.touchMoveTracking = TrackingType::Synchronous;
-    m_touchAndPointerEventTracking.touchEndTracking = TrackingType::Synchronous;
-#endif // ENABLE(ASYNC_SCROLLING) && PLATFORM(IOS_FAMILY)
->>>>>>> 778891c307ac (chore(webkit): bootstrap build #1821)
 }
 
 TrackingType WebPageProxy::touchEventTrackingType(const WebTouchEvent& touchStartEvent) const
@@ -3959,13 +3942,9 @@ void WebPageProxy::receivedNavigationPolicyDecision(PolicyAction policyAction, A
     if (policyAction != PolicyAction::Use
         || (!preferences().siteIsolationEnabled() && !frame.isMainFrame())
         || !navigation) {
-<<<<<<< HEAD
-        receivedPolicyDecision(policyAction, navigation, navigation->websitePolicies(), WTFMove(navigationAction), WTFMove(sender), WillContinueLoadInNewProcess::No, std::nullopt);
-=======
         if (policyAction == PolicyAction::Download && navigation)
-            m_decidePolicyForResponseRequest = navigation->currentRequest();
-        receivedPolicyDecision(policyAction, navigation, navigation->websitePolicies(), WTFMove(navigationAction), WTFMove(sender));
->>>>>>> 778891c307ac (chore(webkit): bootstrap build #1821)
+            internals().decidePolicyForResponseRequest = navigation->currentRequest();
+        receivedPolicyDecision(policyAction, navigation, navigation->websitePolicies(), WTFMove(navigationAction), WTFMove(sender), WillContinueLoadInNewProcess::No, std::nullopt);
         return;
     }
 
@@ -6068,18 +6047,14 @@ void WebPageProxy::decidePolicyForNavigationActionAsync(IPC::Connection& connect
 {
     RefPtr frame = WebFrameProxy::webFrame(frameID);
     MESSAGE_CHECK_BASE(frame, &connection);
-<<<<<<< HEAD
-    decidePolicyForNavigationActionAsyncShared(Ref { frame->process() }, internals().webPageID, frameID, WTFMove(frameInfo), identifier, navigationID, WTFMove(navigationActionData), WTFMove(originatingFrameInfo), originatingPageID, originalRequest, WTFMove(request), WTFMove(requestBody), WTFMove(redirectResponse), listenerID);
-=======
     if (m_inspectorController->shouldPauseLoading()) {
         m_inspectorController->setContinueLoadingCallback([this, protectedThis = Ref { *this }, frame, frameID, frameInfo = WTFMove(frameInfo), identifier, navigationID, navigationActionData = WTFMove(navigationActionData),
                 originatingFrameInfo = WTFMove(originatingFrameInfo), originatingPageID, originalRequest, request = WTFMove(request), requestBody = WTFMove(requestBody), redirectResponse = WTFMove(redirectResponse), listenerID] () mutable {
-            decidePolicyForNavigationActionAsyncShared(Ref { frame->process() }, m_webPageID, frameID, WTFMove(frameInfo), identifier, navigationID, WTFMove(navigationActionData), WTFMove(originatingFrameInfo), originatingPageID, originalRequest, WTFMove(request), WTFMove(requestBody), WTFMove(redirectResponse), listenerID);
+            decidePolicyForNavigationActionAsyncShared(Ref { frame->process() }, internals().webPageID, frameID, WTFMove(frameInfo), identifier, navigationID, WTFMove(navigationActionData), WTFMove(originatingFrameInfo), originatingPageID, originalRequest, WTFMove(request), WTFMove(requestBody), WTFMove(redirectResponse), listenerID);
         });
     } else {
-        decidePolicyForNavigationActionAsyncShared(Ref { frame->process() }, m_webPageID, frameID, WTFMove(frameInfo), identifier, navigationID, WTFMove(navigationActionData), WTFMove(originatingFrameInfo), originatingPageID, originalRequest, WTFMove(request), WTFMove(requestBody), WTFMove(redirectResponse), listenerID);
+        decidePolicyForNavigationActionAsyncShared(Ref { frame->process() }, internals().webPageID, frameID, WTFMove(frameInfo), identifier, navigationID, WTFMove(navigationActionData), WTFMove(originatingFrameInfo), originatingPageID, originalRequest, WTFMove(request), WTFMove(requestBody), WTFMove(redirectResponse), listenerID);
     }
->>>>>>> 778891c307ac (chore(webkit): bootstrap build #1821)
 }
 
 void WebPageProxy::decidePolicyForNavigationActionAsyncShared(Ref<WebProcessProxy>&& process, PageIdentifier webPageID, FrameIdentifier frameID, FrameInfoData&& frameInfo, WebCore::PolicyCheckIdentifier identifier, uint64_t navigationID, NavigationActionData&& navigationActionData, FrameInfoData&& originatingFrameInfo, std::optional<WebPageProxyIdentifier> originatingPageID, const WebCore::ResourceRequest& originalRequest, WebCore::ResourceRequest&& request, IPC::FormDataReference&& requestBody, WebCore::ResourceResponse&& redirectResponse, uint64_t listenerID)

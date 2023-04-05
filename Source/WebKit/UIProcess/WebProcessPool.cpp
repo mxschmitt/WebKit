@@ -369,19 +369,6 @@ void WebProcessPool::setAutomationClient(std::unique_ptr<API::AutomationClient>&
         m_automationClient = WTFMove(automationClient);
 }
 
-<<<<<<< HEAD
-=======
-void WebProcessPool::setCustomWebContentServiceBundleIdentifier(const String& customWebContentServiceBundleIdentifier)
-{
-    // Guard against API misuse.
-    if (!customWebContentServiceBundleIdentifier.isAllASCII())
-        CRASH();
-
-    m_configuration->setCustomWebContentServiceBundleIdentifier(customWebContentServiceBundleIdentifier);
-}
-
-/* playwright revert fb205fb */
->>>>>>> 778891c307ac (chore(webkit): bootstrap build #1821)
 void WebProcessPool::setOverrideLanguages(Vector<String>&& languages)
 {
     m_configuration->setOverrideLanguages(WTFMove(languages));

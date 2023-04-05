@@ -332,9 +332,6 @@ void WebPageProxy::startDrag(const DragItem& dragItem, const ShareableBitmapHand
     pageClient().startDrag(dragItem, dragImageHandle);
 }
 
-<<<<<<< HEAD
-#endif
-=======
 void WebPageProxy::releaseInspectorDragPasteboard() {
     if (!!m_dragSelectionData)
         m_dragSelectionData = std::nullopt;
@@ -380,7 +377,6 @@ void WebPageProxy::setDragCaretRect(const IntRect& dragCaretRect)
 #endif // PLATFORM(IOS_FAMILY)
 
 #endif // ENABLE(DRAG_SUPPORT)
->>>>>>> 778891c307ac (chore(webkit): bootstrap build #1821)
 
 #if ENABLE(ATTACHMENT_ELEMENT)
 
