@@ -38,16 +38,12 @@
 #include <wtf/Lock.h>
 #include <wtf/RunLoop.h>
 #include <wtf/ThreadSafeRefCounted.h>
-<<<<<<< HEAD
 #include <wtf/threads/BinarySemaphore.h>
-||||||| parent of 35797037da94 (chore(webkit): bootstrap build #1823)
-=======
 #include <WebCore/PageIdentifier.h>
 #include <WebCore/RectEdges.h>
 
 #include "NativeWebWheelEvent.h"
 #include "WebPage.h"
->>>>>>> 35797037da94 (chore(webkit): bootstrap build #1823)
 
 namespace WebCore {
 class PlatformWheelEvent;
