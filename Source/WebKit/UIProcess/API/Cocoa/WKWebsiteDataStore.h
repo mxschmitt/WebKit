@@ -24,7 +24,6 @@
  */
 
 #import <WebKit/WKFoundation.h>
-
 #import <WebKit/WKWebsiteDataRecord.h>
 
 #if __has_include(<Network/proxy_config.h>)
@@ -115,6 +114,8 @@ WK_CLASS_AVAILABLE(macos(10.11), ios(9.0))
 */
 - (void)setProxyConfiguration:(nw_proxy_config_t)proxyConfiguration WK_API_AVAILABLE(macos(WK_MAC_TBA), ios(WK_IOS_TBA));
 #endif
+
+- (uint64_t)sessionID;
 
 @end
 

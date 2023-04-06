@@ -34,7 +34,7 @@
 
 namespace WebKit {
 
-WebSocketTask::WebSocketTask(NetworkSocketChannel& channel, const WebCore::ResourceRequest& request, const String& protocol)
+WebSocketTask::WebSocketTask(NetworkSocketChannel& channel, const WebCore::ResourceRequest& request, const String& protocol, bool ignoreCertificateErrors)
     : m_channel(channel)
     , m_request(request.isolatedCopy())
     , m_protocol(protocol)
@@ -43,7 +43,7 @@ WebSocketTask::WebSocketTask(NetworkSocketChannel& channel, const WebCore::Resou
     if (request.url().protocolIs("wss"_s) && WebCore::DeprecatedGlobalSettings::allowsAnySSLCertificate())
         WebCore::CurlContext::singleton().sslHandle().setIgnoreSSLErrors(true);
 
-    m_streamID = m_scheduler.createStream(request.url(), *this);
+    m_streamID = m_scheduler.createStream(request.url(), ignoreCertificateErrors, *this);
     m_channel.didSendHandshakeRequest(WebCore::ResourceRequest(m_request));
 }
 

@@ -22,7 +22,6 @@
       <dep package="wpebackend-fdo"/>
       <dep package="icu"/>
       <dep package="libsoup"/>
-      <dep package="openxr"/>
       <dep package="libvpx"/>
       <dep package="glib"/>
       <dep package="glib-networking"/>

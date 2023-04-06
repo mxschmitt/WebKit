@@ -32,6 +32,7 @@
 #include "FrameLoaderClient.h"
 #include "HistoryController.h"
 #include "HistoryItem.h"
+#include "InspectorInstrumentation.h"
 #include "LocalFrame.h"
 #include "Logging.h"
 #include "NavigationScheduler.h"
@@ -273,6 +274,7 @@ ExceptionOr<void> History::stateObjectAdded(RefPtr<SerializedScriptValue>&& data
 
     if (!urlString.isEmpty())
         frame->document()->updateURLForPushOrReplaceState(fullURL);
+    InspectorInstrumentation::didNavigateWithinPage(*frame);
 
     if (stateObjectType == StateObjectType::Push) {
         frame->loader().history().pushState(WTFMove(data), title, fullURL.string());

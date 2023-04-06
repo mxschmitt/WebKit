@@ -37,6 +37,7 @@ namespace WebCore {
 class ChromeClient;
 class Document;
 class Page;
+class Document;
 
 class UserGestureEmulationScope {
     WTF_MAKE_NONCOPYABLE(UserGestureEmulationScope);

@@ -599,6 +599,12 @@ void NetworkProcess::destroySession(PAL::SessionID sessionID)
     m_sessionsControlledByAutomation.remove(sessionID);
 }
 
+void NetworkProcess::setIgnoreCertificateErrors(PAL::SessionID sessionID, bool ignore)
+{
+    if (auto* networkSession = this->networkSession(sessionID))
+        networkSession->setIgnoreCertificateErrors(ignore);
+}
+
 #if ENABLE(TRACKING_PREVENTION)
 void NetworkProcess::dumpResourceLoadStatistics(PAL::SessionID sessionID, CompletionHandler<void(String)>&& completionHandler)
 {

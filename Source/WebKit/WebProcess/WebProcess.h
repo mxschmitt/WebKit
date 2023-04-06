@@ -715,7 +715,7 @@ private:
 
     WeakHashMap<WebCore::UserGestureToken, uint64_t> m_userGestureTokens;
 
-#if PLATFORM(GTK) && USE(EGL)
+#if PLATFORM(WAYLAND) || (PLATFORM(GTK) && USE(EGL))
     std::unique_ptr<WebCore::PlatformDisplay> m_displayForCompositing;
 #endif
 

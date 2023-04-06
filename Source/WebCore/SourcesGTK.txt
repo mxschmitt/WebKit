@@ -129,3 +129,10 @@ platform/unix/LoggingUnix.cpp
 platform/xdg/MIMETypeRegistryXdg.cpp
 
 rendering/RenderThemeGtk.cpp
+
+// Playwright: begin.
+JSSpeechSynthesisErrorCode.cpp
+JSSpeechSynthesisErrorEvent.cpp
+JSSpeechSynthesisErrorEventInit.cpp
+JSSpeechSynthesisEventInit.cpp
+// Playwright: end.

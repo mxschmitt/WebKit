@@ -39,6 +39,7 @@
 #include "WebPreferencesKeys.h"
 #include "WebProcess.h"
 #include <WebCore/GraphicsContext.h>
+#include <WebCore/InspectorController.h>
 #include <WebCore/LocalFrame.h>
 #include <WebCore/LocalFrameView.h>
 #include <WebCore/Page.h>
@@ -119,6 +120,16 @@ void DrawingAreaCoordinatedGraphics::scroll(const IntRect& scrollRect, const Int
         ASSERT(m_scrollRect.isEmpty());
         ASSERT(m_scrollOffset.isEmpty());
         ASSERT(m_dirtyRegion.isEmpty());
+// Playwright begin
+#if !PLATFORM(WIN)
+        if (m_webPage.mainFrameView() && m_webPage.mainFrameView()->useFixedLayout()) {
+            IntRect visibleRect = IntRect(m_layerTreeHost->viewportController().visibleContentsRect());
+            visibleRect.move(-scrollDelta.width(), -scrollDelta.height());
+            m_layerTreeHost->scrollNonCompositedContents(visibleRect);
+            return;
+        }
+#endif
+// Playwright end
         m_layerTreeHost->scrollNonCompositedContents(scrollRect);
         return;
     }
@@ -251,6 +262,7 @@ void DrawingAreaCoordinatedGraphics::updatePreferences(const WebPreferencesStore
         settings.setAcceleratedCompositingEnabled(false);
     }
 #endif
+
     settings.setForceCompositingMode(store.getBoolValueForKey(WebPreferencesKey::forceCompositingModeKey()));
     // Fixed position elements need to be composited and create stacking contexts
     // in order to be scrolled by the ScrollingCoordinator.
@@ -686,6 +698,11 @@ void DrawingAreaCoordinatedGraphics::enterAcceleratedCompositingMode(GraphicsLay
     m_scrollOffset = IntSize();
     m_displayTimer.stop();
     m_isWaitingForDidUpdate = false;
+// Playwright begin
+#if PLATFORM(WIN)
+    didChangeAcceleratedCompositingMode(true);
+#endif
+// Playwright end
 }
 
 void DrawingAreaCoordinatedGraphics::exitAcceleratedCompositingMode()
@@ -735,6 +752,11 @@ void DrawingAreaCoordinatedGraphics::exitAcceleratedCompositingMode()
         // UI process, we still need to let it know about the new contents, so send an Update message.
         send(Messages::DrawingAreaProxy::Update(m_backingStoreStateID, updateInfo));
     }
+// Playwright begin
+#if PLATFORM(WIN)
+    didChangeAcceleratedCompositingMode(false);
+#endif
+// Playwright end
 }
 
 void DrawingAreaCoordinatedGraphics::scheduleDisplay()

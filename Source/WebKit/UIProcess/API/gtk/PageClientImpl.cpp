@@ -257,6 +257,8 @@ void PageClientImpl::doneWithKeyEvent(const NativeWebKeyboardEvent& event, bool 
 {
     if (wasEventHandled || event.type() != WebEventType::KeyDown || !event.nativeEvent())
         return;
+    if (!event.nativeEvent())
+        return;
 
     // Always consider arrow keys as handled, otherwise the GtkWindow key bindings will move the focus.
     guint keyval;

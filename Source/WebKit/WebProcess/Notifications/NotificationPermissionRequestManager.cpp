@@ -85,7 +85,7 @@ void NotificationPermissionRequestManager::startRequest(const SecurityOriginData
 
     m_page->sendWithAsyncReply(Messages::WebPageProxy::RequestNotificationPermission(securityOrigin.toString()), [this, protectedThis = Ref { *this }, securityOrigin, permissionHandler = WTFMove(permissionHandler)](bool allowed) mutable {
 
-        auto innerPermissionHandler = [this, protectedThis = Ref { *this }, securityOrigin, permissionHandler = WTFMove(permissionHandler)] (bool allowed) mutable {
+        auto innerPermissionHandler = [this, protectedThis, securityOrigin, permissionHandler = WTFMove(permissionHandler)] (bool allowed) mutable {
             WebProcess::singleton().supplement<WebNotificationManager>()->didUpdateNotificationDecision(securityOrigin.toString(), allowed);
 
             auto permissionHandlers = m_requestsPerOrigin.take(securityOrigin);
