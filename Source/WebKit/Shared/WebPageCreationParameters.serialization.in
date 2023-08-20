@@ -214,6 +214,8 @@ struct WebKit::WebPageCreationParameters {
 
     bool httpsUpgradeEnabled;
 
+    bool shouldPauseInInspectorWhenShown;
+
 #if PLATFORM(IOS) || PLATFORM(VISION)
     bool allowsDeprecatedSynchronousXMLHttpRequestDuringUnload;
 #endif

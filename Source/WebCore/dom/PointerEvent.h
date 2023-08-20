@@ -33,6 +33,8 @@
 
 #if ENABLE(TOUCH_EVENTS) && PLATFORM(IOS_FAMILY)
 #include "PlatformTouchEventIOS.h"
+#else
+#include "PlatformTouchEvent.h"
 #endif
 
 #if ENABLE(TOUCH_EVENTS) && PLATFORM(WPE)
@@ -85,7 +87,7 @@ public:
     static Ref<PointerEvent> create(const AtomString& type, short button, const MouseEvent&, PointerID, const String& pointerType);
     static Ref<PointerEvent> create(const AtomString& type, PointerID, const String& pointerType, IsPrimary = IsPrimary::No);
 
-#if ENABLE(TOUCH_EVENTS) && (PLATFORM(IOS_FAMILY) || PLATFORM(WPE))
+#if ENABLE(TOUCH_EVENTS)
     static Ref<PointerEvent> create(const PlatformTouchEvent&, unsigned touchIndex, bool isPrimary, Ref<WindowProxy>&&, const IntPoint& touchDelta = { });
     static Ref<PointerEvent> create(const AtomString& type, const PlatformTouchEvent&, unsigned touchIndex, bool isPrimary, Ref<WindowProxy>&&, const IntPoint& touchDelta = { });
 #endif
@@ -134,7 +136,7 @@ private:
     PointerEvent(const AtomString&, Init&&);
     PointerEvent(const AtomString& type, short button, const MouseEvent&, PointerID, const String& pointerType);
     PointerEvent(const AtomString& type, PointerID, const String& pointerType, IsPrimary);
-#if ENABLE(TOUCH_EVENTS) && (PLATFORM(IOS_FAMILY) || PLATFORM(WPE))
+#if ENABLE(TOUCH_EVENTS)
     PointerEvent(const AtomString& type, const PlatformTouchEvent&, IsCancelable isCancelable, unsigned touchIndex, bool isPrimary, Ref<WindowProxy>&&, const IntPoint& touchDelta = { });
 #endif
 

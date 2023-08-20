@@ -34,6 +34,8 @@
 #include "InspectorInstrumentation.h"
 #include "InspectorPageAgent.h"
 #include "InspectorWebAgentBase.h"
+#include "ResourceError.h"
+#include "SharedBuffer.h"
 #include "WebSocket.h"
 #include <JavaScriptCore/InspectorBackendDispatchers.h>
 #include <JavaScriptCore/InspectorFrontendDispatchers.h>
@@ -101,6 +103,7 @@ public:
 #if ENABLE(INSPECTOR_NETWORK_THROTTLING)
     Inspector::Protocol::ErrorStringOr<void> setEmulatedConditions(std::optional<int>&& bytesPerSecondLimit) final;
 #endif
+    Inspector::Protocol::ErrorStringOr<void> setEmulateOfflineState(bool offline) final;
 
     // InspectorInstrumentation
     void willRecalculateStyle();

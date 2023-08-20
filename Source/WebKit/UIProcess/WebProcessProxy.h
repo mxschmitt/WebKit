@@ -163,6 +163,7 @@ public:
 
     static void forWebPagesWithOrigin(PAL::SessionID, const WebCore::SecurityOriginData&, const Function<void(WebPageProxy&)>&);
     static Vector<std::pair<WebCore::ProcessIdentifier, WebCore::RegistrableDomain>> allowedFirstPartiesForCookies();
+    static Vector<RefPtr<WebProcessProxy>> allProcessesForInspector();
 
     WebConnection* webConnection() const { return m_webConnection.get(); }
 

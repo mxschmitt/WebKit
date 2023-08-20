@@ -47,7 +47,7 @@ struct SessionSet;
 class WebSocketTask : public CanMakeWeakPtr<WebSocketTask>, public WebCore::CurlStream::Client {
     WTF_MAKE_FAST_ALLOCATED;
 public:
-    WebSocketTask(NetworkSocketChannel&, const WebCore::ResourceRequest&, const String& protocol);
+    WebSocketTask(NetworkSocketChannel&, const WebCore::ResourceRequest&, const String& protocol, bool ignoreCertificateErrors);
     virtual ~WebSocketTask();
 
     void sendString(const IPC::DataReference&, CompletionHandler<void()>&&);

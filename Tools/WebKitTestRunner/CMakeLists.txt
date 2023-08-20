@@ -95,6 +95,10 @@ set(TestRunnerInjectedBundle_PRIVATE_LIBRARIES
 )
 set(TestRunnerInjectedBundle_FRAMEWORKS ${WebKitTestRunner_FRAMEWORKS})
 
+if (NOT USE_SYSTEM_MALLOC)
+    list(APPEND WebKitTestRunnerInjectedBundle_LIBRARIES bmalloc)
+endif ()
+
 set(TestRunnerInjectedBundle_IDL_FILES
     "${WebKitTestRunner_DIR}/InjectedBundle/Bindings/AccessibilityController.idl"
     "${WebKitTestRunner_DIR}/InjectedBundle/Bindings/AccessibilityTextMarker.idl"

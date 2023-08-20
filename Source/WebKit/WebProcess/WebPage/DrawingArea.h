@@ -169,6 +169,9 @@ public:
     virtual void didChangeViewportAttributes(WebCore::ViewportAttributes&&) = 0;
     virtual void deviceOrPageScaleFactorChanged() = 0;
 #endif
+#if PLATFORM(WIN)
+    void didChangeAcceleratedCompositingMode(bool enabled);
+#endif
 
     virtual void adoptLayersFromDrawingArea(DrawingArea&) { }
     virtual void adoptDisplayRefreshMonitorsFromDrawingArea(DrawingArea&) { }

@@ -34,6 +34,7 @@
 #include "WebContextMenuItem.h"
 #include "WebContextMenuItemData.h"
 #include "WebFrameProxy.h"
+#include "WebPageInspectorController.h"
 #include "WebKitAuthenticationRequestPrivate.h"
 #include "WebKitBackForwardListPrivate.h"
 #include "WebKitContextMenuClient.h"
@@ -51,6 +52,7 @@
 #include "WebKitNavigationClient.h"
 #include "WebKitNotificationPrivate.h"
 #include "WebKitPermissionStateQueryPrivate.h"
+#include "WebKitPointerLockPermissionRequest.h"
 #include "WebKitPrivate.h"
 #include "WebKitResponsePolicyDecision.h"
 #include "WebKitScriptDialogPrivate.h"
@@ -91,7 +93,6 @@
 #if PLATFORM(GTK)
 #include "WebKitFaviconDatabasePrivate.h"
 #include "WebKitInputMethodContextImplGtk.h"
-#include "WebKitPointerLockPermissionRequest.h"
 #include "WebKitPrintOperationPrivate.h"
 #include "WebKitWebInspectorPrivate.h"
 #include "WebKitWebViewBasePrivate.h"
@@ -142,6 +143,7 @@ enum {
     CLOSE,
 
     SCRIPT_DIALOG,
+    SCRIPT_DIALOG_HANDLED,
 
     DECIDE_POLICY,
     PERMISSION_REQUEST,
@@ -489,6 +491,9 @@ GRefPtr<WebKitOptionMenu> WebKitWebViewClient::showOptionMenu(WebKitPopupMenu& p
 
 void WebKitWebViewClient::frameDisplayed(WKWPE::View&)
 {
+    if (RefPtr<cairo_surface_t> surface = adoptRef(webkitWebViewBackendTakeScreenshot(m_webView->priv->backend.get())))
+        getPage(m_webView).inspectorController().didPaint(surface.get());
+
     {
         SetForScope inFrameDisplayedGuard(m_webView->priv->inFrameDisplayed, true);
         for (const auto& callback : m_webView->priv->frameDisplayedCallbacks) {
@@ -591,7 +596,7 @@ static gboolean webkitWebViewDecidePolicy(WebKitWebView*, WebKitPolicyDecision* 
 
 static gboolean webkitWebViewPermissionRequest(WebKitWebView*, WebKitPermissionRequest* request)
 {
-#if ENABLE(POINTER_LOCK)
+#if ENABLE(POINTER_LOCK) && PLATFORM(GTK)
     if (WEBKIT_IS_POINTER_LOCK_PERMISSION_REQUEST(request)) {
         webkit_permission_request_allow(request);
         return TRUE;
@@ -1838,6 +1843,15 @@ static void webkit_web_view_class_init(WebKitWebViewClass* webViewClass)
         G_TYPE_BOOLEAN, 1,
         WEBKIT_TYPE_SCRIPT_DIALOG);
 
+    signals[SCRIPT_DIALOG_HANDLED] = g_signal_new(
+        "script-dialog-handled",
+        G_TYPE_FROM_CLASS(webViewClass),
+        G_SIGNAL_RUN_LAST,
+        G_STRUCT_OFFSET(WebKitWebViewClass, script_dialog),
+        g_signal_accumulator_true_handled, nullptr,
+        g_cclosure_marshal_generic,
+        G_TYPE_BOOLEAN, 1);
+
     /**
      * WebKitWebView::decide-policy:
      * @web_view: the #WebKitWebView on which the signal is emitted
@@ -2634,6 +2648,23 @@ void webkitWebViewRunJavaScriptBeforeUnloadConfirm(WebKitWebView* webView, const
     gboolean returnValue;
     g_signal_emit(webView, signals[SCRIPT_DIALOG], 0, webView->priv->currentScriptDialog, &returnValue);
     webkit_script_dialog_unref(webView->priv->currentScriptDialog);
+}
+
+void webkitWebViewHandleJavaScriptDialog(WebKitWebView* webView, bool accept, const String& value) {
+    auto* dialog = webView->priv->currentScriptDialog;
+#if PLATFORM(WPE)
+    dialog->isUserHandled = false;
+#endif
+    webkit_script_dialog_ref(dialog);
+    if (!value.isNull())
+        webkitWebViewSetCurrentScriptDialogUserInput(webView, value);
+    if (accept)
+        webkitWebViewAcceptCurrentScriptDialog(webView);
+    else
+        webkitWebViewDismissCurrentScriptDialog(webView);
+    gboolean returnValue;
+    g_signal_emit(webView, signals[SCRIPT_DIALOG_HANDLED], 0, dialog, &returnValue);
+    webkit_script_dialog_unref(dialog);
 }
 
 bool webkitWebViewIsShowingScriptDialog(WebKitWebView* webView)

@@ -30,6 +30,7 @@
 #include "BackingStore.h"
 #include "DrawingAreaProxy.h"
 #include "LayerTreeContext.h"
+#include <wtf/Function.h>
 #include <wtf/RunLoop.h>
 
 namespace WebCore {
@@ -49,6 +50,10 @@ public:
 
     bool isInAcceleratedCompositingMode() const { return !m_layerTreeContext.isEmpty(); }
     const LayerTreeContext& layerTreeContext() const { return m_layerTreeContext; }
+    void waitForSizeUpdate(Function<void ()>&&);
+#if !PLATFORM(WPE)
+    void captureFrame();
+#endif
 
     void dispatchAfterEnsuringDrawing(CompletionHandler<void()>&&);
 
@@ -70,6 +75,9 @@ private:
     void exitAcceleratedCompositingMode(uint64_t backingStoreStateID, UpdateInfo&&) override;
     void updateAcceleratedCompositingMode(uint64_t backingStoreStateID, const LayerTreeContext&) override;
     void targetRefreshRateDidChange(unsigned) override;
+#if PLATFORM(WIN)
+    void didChangeAcceleratedCompositingMode(bool enabled) override;
+#endif
 
     bool shouldSendWheelEventsToEventDispatcher() const override { return true; }
 
@@ -124,6 +132,7 @@ private:
     // The last size we sent to the web process.
     WebCore::IntSize m_lastSentSize;
 
+    Vector<Function<void ()>> m_callbacks;
 
 #if !PLATFORM(WPE)
     bool m_isBackingStoreDiscardable { true };
@@ -131,6 +140,10 @@ private:
     RunLoop::Timer m_discardBackingStoreTimer;
 #endif
     std::unique_ptr<DrawingMonitor> m_drawingMonitor;
+
+#if PLATFORM(WIN)
+    bool m_isInAcceleratedCompositingMode { false };
+#endif
 };
 
 } // namespace WebKit
