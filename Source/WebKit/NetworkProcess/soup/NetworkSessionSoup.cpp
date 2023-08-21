@@ -99,6 +99,11 @@ void NetworkSessionSoup::clearCredentials(WallTime)
 #endif
 }
 
+static gboolean webSocketAcceptCertificateCallbackIgnoreTLSErrors(GTlsConnection* connection, GTlsCertificate* certificate, GTlsCertificateFlags errors, NetworkSessionSoup* session)
+{
+    return TRUE;
+}
+
 #if USE(SOUP2)
 static gboolean webSocketAcceptCertificateCallback(GTlsConnection* connection, GTlsCertificate* certificate, GTlsCertificateFlags errors, NetworkSessionSoup* session)
 {
@@ -107,11 +112,6 @@ static gboolean webSocketAcceptCertificateCallback(GTlsConnection* connection, G
 
     auto* soupMessage = static_cast<SoupMessage*>(g_object_get_data(G_OBJECT(connection), "wk-soup-message"));
     return !session->soupNetworkSession().checkTLSErrors(soupURIToURL(soup_message_get_uri(soupMessage)), certificate, errors);
-}
-
-static gboolean webSocketAcceptCertificateCallbackIgnoreTLSErrors(GTlsConnection* connection, GTlsCertificate* certificate, GTlsCertificateFlags errors, NetworkSessionSoup* session)
-{
-    return TRUE;
 }
 
 static void webSocketMessageNetworkEventCallback(SoupMessage* soupMessage, GSocketClientEvent event, GIOStream* connection, NetworkSessionSoup* session)

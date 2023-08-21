@@ -935,13 +935,14 @@ WebKitNetworkSession* webkit_web_context_get_network_session_for_automation(WebK
 {
     g_return_val_if_fail(WEBKIT_IS_WEB_CONTEXT(context), nullptr);
 
-#if ENABLE(REMOTE_INSPECTOR)
-    if (!context->priv->automationNetworkSession && context->priv->automationClient)
-        context->priv->automationNetworkSession = adoptGRef(webkit_network_session_new_ephemeral());
-    return context->priv->automationNetworkSession.get();
-#else
+    if (context->priv->automationNetworkSession)
+        return context->priv->automationNetworkSession.get();
     return nullptr;
-#endif
+}
+
+void webkit_web_context_set_network_session_for_automation(WebKitWebContext* context, WebKitNetworkSession* session)
+{
+    context->priv->automationNetworkSession = session;
 }
 #endif
 /**

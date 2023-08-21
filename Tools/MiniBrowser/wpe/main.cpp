@@ -324,7 +324,14 @@ static void activate(GApplication* application, WPEToolingBackends::ViewBackend*
 #if ENABLE_2022_GLIB_API
     WebKitNetworkSession* networkSession = nullptr;
     if (!automationMode) {
-        networkSession = privateMode ? webkit_network_session_new_ephemeral() : webkit_network_session_new(nullptr, nullptr);
+        if (userDataDir) {
+            networkSession = webkit_network_session_new(userDataDir, userDataDir);
+            cookiesFile = g_build_filename(userDataDir, "cookies.txt", nullptr);
+        } else if (inspectorPipe || privateMode || automationMode) {
+            networkSession = webkit_network_session_new_ephemeral();
+        } else {
+            networkSession = webkit_network_session_new(nullptr, nullptr);
+        }        
         webkit_network_session_set_itp_enabled(networkSession, enableITP);
 
         if (proxy) {
@@ -351,6 +358,8 @@ static void activate(GApplication* application, WPEToolingBackends::ViewBackend*
             webkit_cookie_manager_set_persistent_storage(cookieManager, cookiesFile, storageType);
         }
     }
+    auto* webContext = WEBKIT_WEB_CONTEXT(g_object_new(WEBKIT_TYPE_WEB_CONTEXT, "time-zone-override", timeZone, nullptr));
+    webkit_web_context_set_network_session_for_automation(webContext, networkSession);
 #else
     WebKitWebsiteDataManager *manager;
     if (userDataDir) {
