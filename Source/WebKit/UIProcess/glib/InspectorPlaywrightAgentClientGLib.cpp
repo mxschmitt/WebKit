@@ -132,9 +132,9 @@ std::unique_ptr<BrowserContext> InspectorPlaywrightAgentClientGlib::createBrowse
     }
 
 #if ENABLE(2022_GLIB_API)
-    WebKitNetworkSession* networkSession = webkit_network_session_new_ephemeral();
-    webkit_web_context_set_network_session_for_automation(context.get(), networkSession);
-    GRefPtr<WebKitWebsiteDataManager> data_manager = webkit_network_session_get_website_data_manager(networkSession);
+    GRefPtr<WebKitNetworkSession> networkSession = adoptGRef(webkit_network_session_new_ephemeral());
+    webkit_web_context_set_network_session_for_automation(context.get(), networkSession.get());
+    GRefPtr<WebKitWebsiteDataManager> data_manager = webkit_network_session_get_website_data_manager(networkSession.get());
 #endif
 
     auto browserContext = std::make_unique<BrowserContext>();
