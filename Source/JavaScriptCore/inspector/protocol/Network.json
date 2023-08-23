@@ -352,6 +352,13 @@
             "parameters": [
                 { "name": "bytesPerSecondLimit", "type": "integer", "optional": true, "description": "Limits the bytes per second of requests if positive. Removes any limits if zero or not provided." }
             ]
+        },
+        {
+            "name": "setEmulateOfflineState",
+            "description": "Emulate offline state overriding the actual state.",
+            "parameters": [
+                { "name": "offline", "type": "boolean", "description": "True to emulate offline." }
+            ]
         }
     ],
     "events": [

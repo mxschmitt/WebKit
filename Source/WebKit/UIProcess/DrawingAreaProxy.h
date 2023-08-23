@@ -85,6 +85,7 @@ public:
 
     const WebCore::IntSize& size() const { return m_size; }
     bool setSize(const WebCore::IntSize&, const WebCore::IntSize& scrollOffset = { });
+    void waitForSizeUpdate(Function<void ()>&&);
 
 #if USE(COORDINATED_GRAPHICS) || USE(TEXTURE_MAPPER)
     virtual void targetRefreshRateDidChange(unsigned) { }
@@ -158,6 +159,10 @@ private:
 #if USE(COORDINATED_GRAPHICS) || USE(TEXTURE_MAPPER)
     virtual void update(uint64_t /* backingStoreStateID */, UpdateInfo&&) { }
     virtual void exitAcceleratedCompositingMode(uint64_t /* backingStoreStateID */, UpdateInfo&&) { }
+#endif
+
+#if PLATFORM(WIN)
+    virtual void didChangeAcceleratedCompositingMode(bool) { }
 #endif
 };
 

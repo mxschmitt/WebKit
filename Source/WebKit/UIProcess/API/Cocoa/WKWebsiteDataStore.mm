@@ -50,6 +50,7 @@
 #import "_WKResourceLoadStatisticsThirdPartyInternal.h"
 #import "_WKWebsiteDataStoreConfigurationInternal.h"
 #import "_WKWebsiteDataStoreDelegate.h"
+#import <pal/SessionID.h>
 #import <WebCore/Credential.h>
 #import <WebCore/ServiceWorkerClientData.h>
 #import <WebCore/WebCoreObjCExtras.h>
@@ -369,6 +370,11 @@ static WallTime toSystemClockTime(NSDate *date)
     _websiteDataStore->removeData(WebKit::toWebsiteDataTypes(dataTypes), toSystemClockTime(date ? date : [NSDate distantPast]), [completionHandlerCopy] {
         completionHandlerCopy();
     });
+}
+
+- (uint64_t) sessionID
+{
+    return _websiteDataStore->sessionID().toUInt64();
 }
 
 static Vector<WebKit::WebsiteDataRecord> toWebsiteDataRecords(NSArray *dataRecords)

@@ -445,6 +445,8 @@ void WebChromeClient::setResizable(bool resizable)
 
 void WebChromeClient::addMessageToConsole(MessageSource source, MessageLevel level, const String& message, unsigned lineNumber, unsigned columnNumber, const String& sourceID)
 {
+    if (level == MessageLevel::Error)
+        m_page.send(Messages::WebPageProxy::LogToStderr(message));
     // Notify the bundle client.
     m_page.injectedBundleUIClient().willAddMessageToConsole(&m_page, source, level, message, lineNumber, columnNumber, sourceID);
 }

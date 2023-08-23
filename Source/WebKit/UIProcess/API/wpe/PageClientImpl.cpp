@@ -33,8 +33,11 @@
 #include "NativeWebWheelEvent.h"
 #include "TouchGestureController.h"
 #include "WPEView.h"
+#include "WebColorPickerWPE.h"
+#include "WebDateTimePickerWPE.h"
 #include "WebContextMenuProxy.h"
 #include "WebContextMenuProxyWPE.h"
+#include "WebKitDataListSuggestionsDropdown.h"
 #include "WebKitPopupMenu.h"
 #include <WebCore/ActivityState.h>
 #include <WebCore/DOMPasteAccess.h>
@@ -190,7 +193,7 @@ WebCore::IntPoint PageClientImpl::accessibilityScreenToRootView(const WebCore::I
 
 WebCore::IntRect PageClientImpl::rootViewToAccessibilityScreen(const WebCore::IntRect& rect)
 {
-    return rootViewToScreen(rect);    
+    return rootViewToScreen(rect);
 }
 
 void PageClientImpl::doneWithKeyEvent(const NativeWebKeyboardEvent&, bool)
@@ -427,9 +430,33 @@ void PageClientImpl::selectionDidChange()
     m_view.selectionDidChange();
 }
 
+RefPtr<cairo_surface_t> PageClientImpl::takeViewSnapshot()
+{
+    return adoptRef(m_view.client().takeViewScreenshot());
+}
+
 WebKitWebResourceLoadManager* PageClientImpl::webResourceLoadManager()
 {
     return m_view.webResourceLoadManager();
 }
+
+#if ENABLE(DATALIST_ELEMENT)
+RefPtr<WebKit::WebDataListSuggestionsDropdown> PageClientImpl::createDataListSuggestionsDropdown(WebKit::WebPageProxy& page)
+{
+    return WebKitDataListSuggestionsDropdown::create(page);
+}
+#endif
+
+RefPtr<WebColorPicker> PageClientImpl::createColorPicker(WebPageProxy* page, const WebCore::Color& color, const WebCore::IntRect& rect, Vector<WebCore::Color>&&)
+{
+    return WebColorPickerWPE::create(*page, color, rect);
+}
+
+#if ENABLE(DATE_AND_TIME_INPUT_TYPES)
+RefPtr<WebDateTimePicker> PageClientImpl::createDateTimePicker(WebPageProxy& page)
+{
+    return WebDateTimePickerWPE::create(page);
+}
+#endif
 
 } // namespace WebKit
