@@ -275,9 +275,9 @@ void WebPageInspectorInputAgent::dispatchMouseEvent(const String& type, int x, i
     // operating system. This is turned off in the callback.
     m_page.setInterceptDrags(true);
 #if PLATFORM(MAC)
-    ASSERT_UNUSED(eventType, 1);
-    ASSERT_UNUSED(eventButton, 1);
-    ASSERT_UNUSED(eventClickCount, 1);
+    UNUSED_VARIABLE(eventType);
+    UNUSED_VARIABLE(eventButton);
+    UNUSED_VARIABLE(eventClickCount);
     platformDispatchMouseEvent(type, x, y, WTFMove(modifiers), button, WTFMove(clickCount), eventButtons);
 #elif PLATFORM(GTK) || PLATFORM(WPE) || PLATFORM(WIN)
     WallTime timestamp = WallTime::now();

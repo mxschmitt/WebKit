@@ -238,6 +238,8 @@ void InspectorScreencastAgent::scheduleFrameEncoding()
     RunLoop::main().dispatchAfter(Seconds(1.0 / ScreencastEncoder::fps), [agent = WeakPtr { this }]() mutable {
         if (!agent)
             return;
+        if (!agent->m_page.pageClientWeakPtr())
+            return;
 
         agent->encodeFrame();
         agent->scheduleFrameEncoding();

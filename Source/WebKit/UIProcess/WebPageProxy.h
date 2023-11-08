@@ -835,6 +835,7 @@ public:
     void restoreSelectionInFocusedEditableElement();
 
     PageClient& pageClient() const;
+    WeakPtr<PageClient> pageClientWeakPtr() const;
 
     void setViewNeedsDisplay(const WebCore::Region&);
     void requestScroll(const WebCore::FloatPoint& scrollPosition, const WebCore::IntPoint& scrollOrigin, WebCore::ScrollIsAnimated);

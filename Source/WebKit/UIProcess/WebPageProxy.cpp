@@ -824,6 +824,11 @@ PageClient& WebPageProxy::pageClient() const
     return *m_pageClient;
 }
 
+WeakPtr<PageClient> WebPageProxy::pageClientWeakPtr() const
+{
+    return m_pageClient;
+}
+
 PAL::SessionID WebPageProxy::sessionID() const
 {
     return m_websiteDataStore->sessionID();
