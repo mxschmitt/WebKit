@@ -39,6 +39,11 @@
 #include <wtf/RunLoop.h>
 #include <wtf/ThreadSafeRefCounted.h>
 #include <wtf/threads/BinarySemaphore.h>
+#include <WebCore/PageIdentifier.h>
+#include <WebCore/RectEdges.h>
+
+#include "NativeWebWheelEvent.h"
+#include "WebPage.h"
 
 namespace WebCore {
 class PlatformWheelEvent;

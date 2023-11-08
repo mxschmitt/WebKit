@@ -37,6 +37,7 @@
 
 namespace JSC {
 class CallFrame;
+class JSGlobalObject;
 }
 
 namespace WebCore {
@@ -54,28 +55,31 @@ public:
     ~PageRuntimeAgent();
 
     // RuntimeBackendDispatcherHandler
-    Inspector::Protocol::ErrorStringOr<void> enable();
-    Inspector::Protocol::ErrorStringOr<void> disable();
-    Inspector::Protocol::ErrorStringOr<std::tuple<Ref<Inspector::Protocol::Runtime::RemoteObject>, std::optional<bool> /* wasThrown */, std::optional<int> /* savedResultIndex */>> evaluate(const String& expression, const String& objectGroup, std::optional<bool>&& includeCommandLineAPI, std::optional<bool>&& doNotPauseOnExceptionsAndMuteConsole, std::optional<Inspector::Protocol::Runtime::ExecutionContextId>&&, std::optional<bool>&& returnByValue, std::optional<bool>&& generatePreview, std::optional<bool>&& saveResult, std::optional<bool>&& emulateUserGesture);
-    Inspector::Protocol::ErrorStringOr<std::tuple<Ref<Inspector::Protocol::Runtime::RemoteObject>, std::optional<bool> /* wasThrown */>> callFunctionOn(const Inspector::Protocol::Runtime::RemoteObjectId&, const String& expression, RefPtr<JSON::Array>&& arguments, std::optional<bool>&& doNotPauseOnExceptionsAndMuteConsole, std::optional<bool>&& returnByValue, std::optional<bool>&& generatePreview, std::optional<bool>&& emulateUserGesture);
+    Inspector::Protocol::ErrorStringOr<void> enable() override;
+    Inspector::Protocol::ErrorStringOr<void> disable() override;
+    Inspector::Protocol::ErrorStringOr<std::tuple<Ref<Inspector::Protocol::Runtime::RemoteObject>, std::optional<bool> /* wasThrown */, std::optional<int> /* savedResultIndex */>> evaluate(const String& expression, const String& objectGroup, std::optional<bool>&& includeCommandLineAPI, std::optional<bool>&& doNotPauseOnExceptionsAndMuteConsole, std::optional<Inspector::Protocol::Runtime::ExecutionContextId>&&, std::optional<bool>&& returnByValue, std::optional<bool>&& generatePreview, std::optional<bool>&& saveResult, std::optional<bool>&& emulateUserGesture) override;
+    void callFunctionOn(const Inspector::Protocol::Runtime::RemoteObjectId&, const String& functionDeclaration, RefPtr<JSON::Array>&& arguments, std::optional<bool>&& doNotPauseOnExceptionsAndMuteConsole, std::optional<bool>&& returnByValue, std::optional<bool>&& generatePreview, std::optional<bool>&& emulateUserGesture, std::optional<bool>&& awaitPromise, Ref<CallFunctionOnCallback>&&) override;
+    Inspector::Protocol::ErrorStringOr<void> addBinding(const String& name) final;
 
     // InspectorInstrumentation
     void frameNavigated(LocalFrame&);
     void didClearWindowObjectInWorld(LocalFrame&, DOMWrapperWorld&);
+    void didReceiveMainResourceError(LocalFrame&);
+    void bindingCalled(JSC::JSGlobalObject* globalObject, const String& name, const String& arg);
 
 private:
-    Inspector::InjectedScript injectedScriptForEval(Inspector::Protocol::ErrorString&, std::optional<Inspector::Protocol::Runtime::ExecutionContextId>&&);
-    void muteConsole();
-    void unmuteConsole();
+    Inspector::InjectedScript injectedScriptForEval(Inspector::Protocol::ErrorString&, std::optional<Inspector::Protocol::Runtime::ExecutionContextId>&&) override;
+    void muteConsole() override;
+    void unmuteConsole() override;
     void reportExecutionContextCreation();
     void notifyContextCreated(const Inspector::Protocol::Network::FrameId&, JSC::JSGlobalObject*, const DOMWrapperWorld&, SecurityOrigin* = nullptr);
 
     std::unique_ptr<Inspector::RuntimeFrontendDispatcher> m_frontendDispatcher;
     RefPtr<Inspector::RuntimeBackendDispatcher> m_backendDispatcher;
-
     InstrumentingAgents& m_instrumentingAgents;
 
     Page& m_inspectedPage;
+    HashSet<String> m_bindingNames;
 };
 
 } // namespace WebCore

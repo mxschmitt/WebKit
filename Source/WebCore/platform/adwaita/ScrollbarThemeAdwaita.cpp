@@ -43,7 +43,7 @@
 
 namespace WebCore {
 
-static const unsigned scrollbarSize = 21;
+static const unsigned scrollbarSize = 0;
 static const unsigned scrollbarBorderSize = 1;
 static const unsigned thumbBorderSize = 1;
 static const unsigned overlayThumbSize = 3;

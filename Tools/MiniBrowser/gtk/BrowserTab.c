@@ -123,13 +123,16 @@ static gboolean decidePolicy(WebKitWebView *webView, WebKitPolicyDecision *decis
         return FALSE;
 
     WebKitResponsePolicyDecision *responseDecision = WEBKIT_RESPONSE_POLICY_DECISION(decision);
-    if (webkit_response_policy_decision_is_mime_type_supported(responseDecision))
-        return FALSE;
-
     if (!webkit_response_policy_decision_is_main_frame_main_resource(responseDecision))
         return FALSE;
 
-    webkit_policy_decision_download(decision);
+    const gchar* mimeType = webkit_uri_response_get_mime_type(webkit_response_policy_decision_get_response(responseDecision));
+    if (!webkit_response_policy_decision_is_mime_type_supported(responseDecision) && mimeType && mimeType[0] != '\0') {
+        webkit_policy_decision_download(decision);
+        return TRUE;
+    }
+
+    webkit_policy_decision_use(decision);
     return TRUE;
 }
 
@@ -157,6 +160,11 @@ static void loadChanged(WebKitWebView *webView, WebKitLoadEvent loadEvent, Brows
 #else
     gtk_container_foreach(GTK_CONTAINER(tab), (GtkCallback)removeChildIfInfoBar, tab);
 #endif
+}
+
+static gboolean loadFailed()
+{
+    return TRUE;
 }
 
 static GtkWidget *createInfoBarQuestionMessage(const char *title, const char *text)
@@ -720,6 +728,7 @@ static void browserTabConstructed(GObject *gObject)
     g_signal_connect(tab->webView, "notify::is-loading", G_CALLBACK(isLoadingChanged), tab);
     g_signal_connect(tab->webView, "decide-policy", G_CALLBACK(decidePolicy), tab);
     g_signal_connect(tab->webView, "load-changed", G_CALLBACK(loadChanged), tab);
+    g_signal_connect(tab->webView, "load-failed", G_CALLBACK(loadFailed), tab);
     g_signal_connect(tab->webView, "load-failed-with-tls-errors", G_CALLBACK(loadFailedWithTLSerrors), tab);
     g_signal_connect(tab->webView, "permission-request", G_CALLBACK(decidePermissionRequest), tab);
     g_signal_connect(tab->webView, "run-color-chooser", G_CALLBACK(runColorChooserCallback), tab);
@@ -771,6 +780,9 @@ static char *getInternalURI(const char *uri)
     /* Internally we use minibrowser-about: as about: prefix is ignored by WebKit. */
     if (g_str_has_prefix(uri, "about:") && !g_str_equal(uri, "about:blank"))
         return g_strconcat(BROWSER_ABOUT_SCHEME, uri + strlen ("about"), NULL);
+
+    if (!g_str_has_prefix(uri, "http://") && !g_str_has_prefix(uri, "https://") && !g_str_has_prefix(uri, "file://"))
+        return g_strconcat("http://", uri, NULL);
 
     return g_strdup(uri);
 }

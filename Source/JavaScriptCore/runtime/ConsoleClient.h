@@ -69,6 +69,7 @@ public:
     virtual void record(JSGlobalObject*, Ref<Inspector::ScriptArguments>&&) = 0;
     virtual void recordEnd(JSGlobalObject*, Ref<Inspector::ScriptArguments>&&) = 0;
     virtual void screenshot(JSGlobalObject*, Ref<Inspector::ScriptArguments>&&) = 0;
+    virtual void bindingCalled(JSGlobalObject*, const String& name, const String& arg) = 0;
 
 private:
     enum ArgumentRequirement { ArgumentRequired, ArgumentNotRequired };

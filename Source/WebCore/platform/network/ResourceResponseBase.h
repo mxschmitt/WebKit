@@ -86,6 +86,7 @@ public:
         AtomString m_httpStatusText;
         AtomString m_httpVersion;
         HTTPHeaderMap m_httpHeaderFields;
+        HTTPHeaderMap m_httpRequestHeaderFields;
         Box<WebCore::NetworkLoadMetrics> m_networkLoadMetrics;
 
         short m_httpStatusCode;
@@ -279,6 +280,11 @@ protected:
     AtomString m_httpStatusText;
     AtomString m_httpVersion;
     HTTPHeaderMap m_httpHeaderFields;
+
+public:
+    HTTPHeaderMap m_httpRequestHeaderFields;
+
+protected:
     Box<NetworkLoadMetrics> m_networkLoadMetrics;
 
     mutable std::optional<CertificateInfo> m_certificateInfo;
@@ -375,6 +381,7 @@ void ResourceResponseBase::encode(Encoder& encoder) const
     encoder << m_httpStatusText;
     encoder << m_httpVersion;
     encoder << m_httpHeaderFields;
+    encoder << m_httpRequestHeaderFields;
 
     encoder << m_httpStatusCode;
     encoder << m_certificateInfo;
@@ -443,6 +450,12 @@ bool ResourceResponseBase::decode(Decoder& decoder, ResourceResponseBase& respon
     if (!httpHeaderFields)
         return false;
     response.m_httpHeaderFields = WTFMove(*httpHeaderFields);
+
+    std::optional<HTTPHeaderMap> httpRequestHeaderFields;
+    decoder >> httpRequestHeaderFields;
+    if (!httpRequestHeaderFields)
+        return false;
+    response.m_httpRequestHeaderFields = WTFMove(*httpRequestHeaderFields);
 
     std::optional<short> httpStatusCode;
     decoder >> httpStatusCode;

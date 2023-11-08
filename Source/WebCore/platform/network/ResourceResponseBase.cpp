@@ -74,6 +74,7 @@ ResourceResponseBase::ResourceResponseBase(std::optional<ResourceResponseBase::R
     , m_httpStatusText(data ? data->m_httpStatusText : AtomString { })
     , m_httpVersion(data ? data->m_httpVersion : AtomString { })
     , m_httpHeaderFields(data ? data->m_httpHeaderFields : HTTPHeaderMap { })
+    , m_httpRequestHeaderFields(data ? data->m_httpRequestHeaderFields : HTTPHeaderMap { })
     , m_networkLoadMetrics(data ? data->m_networkLoadMetrics : Box<WebCore::NetworkLoadMetrics> { })
     , m_certificateInfo(data ? data->m_certificateInfo : std::nullopt)
     , m_httpStatusCode(data ? data->m_httpStatusCode : 0)
@@ -890,6 +891,7 @@ std::optional<ResourceResponseBase::ResponseData> ResourceResponseBase::getRespo
         m_httpStatusText,
         m_httpVersion,
         m_httpHeaderFields,
+        m_httpRequestHeaderFields,
         m_networkLoadMetrics,
         
         m_httpStatusCode,

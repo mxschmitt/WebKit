@@ -101,4 +101,6 @@ void WorkerConsoleClient::recordEnd(JSC::JSGlobalObject*, Ref<ScriptArguments>&&
 // FIXME: <https://webkit.org/b/243361> Web Inspector: support console screenshots in a Worker
 void WorkerConsoleClient::screenshot(JSC::JSGlobalObject*, Ref<ScriptArguments>&&) { }
 
+void WorkerConsoleClient::bindingCalled(JSC::JSGlobalObject*, const String&, const String&) { }
+
 } // namespace WebCore

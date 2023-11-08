@@ -76,7 +76,9 @@ View::View(struct wpe_view_backend* backend, const API::PageConfiguration& baseC
     if (preferences) {
         preferences->setAcceleratedCompositingEnabled(true);
         preferences->setForceCompositingMode(true);
-        preferences->setThreadedScrollingEnabled(true);
+        // Playwright override begin
+        preferences->setThreadedScrollingEnabled(false);
+        // Playwright override end
     }
 
     auto* pool = configuration->processPool();
@@ -319,6 +321,9 @@ View::View(struct wpe_view_backend* backend, const API::PageConfiguration& baseC
 
 View::~View()
 {
+    wpe_view_backend_set_backend_client(m_backend, nullptr, nullptr);
+    wpe_view_backend_set_input_client(m_backend, nullptr, nullptr);
+
     viewsVector().removeAll(this);
 #if ENABLE(ACCESSIBILITY)
     if (m_accessible)

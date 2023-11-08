@@ -50,6 +50,9 @@ private:
     bool isGLibBasedAPI() override { return true; }
 
     void frameDisplayed(WKWPE::View&) override;
+// Playwright begin
+    cairo_surface_t* takeViewScreenshot() override;
+// Playwright end
     void willStartLoad(WKWPE::View&) override;
     void didChangePageID(WKWPE::View&) override;
     void didReceiveUserMessage(WKWPE::View&, WebKit::UserMessage&&, CompletionHandler<void(WebKit::UserMessage&&)>&&) override;

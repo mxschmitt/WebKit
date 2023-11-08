@@ -43,6 +43,7 @@
 #include <WebCore/LocalFrame.h>
 #include <WebCore/LocalFrameLoaderClient.h>
 #include <WebCore/Page.h>
+#include <WebCore/ResourceLoader.h>
 #include <WebCore/Settings.h>
 #include <WebCore/StorageSessionProvider.h>
 #include <optional>
@@ -366,5 +367,11 @@ void WebCookieJar::removeChangeListener(const String& host, const WebCore::Cooki
     WebProcess::singleton().ensureNetworkProcessConnection().connection().send(Messages::NetworkConnectionToWebProcess::UnsubscribeFromCookieChangeNotifications(host), 0, IPC::SendOption::DispatchMessageEvenWhenWaitingForSyncReply);
 }
 #endif
+
+void WebCookieJar::setCookieFromResponse(ResourceLoader& loader, const String& setCookieValue)
+{
+    const auto& request = loader.request();
+    WebProcess::singleton().ensureNetworkProcessConnection().connection().send(Messages::NetworkConnectionToWebProcess::SetCookieFromResponse(request.firstPartyForCookies(), SameSiteInfo::create(request), request.url(), setCookieValue), 0);
+}
 
 } // namespace WebKit

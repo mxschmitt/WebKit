@@ -89,6 +89,7 @@ private:
 #else
     bool paint(cairo_t*, const WebCore::IntRect&) override;
 #endif
+    cairo_surface_t* surface() override;
     void unrealize() override;
     void update(const LayerTreeContext&) override;
 
@@ -178,6 +179,7 @@ private:
 #else
         virtual void paint(GtkWidget*, cairo_t*, const WebCore::IntRect&) const = 0;
 #endif
+        virtual cairo_surface_t* surfaceForScreencast() = 0;
 
         Buffer* buffer() const { return m_buffer.get(); }
 
@@ -202,6 +204,7 @@ private:
 #else
         void paint(GtkWidget*, cairo_t*, const WebCore::IntRect&) const override;
 #endif
+        cairo_surface_t* surfaceForScreencast() override { return nullptr; }
 
         unsigned m_textureID { 0 };
 #if USE(GTK4)
@@ -223,8 +226,10 @@ private:
 #else
         void paint(GtkWidget*, cairo_t*, const WebCore::IntRect&) const override;
 #endif
+        cairo_surface_t* surfaceForScreencast() override;
 
         RefPtr<cairo_surface_t> m_surface;
+        RefPtr<cairo_surface_t> m_flippedSurface;
     };
 
     GRefPtr<GdkGLContext> m_gdkGLContext;

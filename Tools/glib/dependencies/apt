@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-# If the package $1 is available, prints it. Otherwise prints $2.
+# If the package $1 is available, prints it. Otherwise if package $2 is available, prints $2.
 # Useful for handling when a package is renamed on new versions of Debian/Ubuntu.
 aptIfElse() {
     if apt-cache show $1 &>/dev/null; then
         echo $1
-    else
+    elif apt-cache show $2 &>/dev/null; then
         echo $2
     fi
 }
@@ -71,10 +71,12 @@ PACKAGES=(
     $(aptIfExists libwpe-1.0-dev)
     $(aptIfExists libwpebackend-fdo-1.0-dev)
     libxml2-utils
+    libxcb-glx0-dev
     libxslt1-dev
     mesa-common-dev
     ninja-build
     patch
+    patchelf
     ruby
 
     # These are dependencies necessary for running tests.

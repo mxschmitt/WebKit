@@ -26,6 +26,7 @@
 #pragma once
 
 #include "APIObject.h"
+#include "APIWebsitePolicies.h"
 #include "MessageReceiver.h"
 #include "MessageSender.h"
 #include <wtf/CheckedRef.h>
@@ -34,6 +35,24 @@
 #include <wtf/ProcessID.h>
 #include <wtf/UniqueRef.h>
 #include <wtf/WeakHashSet.h>
+#include "InspectorDialogAgent.h"
+#include "WebProtectionSpace.h"
+#include <WebCore/Credential.h>
+#include <WebCore/IntRect.h>
+#include "WebPageDiagnosticLoggingClient.h"
+#include "WebPageInjectedBundleClient.h"
+#include "WebPreferences.h"
+#include "ViewSnapshotStore.h"
+
+OBJC_CLASS NSPasteboard;
+
+#if PLATFORM(WPE)
+#include "ArgumentCodersWPE.h"
+#endif
+
+#if PLATFORM(GTK) || PLATFORM(WPE)
+#include <WebCore/SelectionData.h>
+#endif
 
 namespace API {
 class Attachment;
@@ -94,6 +113,7 @@ class DestinationColorSpace;
 class DragData;
 class FloatPoint;
 class FloatQuad;
+typedef HashMap<unsigned, Vector<String>> DragDataMap;
 class FloatRect;
 class FloatSize;
 class FontAttributeChanges;
@@ -385,6 +405,7 @@ class WebExtensionController;
 class WebFramePolicyListenerProxy;
 class WebFrameProxy;
 class WebFullScreenManagerProxy;
+class WebFullScreenManagerProxyClient;
 class WebInspectorUIProxy;
 class WebKeyboardEvent;
 class WebMouseEvent;
@@ -595,6 +616,8 @@ public:
     void setControlledByAutomation(bool);
 
     WebPageInspectorController& inspectorController() { return *m_inspectorController; }
+    InspectorDialogAgent* inspectorDialogAgent() { return m_inspectorDialogAgent; }
+    void setInspectorDialogAgent(InspectorDialogAgent * dialogAgent) { m_inspectorDialogAgent = dialogAgent; }
 
 #if PLATFORM(IOS_FAMILY)
     void showInspectorIndication();
@@ -628,6 +651,7 @@ public:
     bool hasSleepDisabler() const;
 
 #if ENABLE(FULLSCREEN_API)
+    void setFullScreenManagerClientOverride(std::unique_ptr<WebFullScreenManagerProxyClient>&&);
     WebFullScreenManagerProxy* fullScreenManager();
 
     API::FullscreenClient& fullscreenClient() const { return *m_fullscreenClient; }
@@ -716,6 +740,11 @@ public:
 
     void setPageLoadStateObserver(std::unique_ptr<PageLoadStateObserverBase>&&);
 
+    void setAuthCredentialsForAutomation(std::optional<WebCore::Credential>&&, std::optional<URL>&&);
+    void setPermissionsForAutomation(const HashMap<String, HashSet<String>>&);
+    void setActiveForAutomation(std::optional<bool> active);
+    void logToStderr(const String& str);
+
     void initializeWebPage();
     void setDrawingArea(std::unique_ptr<DrawingAreaProxy>&&);
 
@@ -742,6 +771,7 @@ public:
     void addPlatformLoadParameters(WebProcessProxy&, LoadParameters&);
     RefPtr<API::Navigation> loadRequest(WebCore::ResourceRequest&&);
     RefPtr<API::Navigation> loadRequest(WebCore::ResourceRequest&&, WebCore::ShouldOpenExternalURLsPolicy, API::Object* userData = nullptr);
+    RefPtr<API::Navigation> loadRequestForInspector(WebCore::ResourceRequest&&, WebFrameProxy*);
     RefPtr<API::Navigation> loadFile(const String& fileURL, const String& resourceDirectoryURL, bool isAppInitiated = true, API::Object* userData = nullptr);
     RefPtr<API::Navigation> loadData(const IPC::DataReference&, const String& MIMEType, const String& encoding, const String& baseURL, API::Object* userData = nullptr);
     RefPtr<API::Navigation> loadData(const IPC::DataReference&, const String& MIMEType, const String& encoding, const String& baseURL, API::Object* userData, WebCore::ShouldOpenExternalURLsPolicy);
@@ -1312,6 +1342,7 @@ public:
 #endif
 
     void pageScaleFactorDidChange(double);
+    void viewScaleFactorDidChange(double);
     void pluginScaleFactorDidChange(double);
     void pluginZoomFactorDidChange(double);
 
@@ -1401,13 +1432,19 @@ public:
     void didStartDrag();
     void dragCancelled();
     void setDragCaretRect(const WebCore::IntRect&);
+    void setInterceptDrags(bool shouldIntercept);
+    bool cancelDragIfNeeded();
 #if PLATFORM(COCOA)
     void startDrag(const WebCore::DragItem&, ShareableBitmapHandle&& dragImageHandle);
     void setPromisedDataForImage(const String& pasteboardName, SharedMemoryHandle&& imageHandle, const String& filename, const String& extension,
         const String& title, const String& url, const String& visibleURL, SharedMemoryHandle&& archiveHandle, const String& originIdentifier);
+    void releaseInspectorDragPasteboard();
 #endif
-#if PLATFORM(GTK)
+#if PLATFORM(GTK) || PLATFORM(WPE)
     void startDrag(WebCore::SelectionData&&, OptionSet<WebCore::DragOperation>, std::optional<ShareableBitmapHandle>&& dragImage, WebCore::IntPoint&& dragImageHotspot);
+#endif
+#if PLATFORM(WIN)
+    void startDrag(WebCore::DragDataMap&& dragDataMap);
 #endif
 #endif
 
@@ -1628,6 +1665,7 @@ public:
     void setViewportSizeForCSSViewportUnits(const WebCore::FloatSize&);
     WebCore::FloatSize viewportSizeForCSSViewportUnits() const;
 
+    bool shouldSendAutomationCredentialsForProtectionSpace(const WebProtectionSpace&);
     void didReceiveAuthenticationChallengeProxy(Ref<AuthenticationChallengeProxy>&&, NegotiatedLegacyTLS);
     void negotiatedLegacyTLS();
     void didNegotiateModernTLS(const URL&);
@@ -1662,6 +1700,8 @@ public:
 
 #if PLATFORM(COCOA) || PLATFORM(GTK)
     RefPtr<ViewSnapshot> takeViewSnapshot(std::optional<WebCore::IntRect>&&);
+#elif PLATFORM(WPE)
+    RefPtr<ViewSnapshot> takeViewSnapshot(std::optional<WebCore::IntRect>&&) { return nullptr; }
 #endif
 
 #if ENABLE(WEB_CRYPTO)
@@ -2487,6 +2527,7 @@ private:
     RefPtr<API::Navigation> launchProcessForReload();
 
     void requestNotificationPermission(const String& originString, CompletionHandler<void(bool allowed)>&&);
+    std::optional<bool> permissionForAutomation(const String& origin, const String& permission) const;
 
     void didChangeContentSize(const WebCore::IntSize&);
     void didChangeIntrinsicContentSize(const WebCore::IntSize&);
@@ -2953,8 +2994,10 @@ private:
     String m_overrideContentSecurityPolicy;
 
     RefPtr<WebInspectorUIProxy> m_inspector;
+    InspectorDialogAgent* m_inspectorDialogAgent { nullptr };
 
 #if ENABLE(FULLSCREEN_API)
+    std::unique_ptr<WebFullScreenManagerProxyClient> m_fullScreenManagerClientOverride;
     std::unique_ptr<WebFullScreenManagerProxy> m_fullScreenManager;
     std::unique_ptr<API::FullscreenClient> m_fullscreenClient;
 #endif
@@ -3136,6 +3179,22 @@ private:
     std::optional<WebCore::DragOperation> m_currentDragOperation;
     bool m_currentDragIsOverFileInput { false };
     unsigned m_currentDragNumberOfFilesToBeAccepted { 0 };
+    WebCore::IntRect m_currentDragCaretRect;
+    WebCore::IntRect m_currentDragCaretEditableElementRect;
+    bool m_interceptDrags { false };
+    OptionSet<WebCore::DragOperation> m_dragSourceOperationMask;
+    WebCore::IntPoint m_lastMousePositionForDrag;
+    int m_dragEventsQueued = 0;
+#if PLATFORM(COCOA)
+    std::optional<String> m_dragSelectionData;
+    String m_overrideDragPasteboardName;
+#endif
+#if PLATFORM(GTK) || PLATFORM(WPE)
+    std::optional<WebCore::SelectionData> m_dragSelectionData;
+#endif
+#if PLATFORM(WIN)
+    std::optional<WebCore::DragDataMap> m_dragSelectionData;
+#endif
 #endif
 
     bool m_mainFrameHasHorizontalScrollbar { false };
@@ -3306,6 +3365,10 @@ private:
         RefPtr<API::Object> messageBody;
     };
     Vector<InjectedBundleMessage> m_pendingInjectedBundleMessages;
+    std::optional<WebCore::Credential> m_credentialsForAutomation;
+    std::optional<URL> m_authOriginForAutomation;
+    HashMap<String, HashSet<String>> m_permissionsForAutomation;
+    std::optional<bool> m_activeForAutomation;
         
 #if PLATFORM(IOS_FAMILY) && ENABLE(DEVICE_ORIENTATION)
     std::unique_ptr<WebDeviceOrientationUpdateProviderProxy> m_webDeviceOrientationUpdateProviderProxy;

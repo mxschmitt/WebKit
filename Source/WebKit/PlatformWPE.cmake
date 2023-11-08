@@ -193,6 +193,7 @@ set(WPE_API_HEADER_TEMPLATES
     ${WEBKIT_DIR}/UIProcess/API/glib/WebKitWindowProperties.h.in
     ${WEBKIT_DIR}/UIProcess/API/glib/WebKitWebsitePolicies.h.in
     ${WEBKIT_DIR}/UIProcess/API/glib/webkit.h.in
+    ${WEBKIT_DIR}/UIProcess/API/gtk/WebKitPointerLockPermissionRequest.h.in
 )
 
 if (ENABLE_2022_GLIB_API)
@@ -394,7 +395,16 @@ list(APPEND WebKit_SYSTEM_INCLUDE_DIRECTORIES
     ${GIO_UNIX_INCLUDE_DIRS}
     ${GLIB_INCLUDE_DIRS}
     ${LIBSOUP_INCLUDE_DIRS}
+# Playwright begin
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/include"
+# Playwright end
 )
+
+# Playwright begin
+list(APPEND WebKit_PRIVATE_INCLUDE_DIRECTORIES
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libwebm"
+)
+# Playwright end
 
 list(APPEND WebKit_LIBRARIES
     Cairo::Cairo

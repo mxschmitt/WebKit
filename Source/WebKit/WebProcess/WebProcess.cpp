@@ -87,6 +87,7 @@
 #include "WebsiteData.h"
 #include "WebsiteDataStoreParameters.h"
 #include "WebsiteDataType.h"
+#include <JavaScriptCore/IdentifiersFactory.h>
 #include <JavaScriptCore/JSLock.h>
 #include <JavaScriptCore/MemoryStatistics.h>
 #include <JavaScriptCore/WasmFaultSignalHandler.h>
@@ -362,6 +363,8 @@ void WebProcess::initializeProcess(const AuxiliaryProcessInitializationParameter
     
     platformInitializeProcess(parameters);
     updateCPULimit();
+
+    Inspector::IdentifiersFactory::initializeWithProcessID(parameters.processIdentifier->toUInt64());
 }
 
 void WebProcess::initializeConnection(IPC::Connection* connection)

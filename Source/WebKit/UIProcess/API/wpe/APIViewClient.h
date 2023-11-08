@@ -26,6 +26,7 @@
 #pragma once
 
 #include "UserMessage.h"
+#include <cairo.h>
 #include <wtf/CompletionHandler.h>
 
 typedef struct OpaqueJSContext* JSGlobalContextRef;
@@ -49,6 +50,9 @@ public:
     virtual bool isGLibBasedAPI() { return false; }
 
     virtual void frameDisplayed(WKWPE::View&) { }
+// Playwright begin
+    virtual cairo_surface_t* takeViewScreenshot() { return nullptr; }
+// Playwright end
     virtual void willStartLoad(WKWPE::View&) { }
     virtual void didChangePageID(WKWPE::View&) { }
     virtual void didReceiveUserMessage(WKWPE::View&, WebKit::UserMessage&&, CompletionHandler<void(WebKit::UserMessage&&)>&& completionHandler) { completionHandler(WebKit::UserMessage()); }

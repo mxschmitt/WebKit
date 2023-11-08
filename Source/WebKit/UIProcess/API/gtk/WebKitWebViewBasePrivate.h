@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include "AcceleratedBackingStore.h"
 #include "APIPageConfiguration.h"
 #include "InputMethodState.h"
 #include "SameDocumentNavigationType.h"
@@ -102,7 +103,7 @@ void webkitWebViewBaseStartDrag(WebKitWebViewBase*, WebCore::SelectionData&&, Op
 void webkitWebViewBaseDidPerformDragControllerAction(WebKitWebViewBase*);
 #endif
 
-RefPtr<WebKit::ViewSnapshot> webkitWebViewBaseTakeViewSnapshot(WebKitWebViewBase*, std::optional<WebCore::IntRect>&&);
+RefPtr<WebKit::ViewSnapshot> webkitWebViewBaseTakeViewSnapshot(WebKitWebViewBase*, std::optional<WebCore::IntRect>&&, bool nominalResolution);
 void webkitWebViewBaseSetEnableBackForwardNavigationGesture(WebKitWebViewBase*, bool enabled);
 WebKit::ViewGestureController* webkitWebViewBaseViewGestureController(WebKitWebViewBase*);
 
@@ -139,3 +140,5 @@ void webkitWebViewBaseSetShouldNotifyFocusEvents(WebKitWebViewBase*, bool);
 void webkitWebViewBaseToplevelWindowIsActiveChanged(WebKitWebViewBase*, bool);
 void webkitWebViewBaseToplevelWindowStateChanged(WebKitWebViewBase*, uint32_t, uint32_t);
 void webkitWebViewBaseToplevelWindowMonitorChanged(WebKitWebViewBase*, GdkMonitor*);
+
+WebKit::AcceleratedBackingStore* webkitWebViewBaseGetAcceleratedBackingStore(WebKitWebViewBase*);

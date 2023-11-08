@@ -190,6 +190,10 @@
 #include <WebCore/AppKitControlSystemImage.h>
 #endif
 
+#if PLATFORM(WPE)
+#include "ArgumentCodersWPE.h"
+#endif
+
 // FIXME: Seems like we could use std::tuple to cut down the code below a lot!
 
 namespace IPC {

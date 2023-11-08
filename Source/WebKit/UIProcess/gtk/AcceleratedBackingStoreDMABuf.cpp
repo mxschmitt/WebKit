@@ -413,6 +413,25 @@ void AcceleratedBackingStoreDMABuf::RendererCairo::paint(GtkWidget* widget, cair
 }
 #endif
 
+cairo_surface_t* AcceleratedBackingStoreDMABuf::RendererCairo::surfaceForScreencast()
+{
+    if (!m_surface)
+        return nullptr;
+
+    // The original surface is upside down, so we flip it to match orientation in other accelerated backing stores.
+    m_flippedSurface = adoptRef(cairo_image_surface_create(CAIRO_FORMAT_ARGB32, cairo_image_surface_get_width(m_surface.get()), cairo_image_surface_get_height(m_surface.get())));
+    {
+        RefPtr<cairo_t> cr = adoptRef(cairo_create(m_flippedSurface.get()));
+        cairo_matrix_t transform;
+        cairo_matrix_init(&transform, 1, 0, 0, -1, 0, cairo_image_surface_get_height(m_surface.get()) / m_deviceScaleFactor);
+        cairo_transform(cr.get(), &transform);
+        cairo_set_source_surface(cr.get(), m_surface.get(), 0, 0);
+        cairo_paint(cr.get());
+    }
+    cairo_surface_flush(m_flippedSurface.get());
+    return m_flippedSurface.get();
+}
+
 void AcceleratedBackingStoreDMABuf::didCreateBuffer(uint64_t id, const WebCore::IntSize& size, uint32_t format, Vector<WTF::UnixFileDescriptor>&& fds, Vector<uint32_t>&& offsets, Vector<uint32_t>&& strides, uint64_t modifier)
 {
 #if USE(GBM)
@@ -575,6 +594,15 @@ bool AcceleratedBackingStoreDMABuf::paint(cairo_t* cr, const WebCore::IntRect& c
     return true;
 }
 #endif
+
+cairo_surface_t* AcceleratedBackingStoreDMABuf::surface()
+{
+    if (!m_renderer)
+        return nullptr;
+
+    return m_renderer->surfaceForScreencast();
+}
+
 
 } // namespace WebKit
 

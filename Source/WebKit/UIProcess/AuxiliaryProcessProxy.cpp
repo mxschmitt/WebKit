@@ -144,7 +144,11 @@ void AuxiliaryProcessProxy::getLaunchOptions(ProcessLauncher::LaunchOptions& lau
         launchOptions.processCmdPrefix = String::fromUTF8(processCmdPrefix);
 #endif // ENABLE(DEVELOPER_MODE) && (PLATFORM(GTK) || PLATFORM(WPE))
 
+/* playwright revert 50f8fee */
+#if 0
     populateOverrideLanguagesLaunchOptions(launchOptions);
+#endif
+/* end playwright revert 50f8fee */
 
     platformGetLaunchOptions(launchOptions);
 }

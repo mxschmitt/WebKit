@@ -73,8 +73,8 @@ $(IDL_FILE_NAMES_LIST) : $(UICONTEXT_INTERFACES:%=%.idl)
 JS%.h JS%.cpp : %.idl $(SCRIPTS) $(IDL_ATTRIBUTES_FILE) $(IDL_FILE_NAMES_LIST) $(FEATURE_AND_PLATFORM_DEFINE_DEPENDENCIES)
 	@echo Generating bindings for $*...
 	$(PERL) -I $(WebCoreScripts) -I $(UISCRIPTCONTEXT_DIR) -I $(DumpRenderTree)/Bindings $(WebCoreScripts)/generate-bindings.pl --defines "$(FEATURE_AND_PLATFORM_DEFINES)" --idlFileNamesList $(IDL_FILE_NAMES_LIST) --outputDir . --generator DumpRenderTree --idlAttributesFile $(IDL_ATTRIBUTES_FILE) $<
-#
 
+#
 
 WEB_PREFERENCES_GENERATED_FILES = \
     TestOptionsGeneratedWebKitLegacyKeyMapping.cpp \

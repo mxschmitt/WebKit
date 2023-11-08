@@ -187,9 +187,13 @@ public:
 
     WEBCORE_EXPORT virtual void detachFromFrame();
 
+    virtual void replacedByFragmentNavigation(LocalFrame&) { }
+
     WEBCORE_EXPORT FrameLoader* frameLoader() const;
     WEBCORE_EXPORT SubresourceLoader* mainResourceLoader() const;
     WEBCORE_EXPORT RefPtr<FragmentedSharedBuffer> mainResourceData() const;
+
+    virtual uint64_t loaderIDForInspector() { return 0; }
     
     DocumentWriter& writer() const { return m_writer; }
 

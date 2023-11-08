@@ -24,7 +24,6 @@
     <dependencies>
       <dep package="wpebackend-fdo"/>
       <dep package="icu"/>
-      <dep package="openxr"/>
       <dep package="libjxl"/>
       <dep package="libvpx"/>
       <dep package="glib"/>
