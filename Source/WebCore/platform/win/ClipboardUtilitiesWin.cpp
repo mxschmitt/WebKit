@@ -692,7 +692,7 @@ template<typename T> void getStringData(IDataObject* data, FORMATETC* format, Ve
         return;
     // The string here should be null terminated, but it could come from another app so lets lock it
     // to the size to prevent an overflow.
-    String rawString = String(static_cast<T*>(GlobalLock(store.hGlobal)), ::GlobalSize(store.hGlobal) / sizeof(T));
+    String rawString = String({ static_cast<T*>(GlobalLock(store.hGlobal)), ::GlobalSize(store.hGlobal) / sizeof(T) });
     dataStrings.append(String::fromUTF8(rawString.utf8().data()));
     GlobalUnlock(store.hGlobal);
     ReleaseStgMedium(&store);

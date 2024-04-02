@@ -49,7 +49,7 @@ DragImageRef dissolveDragImageToFraction(DragImageRef image, float)
 
 DragImageRef createDragImageFromImage(Image* image, ImageOrientation)
 {
-    return image->nativeImageForCurrentFrame()->platformImage();
+    return image->currentNativeImage()->platformImage();
 }
 
 
