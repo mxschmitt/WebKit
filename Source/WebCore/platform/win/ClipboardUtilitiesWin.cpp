@@ -690,16 +690,10 @@ template<typename T> void getStringData(IDataObject* data, FORMATETC* format, Ve
     STGMEDIUM store;
     if (FAILED(data->GetData(format, &store)))
         return;
-<<<<<<< HEAD
-    dataStrings.append(String({ static_cast<T*>(GlobalLock(store.hGlobal)), ::GlobalSize(store.hGlobal) / sizeof(T) }));
-||||||| parent of b0fa7c52d79a (chore(webkit): bootstrap build #1994)
-    dataStrings.append(String(static_cast<T*>(GlobalLock(store.hGlobal)), ::GlobalSize(store.hGlobal) / sizeof(T)));
-=======
     // The string here should be null terminated, but it could come from another app so lets lock it
     // to the size to prevent an overflow.
     String rawString = String(static_cast<T*>(GlobalLock(store.hGlobal)), ::GlobalSize(store.hGlobal) / sizeof(T));
     dataStrings.append(String::fromUTF8(rawString.utf8().data()));
->>>>>>> b0fa7c52d79a (chore(webkit): bootstrap build #1994)
     GlobalUnlock(store.hGlobal);
     ReleaseStgMedium(&store);
 }

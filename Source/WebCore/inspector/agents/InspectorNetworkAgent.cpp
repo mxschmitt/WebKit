@@ -338,16 +338,8 @@ static Ref<Inspector::Protocol::Network::Request> buildObjectForResourceRequest(
         .release();
 
     if (request.httpBody() && !request.httpBody()->isEmpty()) {
-<<<<<<< HEAD
-        auto bytes = request.httpBody()->flatten();
-        requestObject->setPostData(String::fromUTF8WithLatin1Fallback(bytes.span()));
-||||||| parent of b0fa7c52d79a (chore(webkit): bootstrap build #1994)
-        auto bytes = request.httpBody()->flatten();
-        requestObject->setPostData(String::fromUTF8WithLatin1Fallback(bytes.data(), bytes.size()));
-=======
         Vector<uint8_t> bytes = request.httpBody()->flatten();
         requestObject->setPostData(base64EncodeToString(bytes));
->>>>>>> b0fa7c52d79a (chore(webkit): bootstrap build #1994)
     }
 
     if (resourceLoader) {

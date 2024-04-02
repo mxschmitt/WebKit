@@ -62,57 +62,13 @@ void PlatformPasteboard::performAsDataOwner(DataOwnerType, Function<void()>&& ac
 
 void PlatformPasteboard::getTypes(Vector<String>& types) const
 {
-<<<<<<< HEAD
-    struct wpe_pasteboard_string_vector pasteboardTypes = { nullptr, 0 };
-    wpe_pasteboard_get_types(m_pasteboard, &pasteboardTypes);
-
-    for (unsigned i = 0; i < pasteboardTypes.length; ++i) {
-        auto& typeString = pasteboardTypes.strings[i];
-        types.append(String({ typeString.data, typeString.length }));
-    }
-
-    wpe_pasteboard_string_vector_free(&pasteboardTypes);
-||||||| parent of b0fa7c52d79a (chore(webkit): bootstrap build #1994)
-    struct wpe_pasteboard_string_vector pasteboardTypes = { nullptr, 0 };
-    wpe_pasteboard_get_types(m_pasteboard, &pasteboardTypes);
-
-    for (unsigned i = 0; i < pasteboardTypes.length; ++i) {
-        auto& typeString = pasteboardTypes.strings[i];
-        types.append(String(typeString.data, typeString.length));
-    }
-
-    wpe_pasteboard_string_vector_free(&pasteboardTypes);
-=======
     for (const auto& type : sharedPasteboard().keys())
         types.append(type);
->>>>>>> b0fa7c52d79a (chore(webkit): bootstrap build #1994)
 }
 
 String PlatformPasteboard::readString(size_t, const String& type) const
 {
-<<<<<<< HEAD
-    struct wpe_pasteboard_string string = { nullptr, 0 };
-    wpe_pasteboard_get_string(m_pasteboard, type.utf8().data(), &string);
-    if (!string.length)
-        return String();
-
-    String returnValue({ string.data, string.length });
-
-    wpe_pasteboard_string_free(&string);
-    return returnValue;
-||||||| parent of b0fa7c52d79a (chore(webkit): bootstrap build #1994)
-    struct wpe_pasteboard_string string = { nullptr, 0 };
-    wpe_pasteboard_get_string(m_pasteboard, type.utf8().data(), &string);
-    if (!string.length)
-        return String();
-
-    String returnValue(string.data, string.length);
-
-    wpe_pasteboard_string_free(&string);
-    return returnValue;
-=======
     return sharedPasteboard().get(type);
->>>>>>> b0fa7c52d79a (chore(webkit): bootstrap build #1994)
 }
 
 void PlatformPasteboard::write(const PasteboardWebContent& content)

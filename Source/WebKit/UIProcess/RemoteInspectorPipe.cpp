@@ -205,7 +205,7 @@ void RemoteInspectorPipe::workerRun()
                 break;
 
             if (end > start) {
-                String message = String::fromUTF8(line.data() + start, end - start);
+                String message = String::fromUTF8({ line.data() + start, end - start });
                 RunLoop::main().dispatch([this, message = WTFMove(message)] {
                     if (!m_terminated)
                         m_playwrightAgent.dispatchMessageFromFrontend(message);
