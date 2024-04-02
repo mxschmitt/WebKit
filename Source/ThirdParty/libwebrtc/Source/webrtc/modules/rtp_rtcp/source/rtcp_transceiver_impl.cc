@@ -16,6 +16,7 @@
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
 #include "absl/types/optional.h"
+#include "api/call/transport.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "modules/rtp_rtcp/include/receive_statistics.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"

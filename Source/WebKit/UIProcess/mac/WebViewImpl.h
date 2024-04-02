@@ -521,6 +521,9 @@ ALLOW_DEPRECATED_DECLARATIONS_END
     void provideDataForPasteboard(NSPasteboard *, NSString *type);
     NSArray *namesOfPromisedFilesDroppedAtDestination(NSURL *dropDestination);
 
+// Paywright begin
+    RetainPtr<CGImageRef> takeSnapshotForAutomation();
+// Paywright end
     RefPtr<ViewSnapshot> takeViewSnapshot();
     void saveBackForwardSnapshotForCurrentItem();
     void saveBackForwardSnapshotForItem(WebBackForwardListItem&);

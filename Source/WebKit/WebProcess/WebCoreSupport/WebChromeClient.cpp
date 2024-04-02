@@ -468,6 +468,8 @@ void WebChromeClient::addMessageToConsole(MessageSource source, MessageLevel lev
 {
     // Notify the bundle client.
     auto page = protectedPage();
+    if (level == MessageLevel::Error)
+        page->send(Messages::WebPageProxy::LogToStderr(message));
     page->injectedBundleUIClient().willAddMessageToConsole(page.ptr(), source, level, message, lineNumber, columnNumber, sourceID);
 }
 

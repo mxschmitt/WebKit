@@ -65,10 +65,14 @@
 #include "Event.h"
 #include "EventListener.h"
 #include "EventNames.h"
+#include "File.h"
+#include "FileList.h"
 #include "FrameTree.h"
 #include "FullscreenManager.h"
+#include "FloatQuad.h"
 #include "HTMLElement.h"
 #include "HTMLFrameOwnerElement.h"
+#include "HTMLInputElement.h"
 #include "HTMLMediaElement.h"
 #include "HTMLNames.h"
 #include "HTMLScriptElement.h"
@@ -102,12 +106,14 @@
 #include "Pasteboard.h"
 #include "PseudoElement.h"
 #include "RenderGrid.h"
+#include "RenderLayer.h"
 #include "RenderObject.h"
 #include "RenderStyle.h"
 #include "RenderStyleConstants.h"
 #include "ScriptController.h"
 #include "SelectorChecker.h"
 #include "ShadowRoot.h"
+#include "SharedBuffer.h"
 #include "StaticNodeList.h"
 #include "StyleProperties.h"
 #include "StyleResolver.h"
@@ -145,7 +151,8 @@ using namespace HTMLNames;
 static const size_t maxTextSize = 10000;
 static const UChar horizontalEllipsisUChar[] = { horizontalEllipsis, 0 };
 
-static std::optional<Color> parseColor(RefPtr<JSON::Object>&& colorObject)
+// static
+std::optional<Color> InspectorDOMAgent::parseColor(RefPtr<JSON::Object>&& colorObject)
 {
     if (!colorObject)
         return std::nullopt;
@@ -164,7 +171,7 @@ static std::optional<Color> parseColor(RefPtr<JSON::Object>&& colorObject)
 
 static std::optional<Color> parseRequiredConfigColor(const String& fieldName, JSON::Object& configObject)
 {
-    return parseColor(configObject.getObject(fieldName));
+    return InspectorDOMAgent::parseColor(configObject.getObject(fieldName));
 }
 
 static Color parseOptionalConfigColor(const String& fieldName, JSON::Object& configObject)
@@ -190,6 +197,20 @@ static bool parseQuad(Ref<JSON::Array>&& quadArray, FloatQuad* quad)
     quad->setP4(FloatPoint(coordinates[6], coordinates[7]));
 
     return true;
+}
+
+static void CollectQuads(Node* node, Vector<FloatQuad>& quads)
+{
+    Element* element = dynamicDowncast<Element>(node);
+    if (element && element->hasDisplayContents()) {
+        // display:contents elements do not render themselves, so we look into children.
+        for (auto& child : composedTreeChildren(*element))
+            CollectQuads(&child, quads);
+        return;
+    }
+    RenderObject* renderer = node->renderer();
+    if (renderer)
+        renderer->absoluteQuads(quads);
 }
 
 class RevalidateStyleAttributeTask {
@@ -464,6 +485,20 @@ Node* InspectorDOMAgent::assertNode(Inspector::Protocol::ErrorString& errorStrin
         return nullptr;
     }
     return node.get();
+}
+
+Node* InspectorDOMAgent::assertNode(Protocol::ErrorString& errorString, std::optional<Protocol::DOM::NodeId>&& nodeId, const String& objectId)
+{
+    Node* node = nullptr;
+    if (nodeId) {
+        node = assertNode(errorString, *nodeId);
+    } else if (!!objectId) {
+        node = nodeForObjectId(objectId);
+        if (!node)
+            errorString = "Missing node for given objectId"_s;
+    } else
+        errorString = "Either nodeId or objectId must be specified"_s;
+    return node;
 }
 
 Document* InspectorDOMAgent::assertDocument(Inspector::Protocol::ErrorString& errorString, Inspector::Protocol::DOM::NodeId nodeId)
@@ -1540,16 +1575,7 @@ Inspector::Protocol::ErrorStringOr<void> InspectorDOMAgent::highlightNode(std::o
 Inspector::Protocol::ErrorStringOr<void> InspectorDOMAgent::highlightNode(std::optional<Inspector::Protocol::DOM::NodeId>&& nodeId, const Inspector::Protocol::Runtime::RemoteObjectId& objectId, Ref<JSON::Object>&& highlightInspectorObject, RefPtr<JSON::Object>&& gridOverlayInspectorObject, RefPtr<JSON::Object>&& flexOverlayInspectorObject, std::optional<bool>&& showRulers)
 {
     Inspector::Protocol::ErrorString errorString;
-
-    Node* node = nullptr;
-    if (nodeId)
-        node = assertNode(errorString, *nodeId);
-    else if (!!objectId) {
-        node = nodeForObjectId(objectId);
-        errorString = "Missing node for given objectId"_s;
-    } else
-        errorString = "Either nodeId or objectId must be specified"_s;
-
+    Node* node = assertNode(errorString, WTFMove(nodeId), objectId);
     if (!node)
         return makeUnexpected(errorString);
 
@@ -1804,15 +1830,155 @@ Inspector::Protocol::ErrorStringOr<void> InspectorDOMAgent::setInspectedNode(Ins
     return { };
 }
 
-Inspector::Protocol::ErrorStringOr<Ref<Inspector::Protocol::Runtime::RemoteObject>> InspectorDOMAgent::resolveNode(Inspector::Protocol::DOM::NodeId nodeId, const String& objectGroup)
+static FloatPoint contentsToRootView(LocalFrameView& containingView, const FloatPoint& point)
+{
+    return containingView.convertToRootView(point - toFloatSize(containingView.documentScrollPositionRelativeToViewOrigin()));
+}
+
+static void frameQuadToViewport(LocalFrameView& containingView, FloatQuad& quad, float pageScaleFactor)
+{
+    // Return css (not dip) coordinates by scaling back.
+    quad.setP1(contentsToRootView(containingView, quad.p1()).scaled(1 / pageScaleFactor));
+    quad.setP2(contentsToRootView(containingView, quad.p2()).scaled(1 / pageScaleFactor));
+    quad.setP3(contentsToRootView(containingView, quad.p3()).scaled(1 / pageScaleFactor));
+    quad.setP4(contentsToRootView(containingView, quad.p4()).scaled(1 / pageScaleFactor));
+}
+
+static Ref<Inspector::Protocol::DOM::Quad> buildObjectForQuad(const FloatQuad& quad)
+{
+    auto result = Inspector::Protocol::DOM::Quad::create();
+    result->addItem(quad.p1().x());
+    result->addItem(quad.p1().y());
+    result->addItem(quad.p2().x());
+    result->addItem(quad.p2().y());
+    result->addItem(quad.p3().x());
+    result->addItem(quad.p3().y());
+    result->addItem(quad.p4().x());
+    result->addItem(quad.p4().y());
+    return result;
+}
+
+static Ref<JSON::ArrayOf<Inspector::Protocol::DOM::Quad>> buildArrayOfQuads(const Vector<FloatQuad>& quads)
+{
+    auto result = JSON::ArrayOf<Inspector::Protocol::DOM::Quad>::create();
+    for (const auto& quad : quads)
+        result->addItem(buildObjectForQuad(quad));
+    return result;
+}
+
+Inspector::Protocol::ErrorStringOr<std::tuple<String /* contentFrameId */, String /* ownerFrameId */>> InspectorDOMAgent::describeNode(const String& objectId)
+{
+    Node* node = nodeForObjectId(objectId);
+    if (!node)
+        return makeUnexpected("Node not found"_s);
+
+    auto* pageAgent = m_instrumentingAgents.enabledPageAgent();
+    if (!pageAgent)
+        return makeUnexpected("Page agent must be enabled"_s);
+
+    String ownerFrameId;
+    String frameId = pageAgent->frameId(node->document().frame());
+    if (!frameId.isEmpty())
+        ownerFrameId = frameId;
+
+    String contentFrameId;
+    if (is<HTMLFrameOwnerElement>(*node)) {
+        const auto& frameOwner = downcast<HTMLFrameOwnerElement>(*node);
+        // TODO(playwright): Unnecessary downcast to LocalFrame?
+        String frameId = pageAgent->frameId(dynamicDowncast<LocalFrame>(frameOwner.contentFrame()));
+        if (!frameId.isEmpty())
+            contentFrameId = frameId;
+    }
+
+    return { { contentFrameId, ownerFrameId } };
+}
+
+Protocol::ErrorStringOr<void> InspectorDOMAgent::scrollIntoViewIfNeeded(const String& objectId, RefPtr<JSON::Object>&& rect)
+{
+    Node* node = nodeForObjectId(objectId);
+    if (!node)
+        return makeUnexpected("Node not found"_s);
+
+    m_inspectedPage.isolatedUpdateRendering();
+    if (!node->isConnected())
+        return makeUnexpected("Node is detached from document"_s);
+
+    RenderObject* renderer = node->renderer();
+    auto* containerNode = dynamicDowncast<ContainerNode>(*node);
+    if (!renderer && containerNode) {
+        // Find the first descendant with a renderer, to account for
+        // containers without a renderer like display:contents elements.
+        for (auto& descendant : composedTreeDescendants(*containerNode)) {
+            renderer = descendant.renderer();
+            if (renderer)
+                break;
+        }
+    }
+    if (!renderer)
+        return makeUnexpected("Node does not have a layout object"_s);
+
+    bool insideFixed = false;
+    LayoutRect absoluteBounds = renderer->absoluteBoundingBoxRect(true, &insideFixed);
+    if (rect) {
+        std::optional<double> x = rect->getDouble("x"_s);
+        std::optional<double> y = rect->getDouble("y"_s);
+        std::optional<double> width = rect->getDouble("width"_s);
+        std::optional<double> height = rect->getDouble("height"_s);
+        if (!x || !y || !width || !height)
+            return makeUnexpected("Malformed rect"_s);
+
+        absoluteBounds.setX(absoluteBounds.x() + LayoutUnit(*x));
+        absoluteBounds.setY(absoluteBounds.y() + LayoutUnit(*y));
+        absoluteBounds.setWidth(LayoutUnit(std::max(*width, 1.0)));
+        absoluteBounds.setHeight(LayoutUnit(std::max(*height, 1.0)));
+    }
+    ScrollAlignment alignment = ScrollAlignment::alignCenterIfNeeded;
+    alignment.m_enableLegacyHorizontalVisibilityThreshold = false; // Disable RenderLayer minium horizontal scroll threshold.
+    LocalFrameView::scrollRectToVisible(absoluteBounds, *renderer, insideFixed, { SelectionRevealMode::Reveal, alignment, alignment, ShouldAllowCrossOriginScrolling::Yes, ScrollBehavior::Instant });
+    return { };
+}
+
+Protocol::ErrorStringOr<Ref<JSON::ArrayOf<Protocol::DOM::Quad>>> InspectorDOMAgent::getContentQuads(const String& objectId)
+{
+    Node* node = nodeForObjectId(objectId);
+    if (!node)
+        return makeUnexpected("Node not found"_s);
+
+    // Ensure quads are up to date.
+    m_inspectedPage.isolatedUpdateRendering();
+
+    LocalFrameView* containingView = node->document().view();
+    if (!containingView)
+        return makeUnexpected("Internal error: no containing view"_s);
+
+    Vector<FloatQuad> quads;
+    CollectQuads(node, quads);
+    for (auto& quad : quads)
+        frameQuadToViewport(*containingView, quad, m_inspectedPage.pageScaleFactor());
+    return buildArrayOfQuads(quads);
+}
+
+Inspector::Protocol::ErrorStringOr<Ref<Protocol::Runtime::RemoteObject>> InspectorDOMAgent::resolveNode(std::optional<Inspector::Protocol::DOM::NodeId>&& nodeId, const String& objectId, const Inspector::Protocol::Network::FrameId& frameId, std::optional<int>&& contextId, const String& objectGroup)
 {
     Inspector::Protocol::ErrorString errorString;
+    Node* node = nullptr;
+    if (!!frameId) {
+        auto* pageAgent = m_instrumentingAgents.enabledPageAgent();
+        if (!pageAgent)
+            return makeUnexpected("Page domain must be enabled"_s);
 
-    Node* node = assertNode(errorString, nodeId);
+        auto* frame = pageAgent->assertFrame(errorString, frameId);
+        if (!frame)
+            return makeUnexpected(errorString);
+
+        node = frame->ownerElement();
+    } else {
+        node = assertNode(errorString, WTFMove(nodeId), objectId);
+    }
     if (!node)
         return makeUnexpected(errorString);
 
-    auto object = resolveNode(node, objectGroup);
+    auto object = resolveNode(node, objectGroup, WTFMove(contextId));
     if (!object)
         return makeUnexpected("Missing injected script for given nodeId"_s);
 
@@ -3061,7 +3227,7 @@ Inspector::Protocol::ErrorStringOr<Inspector::Protocol::DOM::NodeId> InspectorDO
     return makeUnexpected("Missing node for given path"_s);
 }
 
-RefPtr<Inspector::Protocol::Runtime::RemoteObject> InspectorDOMAgent::resolveNode(Node* node, const String& objectGroup)
+RefPtr<Inspector::Protocol::Runtime::RemoteObject> InspectorDOMAgent::resolveNode(Node* node, const String& objectGroup, std::optional<int>&& contextId)
 {
     Document* document = &node->document();
     if (auto* templateHost = document->templateDocumentHost())
@@ -3070,12 +3236,18 @@ RefPtr<Inspector::Protocol::Runtime::RemoteObject> InspectorDOMAgent::resolveNod
     if (!frame)
         return nullptr;
 
-    auto& globalObject = mainWorldGlobalObject(*frame);
-    auto injectedScript = m_injectedScriptManager.injectedScriptFor(&globalObject);
+    InjectedScript injectedScript;
+    if (contextId) {
+        injectedScript = m_injectedScriptManager.injectedScriptForId(*contextId);
+    } else {
+        auto& globalObject = mainWorldGlobalObject(*frame);
+        injectedScript = m_injectedScriptManager.injectedScriptFor(&globalObject);
+    }
+
     if (injectedScript.hasNoValue())
         return nullptr;
 
-    return injectedScript.wrapObject(nodeAsScriptValue(globalObject, node), objectGroup);
+    return injectedScript.wrapObject(nodeAsScriptValue(*injectedScript.globalObject(), node), objectGroup);
 }
 
 Node* InspectorDOMAgent::scriptValueAsNode(JSC::JSValue value)
@@ -3176,6 +3348,59 @@ Inspector::Protocol::ErrorStringOr<Ref<Inspector::Protocol::DOM::MediaStats>> In
     }
 
     return stats;
+}
+
+Protocol::ErrorStringOr<void> InspectorDOMAgent::setInputFiles(const String& objectId, RefPtr<JSON::Array>&& files, RefPtr<JSON::Array>&& paths) {
+    InjectedScript injectedScript = m_injectedScriptManager.injectedScriptForObjectId(objectId);
+    if (injectedScript.hasNoValue())
+        return makeUnexpected("Can not find element's context for given id"_s);
+
+    Node* node = scriptValueAsNode(injectedScript.findObjectById(objectId));
+    if (!node)
+        return makeUnexpected("Can not find element for given id"_s);
+
+    if (node->nodeType() != Node::ELEMENT_NODE || node->nodeName() != "INPUT"_s)
+        return makeUnexpected("Not an input node"_s);
+
+    if (!(bool(files) ^ bool(paths)))
+        return makeUnexpected("Exactly one of files and paths should be specified"_s);
+
+    HTMLInputElement* element = static_cast<HTMLInputElement*>(node);
+    Vector<Ref<File>> fileObjects;
+    if (files) {
+        for (unsigned i = 0; i < files->length(); ++i) {
+            RefPtr<JSON::Value> item = files->get(i);
+            RefPtr<JSON::Object> obj = item->asObject();
+            if (!obj)
+                return makeUnexpected("Invalid file payload format"_s);
+
+            String name;
+            String type;
+            String data;
+            if (!obj->getString("name"_s, name) || !obj->getString("type"_s, type) || !obj->getString("data"_s, data))
+                return makeUnexpected("Invalid file payload format"_s);
+
+            std::optional<Vector<uint8_t>> buffer = base64Decode(data);
+            if (!buffer)
+                return makeUnexpected("Unable to decode given content"_s);
+
+            ScriptExecutionContext* context = element->scriptExecutionContext();
+            fileObjects.append(File::create(context, Blob::create(context, WTFMove(*buffer), type), name));
+        }
+    } else {
+        for (unsigned i = 0; i < paths->length(); ++i) {
+            RefPtr<JSON::Value> item = paths->get(i);
+            String path = item->asString();
+            if (path.isEmpty())
+                return makeUnexpected("Invalid file path"_s);
+
+            ScriptExecutionContext* context = element->scriptExecutionContext();
+            fileObjects.append(File::create(context, path));
+        }
+    }
+    RefPtr<FileList> fileList = FileList::create(WTFMove(fileObjects));
+    element->setFiles(WTFMove(fileList));
+    return { };
 }
 
 } // namespace WebCore

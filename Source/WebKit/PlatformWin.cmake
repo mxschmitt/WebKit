@@ -56,8 +56,13 @@ list(APPEND WebKit_SOURCES
     UIProcess/WebsiteData/win/WebsiteDataStoreWin.cpp
 
     UIProcess/win/AutomationClientWin.cpp
+
+    UIProcess/win/InspectorTargetProxyWin.cpp
+    UIProcess/win/InspectorPlaywrightAgentClientWin.cpp
     UIProcess/win/PageClientImpl.cpp
     UIProcess/win/WebContextMenuProxyWin.cpp
+    UIProcess/win/WebPageInspectorEmulationAgentWin.cpp
+    UIProcess/win/WebPageInspectorInputAgentWin.cpp
     UIProcess/win/WebPageProxyWin.cpp
     UIProcess/win/WebPopupMenuProxyWin.cpp
     UIProcess/win/WebProcessPoolWin.cpp
@@ -73,6 +78,7 @@ list(APPEND WebKit_SOURCES
     WebProcess/MediaCache/WebMediaKeyStorageManager.cpp
 
     WebProcess/WebCoreSupport/win/WebPopupMenuWin.cpp
+    WebProcess/WebCoreSupport/win/WebDragClientWin.cpp
 
     WebProcess/WebPage/AcceleratedSurface.cpp
 
@@ -121,7 +127,80 @@ list(APPEND WebKit_PUBLIC_FRAMEWORK_HEADERS
 
 list(APPEND WebKit_PRIVATE_LIBRARIES
     comctl32
+    ${LIBVPX_CUSTOM_LIBRARY}
 )
+
+# Playwright begin
+list(APPEND WebKit_SYSTEM_INCLUDE_DIRECTORIES
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/include"
+    "${LIBVPX_CUSTOM_INCLUDE_DIR}"
+)
+
+list(APPEND WebKit_PRIVATE_INCLUDE_DIRECTORIES
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libwebm"
+)
+
+set(vpxutils_SOURCES
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libwebm/mkvmuxer/mkvmuxer.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libwebm/mkvmuxer/mkvmuxerutil.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libwebm/mkvmuxer/mkvwriter.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/compare.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/compare_common.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/compare_gcc.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/compare_msa.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/compare_neon64.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/compare_neon.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/compare_win.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/convert_argb.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/convert.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/convert_from_argb.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/convert_from.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/convert_jpeg.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/convert_to_argb.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/convert_to_i420.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/cpu_id.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/mjpeg_decoder.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/mjpeg_validate.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/planar_functions.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/rotate_any.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/rotate_argb.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/rotate.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/rotate_common.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/rotate_gcc.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/rotate_msa.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/rotate_neon64.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/rotate_neon.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/rotate_win.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/row_any.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/row_common.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/row_gcc.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/row_msa.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/row_neon64.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/row_neon.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/row_win.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/scale_any.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/scale_argb.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/scale.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/scale_common.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/scale_gcc.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/scale_msa.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/scale_neon64.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/scale_neon.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/scale_rvv.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/scale_uv.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/scale_win.cc"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/source/video_common.cc"
+)
+
+add_library(vpxutils STATIC ${vpxutils_SOURCES})
+
+target_include_directories(vpxutils PRIVATE
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libyuv/include"
+    "${THIRDPARTY_DIR}/libwebrtc/Source/third_party/libwebm"
+)
+
+target_link_libraries(WebKit PRIVATE vpxutils)
+# Playwright end
 
 list(APPEND WebProcess_SOURCES
     WebProcess/EntryPoint/win/WebProcessMain.cpp

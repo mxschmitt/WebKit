@@ -29,6 +29,7 @@ messages -> WebPageProxy {
     RunJavaScriptConfirm(WebCore::FrameIdentifier frameID, struct WebKit::FrameInfoData frameInfo, String message) -> (bool result) Synchronous
     RunJavaScriptPrompt(WebCore::FrameIdentifier frameID, struct WebKit::FrameInfoData frameInfo, String message, String defaultValue) -> (String result) Synchronous
     MouseDidMoveOverElement(struct WebKit::WebHitTestResultData hitTestResultData, OptionSet<WebKit::WebEventModifier> modifiers, WebKit::UserData userData)
+    LogToStderr(String text)
 
     DidChangeViewportProperties(struct WebCore::ViewportAttributes attributes)
     DidReceiveEvent(enum:uint8_t WebKit::WebEventType eventType, bool handled)
@@ -182,6 +183,7 @@ messages -> WebPageProxy {
 #endif
 
     PageScaleFactorDidChange(double scaleFactor)
+    ViewScaleFactorDidChange(double scaleFactor)
     PluginScaleFactorDidChange(double zoomFactor)
     PluginZoomFactorDidChange(double zoomFactor)
 
@@ -309,8 +311,12 @@ messages -> WebPageProxy {
     StartDrag(struct WebCore::DragItem dragItem, WebCore::ShareableBitmapHandle dragImage)
     SetPromisedDataForImage(String pasteboardName, WebCore::SharedMemory::Handle imageHandle, String filename, String extension, String title, String url, String visibleURL, WebCore::SharedMemory::Handle archiveHandle, String originIdentifier)
 #endif
-#if PLATFORM(GTK) && ENABLE(DRAG_SUPPORT)
+#if (PLATFORM(GTK) || PLATFORM(WPE)) && ENABLE(DRAG_SUPPORT)
     StartDrag(WebCore::SelectionData selectionData, OptionSet<WebCore::DragOperation> dragOperationMask, std::optional<WebCore::ShareableBitmapHandle> dragImage, WebCore::IntPoint dragImageHotspot)
+#endif
+
+#if PLATFORM(WIN) && ENABLE(DRAG_SUPPORT)
+    StartDrag(HashMap<unsigned, Vector<String>> dragDataMap)
 #endif
 
 #if PLATFORM(IOS_FAMILY) && ENABLE(DRAG_SUPPORT)

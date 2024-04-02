@@ -40,8 +40,10 @@
 #include <WebCore/MIMETypeRegistry.h>
 #include <WebCore/ResourceResponseBase.h>
 #include <wtf/FileSystem.h>
+#include <wtf/NeverDestroyed.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/WTFString.h>
+#include <wtf/UUID.h>
 
 #if PLATFORM(MAC)
 #include <pal/spi/mac/QuarantineSPI.h>
@@ -58,7 +60,10 @@ DownloadProxy::DownloadProxy(DownloadProxyMap& downloadProxyMap, WebsiteDataStor
     , m_request(resourceRequest)
     , m_originatingPage(originatingPage)
     , m_frameInfo(API::FrameInfo::create(FrameInfoData { frameInfoData }, originatingPage))
+    , m_uuid(createVersion4UUIDString())
 {
+    if (auto* instrumentation = m_dataStore->downloadInstrumentation())
+      instrumentation->downloadCreated(m_uuid, m_request, frameInfoData, originatingPage, this);
 }
 
 DownloadProxy::~DownloadProxy()
@@ -77,9 +82,12 @@ static RefPtr<API::Data> createData(std::span<const uint8_t> data)
 void DownloadProxy::cancel(CompletionHandler<void(API::Data*)>&& completionHandler)
 {
     if (m_dataStore) {
-        m_dataStore->networkProcess().sendWithAsyncReply(Messages::NetworkProcess::CancelDownload(m_downloadID), [this, protectedThis = Ref { *this }, completionHandler = WTFMove(completionHandler)] (std::span<const uint8_t> resumeData) mutable {
+        auto* instrumentation = m_dataStore->downloadInstrumentation();
+        m_dataStore->networkProcess().sendWithAsyncReply(Messages::NetworkProcess::CancelDownload(m_downloadID), [this, protectedThis = Ref { *this }, completionHandler = WTFMove(completionHandler), instrumentation] (std::span<const uint8_t> resumeData) mutable {
             m_legacyResumeData = createData(resumeData);
             completionHandler(m_legacyResumeData.get());
+            if (instrumentation)
+                instrumentation->downloadFinished(m_uuid, "canceled"_s);
             m_downloadProxyMap.downloadFinished(*this);
         });
     } else
@@ -162,6 +170,21 @@ void DownloadProxy::decideDestinationWithSuggestedFilename(const WebCore::Resour
         suggestedFilename = m_suggestedFilename;
     suggestedFilename = MIMETypeRegistry::appendFileExtensionIfNecessary(suggestedFilename, response.mimeType());
 
+    if (auto* instrumentation = m_dataStore->downloadInstrumentation())
+      instrumentation->downloadFilenameSuggested(m_uuid, suggestedFilename);
+
+    if (m_dataStore->allowDownloadForAutomation()) {
+        SandboxExtension::Handle sandboxExtensionHandle;
+        String destination;
+        if (*m_dataStore->allowDownloadForAutomation()) {
+            destination = FileSystem::pathByAppendingComponent(m_dataStore->downloadPathForAutomation(), m_uuid);
+            if (auto handle = SandboxExtension::createHandle(destination, SandboxExtension::Type::ReadWrite))
+                sandboxExtensionHandle = WTFMove(*handle);
+        }
+        completionHandler(destination, WTFMove(sandboxExtensionHandle), AllowOverwrite::Yes);
+        return;
+    }
+
     m_client->decideDestinationWithSuggestedFilename(*this, response, ResourceResponseBase::sanitizeSuggestedFilename(suggestedFilename), [this, protectedThis = Ref { *this }, completionHandler = WTFMove(completionHandler)] (AllowOverwrite allowOverwrite, String destination) mutable {
         SandboxExtension::Handle sandboxExtensionHandle;
         if (!destination.isNull()) {
@@ -210,6 +233,8 @@ void DownloadProxy::didFinish()
     updateQuarantinePropertiesIfPossible();
 #endif
     m_client->didFinish(*this);
+    if (auto* instrumentation = m_dataStore->downloadInstrumentation())
+      instrumentation->downloadFinished(m_uuid, String());
 
     // This can cause the DownloadProxy object to be deleted.
     m_downloadProxyMap.downloadFinished(*this);
@@ -220,6 +245,8 @@ void DownloadProxy::didFail(const ResourceError& error, std::span<const uint8_t>
     m_legacyResumeData = createData(resumeData);
 
     m_client->didFail(*this, error, m_legacyResumeData.get());
+    if (auto* instrumentation = m_dataStore->downloadInstrumentation())
+      instrumentation->downloadFinished(m_uuid, error.localizedDescription());
 
     // This can cause the DownloadProxy object to be deleted.
     m_downloadProxyMap.downloadFinished(*this);

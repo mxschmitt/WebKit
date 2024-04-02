@@ -221,6 +221,14 @@ void JSGlobalObjectConsoleClient::screenshot(JSGlobalObject*, Ref<ScriptArgument
     warnUnimplemented("console.screenshot"_s);
 }
 
+void JSGlobalObjectConsoleClient::bindingCalled(JSGlobalObject*, const String&, const String&)
+{
+    if (LIKELY(!m_consoleAgent->developerExtrasEnabled()))
+        return;
+
+    warnUnimplemented("console.bindingCalled"_s);
+}
+
 void JSGlobalObjectConsoleClient::warnUnimplemented(const String& method)
 {
     String message = method + " is currently ignored in JavaScript context inspection."_s;

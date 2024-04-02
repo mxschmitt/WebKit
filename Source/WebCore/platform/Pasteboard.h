@@ -45,7 +45,7 @@ OBJC_CLASS NSString;
 OBJC_CLASS NSArray;
 #endif
 
-#if PLATFORM(GTK)
+#if PLATFORM(GTK) || PLATFORM(WPE)
 #include "SelectionData.h"
 #endif
 
@@ -108,7 +108,7 @@ struct PasteboardURL {
 #if PLATFORM(MAC)
     String userVisibleForm;
 #endif
-#if PLATFORM(GTK)
+#if PLATFORM(GTK) || PLATFORM(WPE)
     String markup;
 #endif
 };
@@ -197,6 +197,11 @@ public:
 #endif
 #endif
 
+#if PLATFORM(WPE) && ENABLE(DRAG_SUPPORT)
+    explicit Pasteboard(std::unique_ptr<PasteboardContext>&&, SelectionData&);
+    explicit Pasteboard(std::unique_ptr<PasteboardContext>&&, SelectionData&&);
+#endif
+
 #if PLATFORM(WIN)
     explicit Pasteboard(std::unique_ptr<PasteboardContext>&&, IDataObject*);
     explicit Pasteboard(std::unique_ptr<PasteboardContext>&&, WCDataObject*);
@@ -264,6 +269,12 @@ public:
     int64_t changeCount() const;
 #endif
 
+#if PLATFORM(WPE)
+    const SelectionData& selectionData() const {
+        return *m_selectionData;
+    }
+#endif
+
 #if PLATFORM(IOS_FAMILY)
     explicit Pasteboard(std::unique_ptr<PasteboardContext>&&, int64_t changeCount);
     explicit Pasteboard(std::unique_ptr<PasteboardContext>&&, const String& pasteboardName);
@@ -306,6 +317,7 @@ public:
     COMPtr<IDataObject> dataObject() const { return m_dataObject; }
     WEBCORE_EXPORT void setExternalDataObject(IDataObject*);
     const DragDataMap& dragDataMap() const { return m_dragDataMap; }
+    WEBCORE_EXPORT DragDataMap createDragDataMap();
     void writeURLToWritableDataObject(const URL&, const String&);
     COMPtr<WCDataObject> writableDataObject() const { return m_writableDataObject; }
     void writeImageToDataObject(Element&, const URL&); // FIXME: Layering violation.
@@ -358,6 +370,10 @@ private:
     int64_t m_changeCount { 0 };
 #endif
 
+#if PLATFORM(WPE)
+    std::optional<SelectionData> m_selectionData;
+#endif
+
 #if PLATFORM(COCOA)
     String m_pasteboardName;
     int64_t m_changeCount;
@@ -373,6 +389,7 @@ private:
     COMPtr<IDataObject> m_dataObject;
     COMPtr<WCDataObject> m_writableDataObject;
     DragDataMap m_dragDataMap;
+    bool m_forDrag = false;
 #endif
 };
 

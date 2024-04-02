@@ -434,4 +434,9 @@ Ref<Page> PageConsoleClient::protectedPage() const
     return m_page.get();
 }
 
+void PageConsoleClient::bindingCalled(JSC::JSGlobalObject* globalObject, const String& name, const String& arg)
+{
+    InspectorInstrumentation::bindingCalled(m_page, globalObject, name, arg);
+}
+
 } // namespace WebCore

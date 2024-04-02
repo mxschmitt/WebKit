@@ -184,6 +184,11 @@ Vector<Ref<WebProcessProxy>> WebProcessProxy::allProcesses()
     });
 }
 
+Vector<Ref<WebProcessProxy>> WebProcessProxy::allProcessesForInspector()
+{
+    return copyToVector(allProcesses());
+}
+
 RefPtr<WebProcessProxy> WebProcessProxy::processForIdentifier(ProcessIdentifier identifier)
 {
     return allProcessMap().get(identifier);
@@ -540,6 +545,26 @@ void WebProcessProxy::getLaunchOptions(ProcessLauncher::LaunchOptions& launchOpt
 
     if (WebKit::isInspectorProcessPool(processPool()))
         launchOptions.extraInitializationData.add<HashTranslatorASCIILiteral>("inspector-process"_s, "1"_s);
+
+    /* playwright revert fb205fb, 50f8fee */
+    LOG(Language, "WebProcessProxy is getting launch options.");
+    auto overrideLanguages = m_processPool->configuration().overrideLanguages();
+    if (overrideLanguages.isEmpty()) {
+        LOG(Language, "overrideLanguages() reports empty. Calling platformOverrideLanguages()");
+        overrideLanguages = platformOverrideLanguages();
+    }
+    if (!overrideLanguages.isEmpty()) {
+        StringBuilder languageString;
+        for (size_t i = 0; i < overrideLanguages.size(); ++i) {
+            if (i)
+                languageString.append(',');
+            languageString.append(overrideLanguages[i]);
+        }
+        LOG_WITH_STREAM(Language, stream << "Setting WebProcess's launch OverrideLanguages to " << languageString);
+        launchOptions.extraInitializationData.add<HashTranslatorASCIILiteral>("OverrideLanguages"_s, languageString.toString());
+    } else
+        LOG(Language, "overrideLanguages is still empty. Not setting WebProcess's launch OverrideLanguages.");
+    /* end playwright revert fb205fb, 50f8fee */
 
     launchOptions.nonValidInjectedCodeAllowed = shouldAllowNonValidInjectedCode();
 

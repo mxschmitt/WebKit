@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include "AcceleratedBackingStore.h"
 #include "APIPageConfiguration.h"
 #include "InputMethodState.h"
 #include "SameDocumentNavigationType.h"
@@ -106,7 +107,7 @@ void webkitWebViewBaseStartDrag(WebKitWebViewBase*, WebCore::SelectionData&&, Op
 void webkitWebViewBaseDidPerformDragControllerAction(WebKitWebViewBase*);
 #endif
 
-RefPtr<WebKit::ViewSnapshot> webkitWebViewBaseTakeViewSnapshot(WebKitWebViewBase*, std::optional<WebCore::IntRect>&&);
+RefPtr<WebKit::ViewSnapshot> webkitWebViewBaseTakeViewSnapshot(WebKitWebViewBase*, std::optional<WebCore::IntRect>&&, bool nominalResolution);
 void webkitWebViewBaseSetEnableBackForwardNavigationGesture(WebKitWebViewBase*, bool enabled);
 WebKit::ViewGestureController* webkitWebViewBaseViewGestureController(WebKitWebViewBase*);
 
@@ -145,3 +146,5 @@ void webkitWebViewBaseCallAfterNextPresentationUpdate(WebKitWebViewBase*, Comple
 #if USE(GTK4)
 void webkitWebViewBaseSetPlugID(WebKitWebViewBase*, const String&);
 #endif
+
+WebKit::AcceleratedBackingStore* webkitWebViewBaseGetAcceleratedBackingStore(WebKitWebViewBase*);

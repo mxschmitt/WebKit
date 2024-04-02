@@ -28,6 +28,10 @@
 #include <unicode/utypes.h>
 #include <wtf/text/LChar.h>
 
+#ifdef Success
+#undef Success
+#endif
+
 namespace WTF {
 namespace Unicode {
 

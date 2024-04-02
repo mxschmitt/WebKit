@@ -25,6 +25,7 @@
 
 #include "config.h"
 #include "ProvisionalFrameProxy.h"
+#include "WebFrameProxy.h"
 
 #include "FrameProcess.h"
 #include "VisitedLinkStore.h"

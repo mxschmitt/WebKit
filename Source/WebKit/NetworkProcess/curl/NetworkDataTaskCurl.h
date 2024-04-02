@@ -28,6 +28,7 @@
 #include "NetworkDataTask.h"
 #include "NetworkLoadParameters.h"
 #include <WebCore/CurlRequestClient.h>
+#include <WebCore/DataURLDecoder.h>
 #include <WebCore/FrameIdentifier.h>
 #include <WebCore/PageIdentifier.h>
 #include <WebCore/ProtectionSpace.h>
@@ -42,6 +43,8 @@ class SharedBuffer;
 }
 
 namespace WebKit {
+
+class Download;
 
 class NetworkDataTaskCurl final : public NetworkDataTask, public WebCore::CurlRequestClient {
 public:
@@ -74,6 +77,9 @@ private:
     void curlDidReceiveData(WebCore::CurlRequest&, Ref<WebCore::SharedBuffer>&&) override;
     void curlDidComplete(WebCore::CurlRequest&, WebCore::NetworkLoadMetrics&&) override;
     void curlDidFailWithError(WebCore::CurlRequest&, WebCore::ResourceError&&, WebCore::CertificateInfo&&) override;
+
+    void didReadDataURL(std::optional<WebCore::DataURLDecoder::Result>&&);
+    void downloadDataURL(Download&);
 
     void invokeDidReceiveResponse();
 
@@ -113,6 +119,9 @@ private:
     unsigned m_authFailureCount { 0 };
 
     bool m_allowOverwriteDownload { false };
+
+    std::optional<WebCore::DataURLDecoder::Result> m_dataURLResult;
+
     FileSystem::PlatformFileHandle m_downloadDestinationFile { FileSystem::invalidPlatformFileHandle };
 
     bool m_blockingCookies { false };

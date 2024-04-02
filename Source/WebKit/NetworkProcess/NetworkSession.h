@@ -198,6 +198,9 @@ public:
 
     void lowMemoryHandler(WTF::Critical);
 
+    void setIgnoreCertificateErrors(bool ignore) { m_ignoreCertificateErrors = ignore; }
+    bool ignoreCertificateErrors() { return m_ignoreCertificateErrors; }
+
     void removeSoftUpdateLoader(ServiceWorkerSoftUpdateLoader* loader) { m_softUpdateLoaders.remove(loader); }
     void addNavigationPreloaderTask(ServiceWorkerFetchTask&);
     ServiceWorkerFetchTask* navigationPreloaderTaskFromFetchIdentifier(WebCore::FetchIdentifier);
@@ -307,6 +310,7 @@ protected:
     bool m_privateClickMeasurementDebugModeEnabled { false };
     std::optional<WebCore::PrivateClickMeasurement> m_ephemeralMeasurement;
     bool m_isRunningEphemeralMeasurementTest { false };
+    bool m_ignoreCertificateErrors { false };
 
     HashSet<Ref<NetworkResourceLoader>> m_keptAliveLoads;
 

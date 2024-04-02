@@ -556,6 +556,45 @@ void Page::setOverrideViewportArguments(const std::optional<ViewportArguments>& 
         document->updateViewportArguments();
 }
 
+FloatSize Page::screenSize()
+{
+    auto* localMainFrame = dynamicDowncast<LocalFrame>(mainFrame());
+    RefPtr frameView = localMainFrame ? localMainFrame->view() : nullptr;
+    if (!frameView)
+        return { };
+    return m_overrideScreenSize.value_or(screenRect(frameView.get()).size());
+}
+
+void Page::setOverrideScreenSize(std::optional<FloatSize> size)
+{
+    if (size == m_overrideScreenSize)
+        return;
+
+    m_overrideScreenSize = size;
+    auto* localMainFrame = dynamicDowncast<LocalFrame>(mainFrame());
+    if (auto* document = localMainFrame ? localMainFrame->document() : nullptr)
+        document->updateViewportArguments();
+}
+
+#if ENABLE(ORIENTATION_EVENTS)
+int Page::orientation() const
+{
+    return m_overrideOrientation.value_or(chrome().client().deviceOrientation());
+}
+
+void Page::setOverrideOrientation(std::optional<int> orientation)
+{
+    if (orientation == m_overrideOrientation)
+        return;
+
+    m_overrideOrientation = orientation;
+
+    auto* localMainFrame = dynamicDowncast<LocalFrame>(mainFrame());
+    if (localMainFrame)
+        localMainFrame->orientationChanged();
+}
+#endif
+
 ScrollingCoordinator* Page::scrollingCoordinator()
 {
     if (!m_scrollingCoordinator && m_settings->scrollingCoordinatorEnabled()) {
@@ -3840,6 +3879,26 @@ void Page::setUseDarkAppearanceOverride(std::optional<bool> valueOverride)
 #else
     UNUSED_PARAM(valueOverride);
 #endif
+}
+
+void Page::setUseReducedMotionOverride(std::optional<bool> valueOverride)
+{
+    if (valueOverride == m_useReducedMotionOverride)
+        return;
+
+    m_useReducedMotionOverride = valueOverride;
+
+    appearanceDidChange();
+}
+
+void Page::setUseForcedColorsOverride(std::optional<bool> valueOverride)
+{
+    if (valueOverride == m_useForcedColorsOverride)
+        return;
+
+    m_useForcedColorsOverride = valueOverride;
+
+    appearanceDidChange();
 }
 
 void Page::setFullscreenInsets(const FloatBoxExtent& insets)

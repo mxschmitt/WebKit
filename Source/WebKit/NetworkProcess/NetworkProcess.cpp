@@ -630,6 +630,12 @@ void NetworkProcess::registrableDomainsExemptFromWebsiteDataDeletion(PAL::Sessio
     completionHandler({ });
 }
 
+void NetworkProcess::setIgnoreCertificateErrors(PAL::SessionID sessionID, bool ignore)
+{
+    if (auto* networkSession = this->networkSession(sessionID))
+        networkSession->setIgnoreCertificateErrors(ignore);
+}
+
 void NetworkProcess::dumpResourceLoadStatistics(PAL::SessionID sessionID, CompletionHandler<void(String)>&& completionHandler)
 {
     if (auto* session = networkSession(sessionID)) {

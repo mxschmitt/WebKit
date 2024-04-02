@@ -452,6 +452,7 @@ set(webrtc_SOURCES
     Source/third_party/boringssl/src/crypto/x509/x_val.c
     Source/third_party/boringssl/src/crypto/x509/x_x509a.c
     Source/third_party/boringssl/src/crypto/x509/x_x509.c
+
     Source/third_party/boringssl/src/decrepit/bio/base64_bio.c
     Source/third_party/boringssl/src/decrepit/blowfish/blowfish.c
     Source/third_party/boringssl/src/decrepit/cast/cast.c
@@ -530,6 +531,11 @@ set(webrtc_SOURCES
     Source/third_party/crc32c/src/src/crc32c.cc
     Source/third_party/crc32c/src/src/crc32c_portable.cc
     Source/third_party/crc32c/src/src/crc32c_sse42.cc
+# Playwright begin
+    Source/third_party/libwebm/mkvmuxer/mkvmuxer.cc
+    Source/third_party/libwebm/mkvmuxer/mkvmuxerutil.cc
+    Source/third_party/libwebm/mkvmuxer/mkvwriter.cc
+# Playwright end
     Source/third_party/libyuv/source/compare.cc
     Source/third_party/libyuv/source/compare_common.cc
     Source/third_party/libyuv/source/compare_gcc.cc
@@ -2270,6 +2276,10 @@ set(webrtc_INCLUDE_DIRECTORIES PRIVATE
     Source/third_party/libsrtp/config
     Source/third_party/libsrtp/crypto/include
     Source/third_party/libsrtp/include
+# Playwright begin
+    Source/third_party/libwebm
+    Source/third_party/libvpx/source/libvpx
+# Playwright end
     Source/third_party/libyuv/include
     Source/third_party/opus/src/celt
     Source/third_party/opus/src/include

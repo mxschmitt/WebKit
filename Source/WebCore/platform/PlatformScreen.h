@@ -150,13 +150,18 @@ WEBCORE_EXPORT float screenScaleFactor(UIScreen * = nullptr);
 #endif
 
 #if ENABLE(TOUCH_EVENTS)
-#if PLATFORM(GTK) || PLATFORM(WPE)
+WEBCORE_EXPORT void setScreenHasTouchDeviceOverride(bool);
+
 WEBCORE_EXPORT bool screenHasTouchDevice();
 WEBCORE_EXPORT bool screenIsTouchPrimaryInputDevice();
+#if PLATFORM(GTK) || PLATFORM(WPE)
+bool platformScreenHasTouchDevice();
+bool platformScreenIsTouchPrimaryInputDevice();
 #else
-constexpr bool screenHasTouchDevice() { return true; }
-constexpr bool screenIsTouchPrimaryInputDevice() { return true; }
+constexpr bool platformScreenHasTouchDevice() { return true; }
+constexpr bool platformScreenIsTouchPrimaryInputDevice() { return true; }
 #endif
 #endif
+
 
 } // namespace WebCore

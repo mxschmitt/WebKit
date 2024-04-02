@@ -45,6 +45,9 @@ static gboolean headlessMode;
 static gboolean privateMode;
 static gboolean automationMode;
 static gboolean ignoreTLSErrors;
+static gboolean inspectorPipe;
+static gboolean noStartupWindow;
+static const char* userDataDir;
 static const char* contentFilter;
 static const char* cookiesFile;
 static const char* cookiesPolicy;
@@ -78,6 +81,9 @@ static const GOptionEntry commandLineOptions[] =
     { "use-wpe-platform-api", 0, 0, G_OPTION_ARG_NONE, &useWPEPlatformAPI, "Use the WPE platform API", nullptr },
 #endif
     { "version", 'v', 0, G_OPTION_ARG_NONE, &printVersion, "Print the WPE version", nullptr },
+    { "inspector-pipe", 'v', 0, G_OPTION_ARG_NONE, &inspectorPipe, "Expose remote debugging protocol over pipe", nullptr },
+    { "user-data-dir", 0, 0, G_OPTION_ARG_STRING, &userDataDir, "Default profile persistence folder location", "FILE" },
+    { "no-startup-window", 0, 0, G_OPTION_ARG_NONE, &noStartupWindow, "Do not open default page", nullptr },
     { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &uriArguments, nullptr, "[URL]" },
     { nullptr, 0, 0, G_OPTION_ARG_NONE, nullptr, nullptr, nullptr }
 };
@@ -213,15 +219,38 @@ static void filterSavedCallback(WebKitUserContentFilterStore *store, GAsyncResul
     g_main_loop_quit(data->mainLoop);
 }
 
+static gboolean webViewLoadFailed()
+{
+    return TRUE;
+}
+
 static void webViewClose(WebKitWebView* webView, gpointer user_data)
 {
     // Hash table key delete func takes care of unref'ing the view
     g_hash_table_remove(openViews, webView);
-    if (!g_hash_table_size(openViews))
+    if (!g_hash_table_size(openViews) && user_data)
         g_application_quit(G_APPLICATION(user_data));
 }
 
-static WebKitWebView* createWebView(WebKitWebView* webView, WebKitNavigationAction*, gpointer user_data)
+static gboolean scriptDialog(WebKitWebView*, WebKitScriptDialog* dialog, gpointer)
+{
+    if (inspectorPipe)
+        webkit_script_dialog_ref(dialog);
+    return TRUE;
+}
+
+static gboolean scriptDialogHandled(WebKitWebView*, WebKitScriptDialog* dialog, gpointer)
+{
+    if (inspectorPipe)
+        webkit_script_dialog_unref(dialog);
+    return TRUE;
+}
+
+static gboolean webViewDecidePolicy(WebKitWebView *webView, WebKitPolicyDecision *decision, WebKitPolicyDecisionType decisionType, gpointer);
+
+static WebKitWebView* createWebView(WebKitWebView* webView, WebKitNavigationAction*, gpointer user_data);
+
+static WebKitWebView* createWebViewImpl(WebKitWebView* webView, WebKitWebContext *webContext, gpointer user_data)
 {
 
     auto backend = createViewBackend(1280, 720);
@@ -237,18 +266,37 @@ static WebKitWebView* createWebView(WebKitWebView* webView, WebKitNavigationActi
             }, backend.release());
     }
 
-    auto* newWebView = WEBKIT_WEB_VIEW(g_object_new(WEBKIT_TYPE_WEB_VIEW,
-        "backend", viewBackend,
-        "related-view", webView,
-        "settings", webkit_web_view_get_settings(webView),
-        "user-content-manager", webkit_web_view_get_user_content_manager(webView),
-        nullptr));
+// Playwright begin
+    if (headlessMode) {
+        webkit_web_view_backend_set_screenshot_callback(viewBackend,
+            [](gpointer data) {
+                return static_cast<WPEToolingBackends::HeadlessViewBackend*>(data)->snapshot();
+            });
+    }
+// Playwright end
+    WebKitWebView* newWebView;
+    if (webView) {
+        newWebView = WEBKIT_WEB_VIEW(g_object_new(WEBKIT_TYPE_WEB_VIEW,
+            "backend", viewBackend,
+            "related-view", webView,
+            nullptr));
+    } else {
+        newWebView = WEBKIT_WEB_VIEW(g_object_new(WEBKIT_TYPE_WEB_VIEW,
+            "backend", viewBackend,
+            "web-context", webContext,
+            "is-controlled-by-automation", TRUE,
+            nullptr));
+    }
 
     g_signal_connect(newWebView, "create", G_CALLBACK(createWebView), user_data);
     g_signal_connect(newWebView, "close", G_CALLBACK(webViewClose), user_data);
 
     g_hash_table_add(openViews, newWebView);
 
+    g_signal_connect(newWebView, "load-failed", G_CALLBACK(webViewLoadFailed), nullptr);
+    g_signal_connect(newWebView, "script-dialog", G_CALLBACK(scriptDialog), nullptr);
+    g_signal_connect(newWebView, "script-dialog-handled", G_CALLBACK(scriptDialogHandled), nullptr);
+    g_signal_connect(newWebView, "decide-policy", G_CALLBACK(webViewDecidePolicy), nullptr);
     return newWebView;
 }
 
@@ -262,13 +310,89 @@ static WebKitFeature* findFeature(WebKitFeatureList* featureList, const char* id
     return nullptr;
 }
 
+static WebKitWebView* createWebView(WebKitWebView* webView, WebKitNavigationAction*, gpointer user_data)
+{
+    return createWebViewImpl(webView, nullptr, user_data);
+}
+
+static gboolean webViewDecidePolicy(WebKitWebView *webView, WebKitPolicyDecision *decision, WebKitPolicyDecisionType decisionType, gpointer user_data)
+{
+    if (decisionType == WEBKIT_POLICY_DECISION_TYPE_RESPONSE) {
+        WebKitResponsePolicyDecision *responseDecision = WEBKIT_RESPONSE_POLICY_DECISION(decision);
+        if (!webkit_response_policy_decision_is_main_frame_main_resource(responseDecision))
+            return FALSE;
+
+        const gchar* mimeType = webkit_uri_response_get_mime_type(webkit_response_policy_decision_get_response(responseDecision));
+        if (!webkit_response_policy_decision_is_mime_type_supported(responseDecision) && mimeType && mimeType[0] != '\0') {
+            webkit_policy_decision_download(decision);
+            return TRUE;
+        }
+
+        webkit_policy_decision_use(decision);
+        return TRUE;
+    }
+
+    if (decisionType != WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION)
+        return FALSE;
+
+    WebKitNavigationAction *navigationAction = webkit_navigation_policy_decision_get_navigation_action(WEBKIT_NAVIGATION_POLICY_DECISION(decision));
+    if (webkit_navigation_action_get_navigation_type(navigationAction) != WEBKIT_NAVIGATION_TYPE_LINK_CLICKED)
+        return FALSE;
+
+    guint modifiers = webkit_navigation_action_get_modifiers(navigationAction);
+    if (webkit_navigation_action_get_mouse_button(navigationAction) != 2 /* GDK_BUTTON_MIDDLE */ &&
+        (webkit_navigation_action_get_mouse_button(navigationAction) != 1 /* GDK_BUTTON_PRIMARY */ || (modifiers & (wpe_input_keyboard_modifier_control | wpe_input_keyboard_modifier_shift)) == 0))
+        return FALSE;
+
+    /* Open a new tab if link clicked with the middle button, shift+click or ctrl+click. */
+    WebKitWebView* newWebView = createWebViewImpl(nullptr, webkit_web_view_get_context(webView), user_data);
+    webkit_web_view_load_request(newWebView, webkit_navigation_action_get_request(navigationAction));
+
+    webkit_policy_decision_ignore(decision);
+    return TRUE;
+}
+
+static WebKitWebContext *persistentWebContext = NULL;
+
+static WebKitWebView* createNewPage(WebKitBrowserInspector*, WebKitWebContext *webContext)
+{
+    if (!webContext)
+        webContext = persistentWebContext;
+    WebKitWebView* webView = createWebViewImpl(nullptr, webContext, nullptr);
+    webkit_web_view_load_uri(webView, "about:blank");
+    return webView;
+}
+
+static void quitBroserApplication(WebKitBrowserInspector* browser_inspector, gpointer data)
+{
+    GApplication* application = static_cast<GApplication*>(data);
+    g_application_quit(application);
+}
+
+static void configureBrowserInspector(GApplication* application)
+{
+    WebKitBrowserInspector* browserInspector = webkit_browser_inspector_get_default();
+    g_signal_connect(browserInspector, "create-new-page", G_CALLBACK(createNewPage), NULL);
+    g_signal_connect(browserInspector, "quit-application", G_CALLBACK(quitBroserApplication), application);
+    webkit_browser_inspector_initialize_pipe(proxy, ignoreHosts);
+}
+
 static void activate(GApplication* application, WPEToolingBackends::ViewBackend* backend)
 {
     g_application_hold(application);
+    if (noStartupWindow)
+        return;
 #if ENABLE_2022_GLIB_API
     WebKitNetworkSession* networkSession = nullptr;
     if (!automationMode) {
-        networkSession = privateMode ? webkit_network_session_new_ephemeral() : webkit_network_session_new(nullptr, nullptr);
+        if (userDataDir) {
+            networkSession = webkit_network_session_new(userDataDir, userDataDir);
+            cookiesFile = g_build_filename(userDataDir, "cookies.txt", nullptr);
+        } else if (inspectorPipe || privateMode || automationMode) {
+            networkSession = webkit_network_session_new_ephemeral();
+        } else {
+            networkSession = webkit_network_session_new(nullptr, nullptr);
+        }        
         webkit_network_session_set_itp_enabled(networkSession, enableITP);
 
         if (proxy) {
@@ -295,10 +419,18 @@ static void activate(GApplication* application, WPEToolingBackends::ViewBackend*
             webkit_cookie_manager_set_persistent_storage(cookieManager, cookiesFile, storageType);
         }
     }
-
     auto* webContext = WEBKIT_WEB_CONTEXT(g_object_new(WEBKIT_TYPE_WEB_CONTEXT, "time-zone-override", timeZone, nullptr));
+    webkit_web_context_set_network_session_for_automation(webContext, networkSession);
 #else
-    auto* manager = (privateMode || automationMode) ? webkit_website_data_manager_new_ephemeral() : webkit_website_data_manager_new(nullptr);
+    WebKitWebsiteDataManager *manager;
+    if (userDataDir) {
+        manager = webkit_website_data_manager_new("base-data-directory", userDataDir, "base-cache-directory", userDataDir, NULL);
+        cookiesFile = g_build_filename(userDataDir, "cookies.txt", NULL);
+    } else if (inspectorPipe || privateMode || automationMode) {
+        manager = webkit_website_data_manager_new_ephemeral();
+    } else {
+        manager = webkit_website_data_manager_new(NULL);
+    }
     webkit_website_data_manager_set_itp_enabled(manager, enableITP);
 
     if (proxy) {
@@ -329,6 +461,7 @@ static void activate(GApplication* application, WPEToolingBackends::ViewBackend*
     }
 #endif
 
+    persistentWebContext = webContext;
     WebKitUserContentManager* userContentManager = nullptr;
     if (contentFilter) {
         GFile* contentFilterFile = g_file_new_for_commandline_arg(contentFilter);
@@ -401,6 +534,15 @@ static void activate(GApplication* application, WPEToolingBackends::ViewBackend*
         "autoplay", WEBKIT_AUTOPLAY_ALLOW,
         nullptr);
 
+// Playwright begin
+    if (headlessMode) {
+        webkit_web_view_backend_set_screenshot_callback(viewBackend,
+            [](gpointer data) {
+                return static_cast<WPEToolingBackends::HeadlessViewBackend*>(data)->snapshot();
+            });
+    }
+// Playwright end
+
     auto* webView = WEBKIT_WEB_VIEW(g_object_new(WEBKIT_TYPE_WEB_VIEW,
         "backend", viewBackend,
         "web-context", webContext,
@@ -429,8 +571,6 @@ static void activate(GApplication* application, WPEToolingBackends::ViewBackend*
         g_signal_connect(wpeView, "event", G_CALLBACK(wpeViewEventCallback), webView);
 #endif
 
-    openViews = g_hash_table_new_full(nullptr, nullptr, g_object_unref, nullptr);
-
     webkit_web_context_set_automation_allowed(webContext, automationMode);
     g_signal_connect(webContext, "automation-started", G_CALLBACK(automationStartedCallback), webView);
     g_signal_connect(webView, "permission-request", G_CALLBACK(decidePermissionRequest), nullptr);
@@ -443,16 +583,9 @@ static void activate(GApplication* application, WPEToolingBackends::ViewBackend*
         webkit_web_view_set_background_color(webView, &color);
 
     if (uriArguments) {
-        const char* uri = uriArguments[0];
-        if (g_str_equal(uri, "about:gpu"))
-            uri = "webkit://gpu";
-
-        GFile* file = g_file_new_for_commandline_arg(uri);
-        char* url = g_file_get_uri(file);
-        g_object_unref(file);
-        webkit_web_view_load_uri(webView, url);
-        g_free(url);
-    } else if (automationMode)
+        // Playwright: avoid weird url transformation like http://trac.webkit.org/r240840
+        webkit_web_view_load_uri(webView, uriArguments[0]);
+    } else if (automationMode || inspectorPipe)
         webkit_web_view_load_uri(webView, "about:blank");
     else
         webkit_web_view_load_uri(webView, "https://wpewebkit.org");
@@ -526,8 +659,14 @@ int main(int argc, char *argv[])
         }
     }
 
+    openViews = g_hash_table_new_full(nullptr, nullptr, g_object_unref, nullptr);
+
     GApplication* application = g_application_new("org.wpewebkit.MiniBrowser", G_APPLICATION_NON_UNIQUE);
     g_signal_connect(application, "activate", G_CALLBACK(activate), backend.release());
+
+    if (inspectorPipe)
+        configureBrowserInspector(application);
+
     g_application_run(application, 0, nullptr);
     g_object_unref(application);
 

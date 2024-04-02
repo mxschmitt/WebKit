@@ -429,7 +429,7 @@ ALLOW_DEPRECATED_DECLARATIONS_END
     auto screenProperties = WebCore::collectScreenProperties();
     parameters.screenProperties = WTFMove(screenProperties);
 #if PLATFORM(MAC)
-    parameters.useOverlayScrollbars = ([NSScroller preferredScrollerStyle] == NSScrollerStyleOverlay);
+    parameters.useOverlayScrollbars = m_configuration->forceOverlayScrollbars() || ([NSScroller preferredScrollerStyle] == NSScrollerStyleOverlay);
 #endif
     
 #if (PLATFORM(IOS) || PLATFORM(VISION)) && HAVE(AGX_COMPILER_SERVICE)
@@ -797,8 +797,8 @@ void WebProcessPool::registerNotificationObservers()
     }];
 
     m_scrollerStyleNotificationObserver = [[NSNotificationCenter defaultCenter] addObserverForName:NSPreferredScrollerStyleDidChangeNotification object:nil queue:[NSOperationQueue currentQueue] usingBlock:^(NSNotification *notification) {
-        auto scrollbarStyle = [NSScroller preferredScrollerStyle];
-        sendToAllProcesses(Messages::WebProcess::ScrollerStylePreferenceChanged(scrollbarStyle));
+        bool useOverlayScrollbars = m_configuration->forceOverlayScrollbars() || ([NSScroller preferredScrollerStyle] == NSScrollerStyleOverlay);
+        sendToAllProcesses(Messages::WebProcess::ScrollerStylePreferenceChanged(useOverlayScrollbars));
     }];
 
     m_activationObserver = [[NSNotificationCenter defaultCenter] addObserverForName:NSApplicationDidBecomeActiveNotification object:NSApp queue:[NSOperationQueue currentQueue] usingBlock:^(NSNotification *notification) {

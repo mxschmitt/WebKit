@@ -136,6 +136,7 @@ UIProcess/API/glib/WebKitAutomationSession.cpp @no-unify
 UIProcess/API/glib/WebKitBackForwardList.cpp @no-unify
 UIProcess/API/glib/WebKitBackForwardListItem.cpp @no-unify
 UIProcess/API/glib/WebKitClipboardPermissionRequest.cpp @no-unify
+UIProcess/API/glib/WebKitBrowserInspector.cpp @no-unify
 UIProcess/API/glib/WebKitContextMenuClient.cpp @no-unify
 UIProcess/API/glib/WebKitCookieManager.cpp @no-unify
 UIProcess/API/glib/WebKitCredential.cpp @no-unify
@@ -264,6 +265,7 @@ UIProcess/glib/DisplayLinkGLib.cpp
 UIProcess/glib/DisplayVBlankMonitor.cpp
 UIProcess/glib/DisplayVBlankMonitorDRM.cpp
 UIProcess/glib/DisplayVBlankMonitorTimer.cpp
+UIProcess/glib/InspectorPlaywrightAgentClientGLib.cpp
 UIProcess/glib/ScreenManager.cpp
 UIProcess/glib/WebPageProxyGLib.cpp
 UIProcess/glib/WebProcessPoolGLib.cpp
@@ -279,6 +281,7 @@ UIProcess/gtk/ClipboardGtk4.cpp @no-unify
 UIProcess/gtk/WebDateTimePickerGtk.cpp
 UIProcess/gtk/GtkSettingsManager.cpp
 UIProcess/gtk/HardwareAccelerationManager.cpp
+UIProcess/gtk/InspectorTargetProxyGtk.cpp
 UIProcess/gtk/KeyBindingTranslator.cpp
 UIProcess/gtk/PointerLockManager.cpp @no-unify
 UIProcess/gtk/PointerLockManagerWayland.cpp @no-unify
@@ -291,6 +294,8 @@ UIProcess/gtk/ViewGestureControllerGtk.cpp
 UIProcess/gtk/WebColorPickerGtk.cpp
 UIProcess/gtk/WebContextMenuProxyGtk.cpp
 UIProcess/gtk/WebDataListSuggestionsDropdownGtk.cpp
+UIProcess/gtk/WebPageInspectorEmulationAgentGtk.cpp
+UIProcess/gtk/WebPageInspectorInputAgentGtk.cpp
 UIProcess/gtk/WebPageProxyGtk.cpp @no-unify
 UIProcess/gtk/WebPasteboardProxyGtk.cpp
 UIProcess/gtk/WebPopupMenuProxyGtk.cpp

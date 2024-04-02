@@ -74,6 +74,8 @@ messages -> NetworkConnectionToWebProcess LegacyReceiver {
 
     ClearPageSpecificData(WebCore::PageIdentifier pageID);
 
+    SetCookieFromResponse(URL firstParty, struct WebCore::SameSiteInfo sameSiteInfo, URL url, String setCookieValue);
+
     RemoveStorageAccessForFrame(WebCore::FrameIdentifier frameID, WebCore::PageIdentifier pageID);
     LogUserInteraction(WebCore::RegistrableDomain domain)
     ResourceLoadStatisticsUpdated(Vector<WebCore::ResourceLoadStatistics> statistics) -> ()

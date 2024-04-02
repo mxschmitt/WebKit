@@ -259,13 +259,16 @@ protected:
     static RefPtr<WebCore::SharedBuffer> fetchAudioComponentServerRegistrations();
 #endif
 
+    /* playwright revert 50f8fee - make protected to allow use from WebProcessProxy */
+    Vector<String> platformOverrideLanguages() const;
+    /* end playwright revert 50f8fee */
+
 private:
     virtual void connectionWillOpen(IPC::Connection&);
     virtual void processWillShutDown(IPC::Connection&) = 0;
     void outgoingMessageQueueIsGrowingLarge();
 
     void populateOverrideLanguagesLaunchOptions(ProcessLauncher::LaunchOptions&) const;
-    Vector<String> platformOverrideLanguages() const;
     void platformStartConnectionTerminationWatchdog();
 
     ResponsivenessTimer m_responsivenessTimer;

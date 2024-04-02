@@ -1054,8 +1054,11 @@ ResourceErrorOr<CachedResourceHandle<CachedResource>> CachedResourceLoader::requ
 
     request.updateReferrerPolicy(document() ? document()->referrerPolicy() : ReferrerPolicy::Default);
 
-    if (InspectorInstrumentation::willIntercept(frame.ptr(), request.resourceRequest()))
-        request.setCachingPolicy(CachingPolicy::DisallowCaching);
+    if (InspectorInstrumentation::willIntercept(frame.ptr(), request.resourceRequest())) {
+        // Playwright: we don't disable such caching in other browsers and it breaks css resource downloads,
+        // see https://github.com/microsoft/playwright/issues/19158
+        // request.setCachingPolicy(CachingPolicy::DisallowCaching);
+    }
 
     Ref page = *frame->page();
 
@@ -1663,8 +1666,9 @@ Vector<Ref<SVGImage>> CachedResourceLoader::allCachedSVGImages() const
 
 ResourceErrorOr<CachedResourceHandle<CachedResource>> CachedResourceLoader::preload(CachedResource::Type type, CachedResourceRequest&& request)
 {
-    if (InspectorInstrumentation::willIntercept(protectedFrame().get(), request.resourceRequest()))
-        return makeUnexpected(ResourceError { errorDomainWebKitInternal, 0, request.resourceRequest().url(), "Inspector intercept"_s });
+    // Playwright: <link rel=preload ... /> requests are intercepted (see https://github.com/microsoft/playwright/issues/16745)
+    // if (InspectorInstrumentation::willIntercept(protectedFrame().get(), request.resourceRequest()))
+    //     return makeUnexpected(ResourceError { errorDomainWebKitInternal, 0, request.resourceRequest().url(), "Inspector intercept"_s });
 
     ASSERT(m_document);
     if (request.charset().isEmpty() && m_document && (type == CachedResource::Type::Script || type == CachedResource::Type::CSSStyleSheet))

@@ -77,8 +77,10 @@ void WebPasteboardProxy::setPrimarySelectionOwner(WebFrameProxy* frame)
     if (m_primarySelectionOwner == frame)
         return;
 
-    if (m_primarySelectionOwner)
-        m_primarySelectionOwner->collapseSelection();
+// Playwright begin: do not change selection in another page!
+    // if (m_primarySelectionOwner)
+    //     m_primarySelectionOwner->collapseSelection();
+// Playwright end
 
     m_primarySelectionOwner = frame;
 }

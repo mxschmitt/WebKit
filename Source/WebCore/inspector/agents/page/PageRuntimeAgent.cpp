@@ -34,6 +34,7 @@
 
 #include "DOMWrapperWorld.h"
 #include "Document.h"
+#include "FrameLoader.h"
 #include "InspectorPageAgent.h"
 #include "InstrumentingAgents.h"
 #include "JSExecState.h"
@@ -42,6 +43,7 @@
 #include "Page.h"
 #include "PageConsoleClient.h"
 #include "ScriptController.h"
+#include "ScriptSourceCode.h"
 #include "SecurityOrigin.h"
 #include "UserGestureEmulationScope.h"
 #include <JavaScriptCore/InjectedScript.h>
@@ -85,13 +87,73 @@ Inspector::Protocol::ErrorStringOr<void> PageRuntimeAgent::disable()
 {
     m_instrumentingAgents.setEnabledPageRuntimeAgent(nullptr);
 
+    m_bindingNames.clear();
+
     return InspectorRuntimeAgent::disable();
 }
 
 void PageRuntimeAgent::frameNavigated(LocalFrame& frame)
 {
+    auto* pageAgent = m_instrumentingAgents.enabledPageAgent();
+    if (pageAgent)
+        pageAgent->setIgnoreDidClearWindowObject(true);
     // Ensure execution context is created for the frame even if it doesn't have scripts.
     mainWorldGlobalObject(frame);
+    if (pageAgent)
+        pageAgent->setIgnoreDidClearWindowObject(false);
+}
+
+static JSC_DECLARE_HOST_FUNCTION(bindingCallback);
+
+JSC_DEFINE_HOST_FUNCTION(bindingCallback, (JSC::JSGlobalObject * globalObject, JSC::CallFrame* callFrame))
+{
+    auto result = JSC::JSValue::encode(JSC::jsUndefined());
+    if (!callFrame->jsCallee())
+        return result;
+    String bindingName;
+    if (auto* function = JSC::jsDynamicCast<JSC::JSFunction*>(callFrame->jsCallee()))
+        bindingName = function->name(globalObject->vm());
+    auto client = globalObject->consoleClient();
+    if (!client)
+        return result;
+    if (callFrame->argumentCount() < 1)
+        return result;
+    auto value = callFrame->argument(0);
+    if (value.isUndefined())
+        return result;
+    String stringArg = value.toWTFString(globalObject);
+    client->bindingCalled(globalObject, bindingName, stringArg);
+    return result;
+}
+
+static void addBindingToFrame(LocalFrame& frame, const String& name)
+{
+    JSC::JSGlobalObject* globalObject = frame.script().globalObject(mainThreadNormalWorld());
+    auto& vm = globalObject->vm();
+    globalObject->putDirectNativeFunction(vm, globalObject, JSC::Identifier::fromString(vm, name), 1, bindingCallback, JSC::ImplementationVisibility::Public, JSC::NoIntrinsic, JSC::attributesForStructure(static_cast<unsigned>(JSC::PropertyAttribute::Function)));
+}
+
+Protocol::ErrorStringOr<void> PageRuntimeAgent::addBinding(const String& name)
+{
+    if (!m_bindingNames.add(name).isNewEntry)
+        return {};
+
+    m_inspectedPage.forEachLocalFrame([&](LocalFrame& frame) {
+        if (!frame.script().canExecuteScripts(ReasonForCallingCanExecuteScripts::NotAboutToExecuteScript))
+            return;
+
+        addBindingToFrame(frame, name);
+    });
+
+    return {};
+}
+
+void PageRuntimeAgent::bindingCalled(JSC::JSGlobalObject* globalObject, const String& name, const String& arg)
+{
+    auto injectedScript = injectedScriptManager().injectedScriptFor(globalObject);
+    if (injectedScript.hasNoValue())
+        return;
+    m_frontendDispatcher->bindingCalled(injectedScriptManager().injectedScriptIdFor(globalObject), name, arg);
 }
 
 void PageRuntimeAgent::didClearWindowObjectInWorld(LocalFrame& frame, DOMWrapperWorld& world)
@@ -100,7 +162,26 @@ void PageRuntimeAgent::didClearWindowObjectInWorld(LocalFrame& frame, DOMWrapper
     if (!pageAgent)
         return;
 
+    if (pageAgent->ignoreDidClearWindowObject())
+        return;
+
+    if (world.isNormal()) {
+        for (const auto& name : m_bindingNames)
+            addBindingToFrame(frame, name);
+    }
+
+    pageAgent->setIgnoreDidClearWindowObject(true);
     notifyContextCreated(pageAgent->frameId(&frame), frame.script().globalObject(world), world);
+    pageAgent->setIgnoreDidClearWindowObject(false);
+}
+
+void PageRuntimeAgent::didReceiveMainResourceError(LocalFrame& frame)
+{
+    if (frame.loader().stateMachine().isDisplayingInitialEmptyDocument()) {
+        // Ensure execution context is created for the empty docment to make
+        // it usable in case loading failed.
+        mainWorldGlobalObject(frame);
+    }
 }
 
 InjectedScript PageRuntimeAgent::injectedScriptForEval(Inspector::Protocol::ErrorString& errorString, std::optional<Inspector::Protocol::Runtime::ExecutionContextId>&& executionContextId)
@@ -139,9 +220,6 @@ void PageRuntimeAgent::reportExecutionContextCreation()
         return;
 
     m_inspectedPage.forEachLocalFrame([&](LocalFrame& frame) {
-        if (!frame.script().canExecuteScripts(ReasonForCallingCanExecuteScripts::NotAboutToExecuteScript))
-            return;
-
         auto frameId = pageAgent->frameId(&frame);
 
         // Always send the main world first.

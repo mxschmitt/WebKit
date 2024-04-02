@@ -80,10 +80,18 @@ NetworkDataTaskCurl::NetworkDataTaskCurl(NetworkSession& session, NetworkDataTas
         blockCookies();
     restrictRequestReferrerToOriginIfNeeded(request);
 
-    m_curlRequest = createCurlRequest(WTFMove(request));
-    if (!m_initialCredential.isEmpty()) {
-        m_curlRequest->setUserPass(m_initialCredential.user(), m_initialCredential.password());
-        m_curlRequest->setAuthenticationScheme(ProtectionSpace::AuthenticationScheme::HTTPBasic);
+    if (request.url().protocolIsData()) {
+        DataURLDecoder::decode(request.url(), { }, DataURLDecoder::ShouldValidatePadding::Yes, [this, protectedThis = Ref { *this }](auto decodeResult) mutable {
+            didReadDataURL(WTFMove(decodeResult));
+        });
+    } else {
+        m_curlRequest = createCurlRequest(WTFMove(request));
+        if (!m_initialCredential.isEmpty()) {
+            m_curlRequest->setUserPass(m_initialCredential.user(), m_initialCredential.password());
+            m_curlRequest->setAuthenticationScheme(ProtectionSpace::AuthenticationScheme::HTTPBasic);
+        }
+        if (m_session->ignoreCertificateErrors())
+            m_curlRequest->disableServerTrustEvaluation();
     }
 }
 
@@ -166,6 +174,7 @@ void NetworkDataTaskCurl::curlDidReceiveResponse(CurlRequest& request, CurlRespo
 
     updateNetworkLoadMetrics(receivedResponse.networkLoadMetrics);
     m_response.setDeprecatedNetworkLoadMetrics(Box<NetworkLoadMetrics>::create(WTFMove(receivedResponse.networkLoadMetrics)));
+    m_response.m_httpRequestHeaderFields = request.resourceRequest().httpHeaderFields();
 
     handleCookieHeaders(request.resourceRequest(), receivedResponse);
 
@@ -290,6 +299,36 @@ bool NetworkDataTaskCurl::shouldRedirectAsGET(const ResourceRequest& request, bo
     return false;
 }
 
+void NetworkDataTaskCurl::didReadDataURL(std::optional<DataURLDecoder::Result>&& result)
+{
+    if (state() == State::Canceling || state() == State::Completed)
+        return;
+
+    m_dataURLResult = WTFMove(result);
+    m_response = ResourceResponse::dataURLResponse(firstRequest().url(), m_dataURLResult.value());
+    invokeDidReceiveResponse();
+}
+
+void NetworkDataTaskCurl::downloadDataURL(Download& download)
+{
+    if (!m_dataURLResult) {
+        deleteDownloadFile();
+        download.didFail(internalError(firstRequest().url()), std::span<const uint8_t>());
+        return;
+    }
+
+    if (-1 == FileSystem::writeToFile(m_downloadDestinationFile, static_cast<void*>(m_dataURLResult.value().data.data()), m_dataURLResult.value().data.size())) {
+        deleteDownloadFile();
+        download.didFail(ResourceError(CURLE_WRITE_ERROR, m_response.url()), std::span<const uint8_t>());
+        return;
+    }
+
+    download.didReceiveData(m_dataURLResult.value().data.size(), 0, 0);
+    FileSystem::closeFile(m_downloadDestinationFile);
+    m_downloadDestinationFile = FileSystem::invalidPlatformFileHandle;
+    download.didFinish();
+}
+
 void NetworkDataTaskCurl::invokeDidReceiveResponse()
 {
     didReceiveResponse(ResourceResponse(m_response), NegotiatedLegacyTLS::No, PrivateRelayed::No, [this, protectedThis = Ref { *this }](PolicyAction policyAction) {
@@ -320,6 +359,8 @@ void NetworkDataTaskCurl::invokeDidReceiveResponse()
             downloadPtr->didCreateDestination(m_pendingDownloadLocation);
             if (m_curlRequest)
                 m_curlRequest->completeDidReceiveResponse();
+            else if (firstRequest().url().protocolIsData())
+                downloadDataURL(*downloadPtr);
             break;
         }
         default:
@@ -408,6 +449,8 @@ void NetworkDataTaskCurl::willPerformHTTPRedirection()
             m_curlRequest->setUserPass(m_initialCredential.user(), m_initialCredential.password());
             m_curlRequest->setAuthenticationScheme(ProtectionSpace::AuthenticationScheme::HTTPBasic);
         }
+        if (m_session->ignoreCertificateErrors())
+            m_curlRequest->disableServerTrustEvaluation();
 
         if (m_state != State::Suspended) {
             m_state = State::Suspended;

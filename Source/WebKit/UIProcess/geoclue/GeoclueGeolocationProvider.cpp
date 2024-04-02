@@ -100,6 +100,14 @@ void GeoclueGeolocationProvider::stop()
     }
 
     m_sourceType = LocationProviderSource::Unknown;
+    stopGeoclueClient();
+    g_cancellable_cancel(m_cancellable_start.get());
+    m_cancellable_start = nullptr;
+    g_cancellable_cancel(m_cancellable_setup.get());
+    m_cancellable_setup = nullptr;
+    g_cancellable_cancel(m_cancellable_create.get());
+    m_cancellable_create = nullptr;
+    destroyStateLater();
 }
 
 void GeoclueGeolocationProvider::setEnableHighAccuracy(bool enabled)
@@ -372,6 +380,8 @@ void GeoclueGeolocationProvider::createGeoclueClient(const char* clientPath)
         return;
     }
 
+    g_cancellable_cancel(m_cancellable_create.get());
+    m_cancellable_create = adoptGRef(g_cancellable_new());
     g_dbus_proxy_new_for_bus(G_BUS_TYPE_SYSTEM, G_DBUS_PROXY_FLAGS_NONE, nullptr,
         "org.freedesktop.GeoClue2", clientPath, "org.freedesktop.GeoClue2.Client", m_cancellable.get(),
         [](GObject*, GAsyncResult* result, gpointer userData) {

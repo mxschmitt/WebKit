@@ -45,6 +45,8 @@ editing/libwpe/EditorLibWPE.cpp
 
 loader/soup/ResourceLoaderSoup.cpp
 
+page/wpe/DragControllerWPE.cpp
+
 page/linux/ResourceUsageOverlayLinux.cpp
 page/linux/ResourceUsageThreadLinux.cpp
 
@@ -85,6 +87,17 @@ platform/text/LocaleICU.cpp
 platform/unix/LoggingUnix.cpp
 platform/unix/SharedMemoryUnix.cpp
 
+platform/wpe/DragDataWPE.cpp
+platform/wpe/DragImageWPE.cpp
 platform/wpe/PlatformScreenWPE.cpp
 
 platform/xdg/MIMETypeRegistryXdg.cpp
+
+// Playwright: begin.
+platform/wpe/SelectionData.cpp
+
+JSSpeechSynthesisErrorCode.cpp
+JSSpeechSynthesisErrorEvent.cpp
+JSSpeechSynthesisErrorEventInit.cpp
+JSSpeechSynthesisEventInit.cpp
+// Playwright: end.

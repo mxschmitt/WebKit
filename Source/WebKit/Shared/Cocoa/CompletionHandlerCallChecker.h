@@ -27,6 +27,7 @@
 
 #import <wtf/Forward.h>
 #import <wtf/ThreadSafeRefCounted.h>
+#import <WebCore/LocalFrame.h>
 
 namespace WebKit {
 

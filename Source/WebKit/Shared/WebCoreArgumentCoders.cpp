@@ -28,6 +28,208 @@
 
 #include <WebCore/Font.h>
 #include <WebCore/FontCustomPlatformData.h>
+<<<<<<< HEAD
+||||||| parent of b0fa7c52d79a (chore(webkit): bootstrap build #1994)
+#include <WebCore/GraphicsContext.h>
+#include <WebCore/GraphicsLayer.h>
+#include <WebCore/IDBGetResult.h>
+#include <WebCore/IdentityTransformOperation.h>
+#include <WebCore/Image.h>
+#include <WebCore/ImageControlsButtonPart.h>
+#include <WebCore/InnerSpinButtonPart.h>
+#include <WebCore/JSDOMExceptionHandling.h>
+#include <WebCore/Length.h>
+#include <WebCore/LengthBox.h>
+#include <WebCore/LightSource.h>
+#include <WebCore/Matrix3DTransformOperation.h>
+#include <WebCore/MatrixTransformOperation.h>
+#include <WebCore/MediaSelectionOption.h>
+#include <WebCore/MenuListButtonPart.h>
+#include <WebCore/MenuListPart.h>
+#include <WebCore/MeterPart.h>
+#include <WebCore/NotificationResources.h>
+#include <WebCore/Pasteboard.h>
+#include <WebCore/Path.h>
+#include <WebCore/PerspectiveTransformOperation.h>
+#include <WebCore/PluginData.h>
+#include <WebCore/PointLightSource.h>
+#include <WebCore/ProgressBarPart.h>
+#include <WebCore/PromisedAttachmentInfo.h>
+#include <WebCore/RectEdges.h>
+#include <WebCore/Region.h>
+#include <WebCore/RegistrableDomain.h>
+#include <WebCore/Report.h>
+#include <WebCore/ReportBody.h>
+#include <WebCore/ResourceRequest.h>
+#include <WebCore/ResourceResponse.h>
+#include <WebCore/RotateTransformOperation.h>
+#include <WebCore/SVGFilter.h>
+#include <WebCore/ScaleTransformOperation.h>
+#include <WebCore/ScriptBuffer.h>
+#include <WebCore/ScriptExecutionContextIdentifier.h>
+#include <WebCore/ScrollingConstraints.h>
+#include <WebCore/ScrollingCoordinator.h>
+#include <WebCore/SearchFieldCancelButtonPart.h>
+#include <WebCore/SearchFieldPart.h>
+#include <WebCore/SearchFieldResultsPart.h>
+#include <WebCore/SearchPopupMenu.h>
+#include <WebCore/SecurityOrigin.h>
+#include <WebCore/SerializedPlatformDataCueValue.h>
+#include <WebCore/SerializedScriptValue.h>
+#include <WebCore/ShareData.h>
+#include <WebCore/ShareableBitmap.h>
+#include <WebCore/ShareableResource.h>
+#include <WebCore/SharedBuffer.h>
+#include <WebCore/SkewTransformOperation.h>
+#include <WebCore/SliderThumbPart.h>
+#include <WebCore/SliderTrackPart.h>
+#include <WebCore/SourceAlpha.h>
+#include <WebCore/SourceGraphic.h>
+#include <WebCore/SpotLightSource.h>
+#include <WebCore/SwitchThumbPart.h>
+#include <WebCore/SwitchTrackPart.h>
+#include <WebCore/SystemImage.h>
+#include <WebCore/TestReportBody.h>
+#include <WebCore/TextAreaPart.h>
+#include <WebCore/TextCheckerClient.h>
+#include <WebCore/TextFieldPart.h>
+#include <WebCore/TextIndicator.h>
+#include <WebCore/ToggleButtonPart.h>
+#include <WebCore/TransformOperation.h>
+#include <WebCore/TransformationMatrix.h>
+#include <WebCore/TranslateTransformOperation.h>
+#include <WebCore/UserStyleSheet.h>
+#include <WebCore/VelocityData.h>
+#include <WebCore/ViewportArguments.h>
+#include <WebCore/WindowFeatures.h>
+#include <wtf/URL.h>
+#include <wtf/text/CString.h>
+#include <wtf/text/StringHash.h>
+
+#if PLATFORM(IOS_FAMILY)
+#include <WebCore/SelectionGeometry.h>
+#endif // PLATFORM(IOS_FAMILY)
+
+#if ENABLE(MEDIA_STREAM)
+#include <WebCore/CaptureDevice.h>
+#include <WebCore/MediaConstraints.h>
+#endif
+
+#if ENABLE(IMAGE_ANALYSIS)
+#include <WebCore/TextRecognitionResult.h>
+#endif
+
+#if ENABLE(APPLE_PAY)
+#include <WebCore/ApplePayButtonPart.h>
+#endif
+
+#if USE(APPKIT)
+#include <WebCore/AppKitControlSystemImage.h>
+#endif
+
+=======
+#include <WebCore/GraphicsContext.h>
+#include <WebCore/GraphicsLayer.h>
+#include <WebCore/IDBGetResult.h>
+#include <WebCore/IdentityTransformOperation.h>
+#include <WebCore/Image.h>
+#include <WebCore/ImageControlsButtonPart.h>
+#include <WebCore/InnerSpinButtonPart.h>
+#include <WebCore/JSDOMExceptionHandling.h>
+#include <WebCore/Length.h>
+#include <WebCore/LengthBox.h>
+#include <WebCore/LightSource.h>
+#include <WebCore/Matrix3DTransformOperation.h>
+#include <WebCore/MatrixTransformOperation.h>
+#include <WebCore/MediaSelectionOption.h>
+#include <WebCore/MenuListButtonPart.h>
+#include <WebCore/MenuListPart.h>
+#include <WebCore/MeterPart.h>
+#include <WebCore/NotificationResources.h>
+#include <WebCore/Pasteboard.h>
+#include <WebCore/Path.h>
+#include <WebCore/PerspectiveTransformOperation.h>
+#include <WebCore/PluginData.h>
+#include <WebCore/PointLightSource.h>
+#include <WebCore/ProgressBarPart.h>
+#include <WebCore/PromisedAttachmentInfo.h>
+#include <WebCore/RectEdges.h>
+#include <WebCore/Region.h>
+#include <WebCore/RegistrableDomain.h>
+#include <WebCore/Report.h>
+#include <WebCore/ReportBody.h>
+#include <WebCore/ResourceRequest.h>
+#include <WebCore/ResourceResponse.h>
+#include <WebCore/RotateTransformOperation.h>
+#include <WebCore/SVGFilter.h>
+#include <WebCore/ScaleTransformOperation.h>
+#include <WebCore/ScriptBuffer.h>
+#include <WebCore/ScriptExecutionContextIdentifier.h>
+#include <WebCore/ScrollingConstraints.h>
+#include <WebCore/ScrollingCoordinator.h>
+#include <WebCore/SearchFieldCancelButtonPart.h>
+#include <WebCore/SearchFieldPart.h>
+#include <WebCore/SearchFieldResultsPart.h>
+#include <WebCore/SearchPopupMenu.h>
+#include <WebCore/SecurityOrigin.h>
+#include <WebCore/SerializedPlatformDataCueValue.h>
+#include <WebCore/SerializedScriptValue.h>
+#include <WebCore/ShareData.h>
+#include <WebCore/ShareableBitmap.h>
+#include <WebCore/ShareableResource.h>
+#include <WebCore/SharedBuffer.h>
+#include <WebCore/SkewTransformOperation.h>
+#include <WebCore/SliderThumbPart.h>
+#include <WebCore/SliderTrackPart.h>
+#include <WebCore/SourceAlpha.h>
+#include <WebCore/SourceGraphic.h>
+#include <WebCore/SpotLightSource.h>
+#include <WebCore/SwitchThumbPart.h>
+#include <WebCore/SwitchTrackPart.h>
+#include <WebCore/SystemImage.h>
+#include <WebCore/TestReportBody.h>
+#include <WebCore/TextAreaPart.h>
+#include <WebCore/TextCheckerClient.h>
+#include <WebCore/TextFieldPart.h>
+#include <WebCore/TextIndicator.h>
+#include <WebCore/ToggleButtonPart.h>
+#include <WebCore/TransformOperation.h>
+#include <WebCore/TransformationMatrix.h>
+#include <WebCore/TranslateTransformOperation.h>
+#include <WebCore/UserStyleSheet.h>
+#include <WebCore/VelocityData.h>
+#include <WebCore/ViewportArguments.h>
+#include <WebCore/WindowFeatures.h>
+#include <wtf/URL.h>
+#include <wtf/text/CString.h>
+#include <wtf/text/StringHash.h>
+
+#if PLATFORM(IOS_FAMILY)
+#include <WebCore/SelectionGeometry.h>
+#endif // PLATFORM(IOS_FAMILY)
+
+#if ENABLE(MEDIA_STREAM)
+#include <WebCore/CaptureDevice.h>
+#include <WebCore/MediaConstraints.h>
+#endif
+
+#if ENABLE(IMAGE_ANALYSIS)
+#include <WebCore/TextRecognitionResult.h>
+#endif
+
+#if ENABLE(APPLE_PAY)
+#include <WebCore/ApplePayButtonPart.h>
+#endif
+
+#if USE(APPKIT)
+#include <WebCore/AppKitControlSystemImage.h>
+#endif
+
+#if PLATFORM(WPE)
+#include "ArgumentCodersWPE.h"
+#endif
+
+>>>>>>> b0fa7c52d79a (chore(webkit): bootstrap build #1994)
 // FIXME: Seems like we could use std::tuple to cut down the code below a lot!
 
 namespace IPC {

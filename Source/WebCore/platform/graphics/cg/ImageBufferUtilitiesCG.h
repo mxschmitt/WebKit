@@ -38,7 +38,7 @@ WEBCORE_EXPORT uint8_t verifyImageBufferIsBigEnough(const void* buffer, size_t b
 
 RetainPtr<CFStringRef> utiFromImageBufferMIMEType(const String& mimeType);
 CFStringRef jpegUTI();
-Vector<uint8_t> encodeData(CGImageRef, const String& mimeType, std::optional<double> quality);
+WEBCORE_EXPORT Vector<uint8_t> encodeData(CGImageRef, const String& mimeType, std::optional<double> quality);
 Vector<uint8_t> encodeData(const PixelBuffer&, const String& mimeType, std::optional<double> quality);
 Vector<uint8_t> encodeData(const std::span<const uint8_t>&, const String& mimeType, std::optional<double> quality);
 

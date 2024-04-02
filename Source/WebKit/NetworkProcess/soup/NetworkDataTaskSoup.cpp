@@ -466,6 +466,8 @@ void NetworkDataTaskSoup::didSendRequest(GRefPtr<GInputStream>&& inputStream)
             m_networkLoadMetrics.failsTAOCheck = !passesTimingAllowOriginCheck(m_response, *origin);
     }
 
+    auto& additionalMetrics = additionalNetworkLoadMetricsForWebInspector();
+    m_response.m_httpRequestHeaderFields = additionalMetrics.requestHeaders;
     dispatchDidReceiveResponse();
 }
 
@@ -563,6 +565,8 @@ bool NetworkDataTaskSoup::acceptCertificate(GTlsCertificate* certificate, GTlsCe
 {
     ASSERT(m_soupMessage);
     URL url = soupURIToURL(soup_message_get_uri(m_soupMessage.get()));
+    if (m_session->ignoreCertificateErrors())
+        return true;
     auto error = static_cast<NetworkSessionSoup&>(*m_session).soupNetworkSession().checkTLSErrors(url, certificate, tlsErrors);
     if (!error)
         return true;

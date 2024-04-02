@@ -444,9 +444,11 @@
 
 ;; FIXME: This should be removed when <rdar://problem/10479685> is fixed.
 ;; Restrict AppSandboxed processes from creating /Library/Keychains, but allow access to the contents of /Library/Keychains:
-(allow file-read-data file-read-metadata
-    (subpath "/Library/Keychains")
-    (home-subpath "/Library/Keychains"))
+;; Playwright begin
+;; (allow file-read-data file-read-metadata
+;;     (subpath "/Library/Keychains")
+;;     (home-subpath "/Library/Keychains"))
+;; Playwright end
 
 ;; Except deny access to new-style iOS Keychain folders which are UUIDs.
 (deny file-read* file-write*

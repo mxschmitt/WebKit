@@ -305,7 +305,8 @@ SOAuthorizationCoordinator& WebsiteDataStore::soAuthorizationCoordinator(const W
 
 static Ref<NetworkProcessProxy> networkProcessForSession(PAL::SessionID sessionID)
 {
-#if ((PLATFORM(GTK) || PLATFORM(WPE)) && !ENABLE(2022_GLIB_API))
+// Playwright wants to isolate per BrowserContext.
+#if ((PLATFORM(GTK) || PLATFORM(WPE)))
     if (sessionID.isEphemeral()) {
         // Reuse a previous persistent session network process for ephemeral sessions.
         for (auto& dataStore : allDataStores().values()) {
@@ -2264,6 +2265,12 @@ void WebsiteDataStore::renameOriginInWebsiteData(WebCore::SecurityOriginData&& o
 void WebsiteDataStore::originDirectoryForTesting(WebCore::ClientOrigin&& origin, OptionSet<WebsiteDataType> type, CompletionHandler<void(const String&)>&& completionHandler)
 {
     protectedNetworkProcess()->websiteDataOriginDirectoryForTesting(m_sessionID, WTFMove(origin), type, WTFMove(completionHandler));
+}
+
+void WebsiteDataStore::setDownloadForAutomation(std::optional<bool> allow, const String& downloadPath)
+{
+    m_allowDownloadForAutomation = allow;
+    m_downloadPathForAutomation = downloadPath;
 }
 
 #if ENABLE(APP_BOUND_DOMAINS)

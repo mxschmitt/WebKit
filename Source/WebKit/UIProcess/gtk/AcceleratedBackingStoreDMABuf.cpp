@@ -618,6 +618,32 @@ bool AcceleratedBackingStoreDMABuf::paint(cairo_t* cr, const WebCore::IntRect& c
 }
 #endif
 
+// Playwright begin
+cairo_surface_t* AcceleratedBackingStoreDMABuf::surface()
+{
+    RefPtr<Buffer> buffer = m_renderer.buffer();
+    if (!buffer)
+        return nullptr;
+
+    RefPtr<cairo_surface_t> surface = buffer->surface();
+    if (!surface)
+        return nullptr;
+
+    // The original surface is upside down, so we flip it to match orientation in other accelerated backing stores.
+    m_flippedSurface = adoptRef(cairo_image_surface_create(CAIRO_FORMAT_ARGB32, cairo_image_surface_get_width(surface.get()), cairo_image_surface_get_height(surface.get())));
+    {
+        RefPtr<cairo_t> cr = adoptRef(cairo_create(m_flippedSurface.get()));
+        cairo_matrix_t transform;
+        cairo_matrix_init(&transform, 1, 0, 0, -1, 0, cairo_image_surface_get_height(surface.get()) / buffer->deviceScaleFactor());
+        cairo_transform(cr.get(), &transform);
+        cairo_set_source_surface(cr.get(), surface.get(), 0, 0);
+        cairo_paint(cr.get());
+    }
+    cairo_surface_flush(m_flippedSurface.get());
+    return m_flippedSurface.get();
+}
+// Playwright end
+
 } // namespace WebKit
 
 #endif // USE(EGL)
