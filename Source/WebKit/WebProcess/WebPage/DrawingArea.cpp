@@ -27,6 +27,7 @@
 #include "DrawingArea.h"
 
 #include "DrawingAreaMessages.h"
+#include "DrawingAreaProxyMessages.h"
 #include "Logging.h"
 #include "WebPage.h"
 #include "WebPageCreationParameters.h"
@@ -111,6 +112,13 @@ void DrawingArea::tryMarkLayersVolatile(CompletionHandler<void(bool)>&& completi
 {
     completionFunction(true);
 }
+
+#if PLATFORM(WIN)
+void DrawingArea::didChangeAcceleratedCompositingMode(bool enabled)
+{
+    send(Messages::DrawingAreaProxy::DidChangeAcceleratedCompositingMode(enabled));
+}
+#endif
 
 void DrawingArea::removeMessageReceiverIfNeeded()
 {

@@ -151,12 +151,12 @@ bool screenSupportsExtendedColor(Widget*)
 }
 
 #if ENABLE(TOUCH_EVENTS)
-bool screenHasTouchDevice()
+bool platformScreenHasTouchDevice()
 {
     return true;
 }
 
-bool screenIsTouchPrimaryInputDevice()
+bool platformScreenIsTouchPrimaryInputDevice()
 {
     return true;
 }

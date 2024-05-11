@@ -30,6 +30,7 @@
 
 #include "Logging.h"
 #include "MediaSessionCoordinatorProxyPrivate.h"
+#include "MessageSenderInlines.h"
 #include "RemoteMediaSessionCoordinatorMessages.h"
 #include "RemoteMediaSessionCoordinatorProxyMessages.h"
 #include "WebPageProxy.h"

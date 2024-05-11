@@ -32,13 +32,20 @@
 namespace Inspector {
 
 namespace {
+static uint64_t s_processID = 0;
 static unsigned long s_lastUsedIdentifier = 0;
 }
 
 static String addPrefixToIdentifier(unsigned long identifier)
 {
-    return makeString("0."_s, identifier);
+    return makeString(s_processID, ".", identifier);
 }
+
+void IdentifiersFactory::initializeWithProcessID(uint64_t processID) {
+    ASSERT(!s_processID);
+    s_processID = processID;
+}
+
 
 String IdentifiersFactory::createIdentifier()
 {

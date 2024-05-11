@@ -424,6 +424,30 @@ void NetworkStorageSession::replaceCookies(const Vector<Cookie>& cookies)
     g_signal_emit(jar, signalId, 0);
 }
 
+void  NetworkStorageSession::setCookiesFromResponse(const URL& firstParty, const SameSiteInfo&, const URL& url, const String& setCookieValue)
+{
+    auto origin = urlToSoupURI(url);
+    if (!origin)
+        return;
+
+    auto firstPartyURI = urlToSoupURI(firstParty);
+    if (!firstPartyURI)
+        return;
+
+    for (auto& cookieString : setCookieValue.split('\n')) {
+        GUniquePtr<SoupCookie> cookie(soup_cookie_parse(cookieString.utf8().data(), origin.get()));
+
+        if (!cookie)
+            continue;
+
+#if SOUP_CHECK_VERSION(2, 67, 1)
+        soup_cookie_jar_add_cookie_full(cookieStorage(), cookie.release(), origin.get(), firstPartyURI.get());
+#else
+        soup_cookie_jar_add_cookie_with_first_party(cookieStorage(), firstPartyURI.get(), cookie.release());
+#endif
+    }
+}
+
 void NetworkStorageSession::deleteCookie(const Cookie& cookie, CompletionHandler<void()>&& completionHandler)
 {
     GUniquePtr<SoupCookie> targetCookie(cookie.toSoupCookie());

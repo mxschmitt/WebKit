@@ -336,6 +336,8 @@ bool ContentSecurityPolicy::allowContentSecurityPolicySourceStarToMatchAnyProtoc
 template<typename Predicate, typename... Args>
 typename std::enable_if<!std::is_convertible<Predicate, ContentSecurityPolicy::ViolatedDirectiveCallback>::value, bool>::type ContentSecurityPolicy::allPoliciesWithDispositionAllow(Disposition disposition, Predicate&& predicate, Args&&... args) const
 {
+    if (InspectorInstrumentation::shouldBypassCSP(m_scriptExecutionContext.get()))
+        return true;
     bool isReportOnly = disposition == ContentSecurityPolicy::Disposition::ReportOnly;
     for (auto& policy : m_policies) {
         if (policy->isReportOnly() != isReportOnly)
@@ -349,6 +351,8 @@ typename std::enable_if<!std::is_convertible<Predicate, ContentSecurityPolicy::V
 template<typename Predicate, typename... Args>
 bool ContentSecurityPolicy::allPoliciesWithDispositionAllow(Disposition disposition, ViolatedDirectiveCallback&& callback, Predicate&& predicate, Args&&... args) const
 {
+    if (InspectorInstrumentation::shouldBypassCSP(m_scriptExecutionContext.get()))
+        return true;
     bool isReportOnly = disposition == ContentSecurityPolicy::Disposition::ReportOnly;
     bool isAllowed = true;
     for (auto& policy : m_policies) {
@@ -365,6 +369,8 @@ bool ContentSecurityPolicy::allPoliciesWithDispositionAllow(Disposition disposit
 template<typename Predicate, typename... Args>
 bool ContentSecurityPolicy::allPoliciesAllow(ViolatedDirectiveCallback&& callback, Predicate&& predicate, Args&&... args) const
 {
+    if (InspectorInstrumentation::shouldBypassCSP(m_scriptExecutionContext.get()))
+        return true;
     bool isAllowed = true;
     for (auto& policy : m_policies) {
         if (const ContentSecurityPolicyDirective* violatedDirective = (policy.get()->*predicate)(std::forward<Args>(args)...)) {

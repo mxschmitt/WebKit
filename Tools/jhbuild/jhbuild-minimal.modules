@@ -32,7 +32,6 @@
       <dep package="libjxl"/>
       <dep package="libsoup"/>
       <dep package="libvpx"/>
-      <dep package="openxr"/>
       <dep package="wayland"/>
       <dep package="wayland-protocols"/>
       <dep package="wpebackend-fdo"/>
@@ -132,10 +131,10 @@
       <dep package="glib-networking"/>
       <dep package="libpsl"/>
     </dependencies>
-    <branch module="/sources/libsoup/3.0/libsoup-${version}.tar.xz"
-            version="3.0.7"
+    <branch module="/sources/libsoup/3.2/libsoup-${version}.tar.xz"
+            version="3.2.2"
             repo="download.gnome.org"
-            hash="sha256:ebdf90cf3599c11acbb6818a9d9e3fc9d2c68e56eb829b93962972683e1bf7c8">
+            hash="sha256:83673c685b910fb7d39f1f28eee5afbefb71c05798fc350ac3bf1b885e1efaa1">
     </branch>
   </meson>
 
@@ -229,6 +228,16 @@
       <dep package="atk"/>
       <dep package="at-spi2-core"/>
     </dependencies>
+  </meson>
+
+  <!-- libdrm required for function 'drmGetDeviceFromDevId' -->
+  <meson id="libdrm" mesonargs="-Dtegra=enabled -Dcairo-tests=disabled -Dman-pages=disabled -Dvalgrind=disabled -Dudev=false -Dtests=false">
+    <pkg-config>libdrm.pc</pkg-config>
+    <branch module="mesa/drm.git"
+            version="2.4.113"
+            tag="libdrm-2.4.113"
+            checkoutdir="libdrm-2.4.113"
+            repo="git.freedesktop.org" />
   </meson>
 
   <!-- libjxl required for JPEGXL support -->

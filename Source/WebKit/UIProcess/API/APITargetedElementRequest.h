@@ -34,7 +34,7 @@ class WebPageProxy;
 
 namespace API {
 
-class TargetedElementRequest final : public ObjectImpl<Object::Type::TargetedElementRequest> {
+class TargetedElementRequest final : public ObjectImpl<API::Object::Type::TargetedElementRequest> {
 public:
 
     bool shouldIgnorePointerEventsNone() const { return m_request.shouldIgnorePointerEventsNone; }

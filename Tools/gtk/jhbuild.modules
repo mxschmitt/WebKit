@@ -252,10 +252,10 @@
       <dep package="glib-networking"/>
       <dep package="libpsl"/>
     </dependencies>
-    <branch module="/sources/libsoup/3.0/libsoup-${version}.tar.xz"
-            version="3.0.7"
+    <branch module="/sources/libsoup/3.2/libsoup-${version}.tar.xz"
+            version="3.2.2"
             repo="download.gnome.org"
-            hash="sha256:ebdf90cf3599c11acbb6818a9d9e3fc9d2c68e56eb829b93962972683e1bf7c8">
+            hash="sha256:83673c685b910fb7d39f1f28eee5afbefb71c05798fc350ac3bf1b885e1efaa1">
     </branch>
   </meson>
 

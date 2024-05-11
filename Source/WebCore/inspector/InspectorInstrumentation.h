@@ -31,6 +31,7 @@
 
 #pragma once
 
+#include "AXCoreObject.h"
 #include "CSSSelector.h"
 #include "CanvasBase.h"
 #include "CanvasRenderingContext.h"
@@ -45,6 +46,7 @@
 #include "LocalFrame.h"
 #include "LocalFrameView.h"
 #include "Page.h"
+#include "ResourceError.h"
 #include "ResourceLoader.h"
 #include "ResourceLoaderIdentifier.h"
 #include "StorageArea.h"
@@ -78,6 +80,7 @@ class DOMWrapperWorld;
 class Document;
 class DocumentLoader;
 class EventListener;
+class HTMLInputElement;
 class HTTPHeaderMap;
 class InspectorTimelineAgent;
 class InstrumentingAgents;
@@ -192,6 +195,7 @@ public:
     static void didRecalculateStyle(Document&);
     static void didScheduleStyleRecalculation(Document&);
     static void applyUserAgentOverride(LocalFrame&, String&);
+    static void applyPlatformOverride(LocalFrame&, String&);
     static void applyEmulatedMedia(LocalFrame&, AtomString&);
 
     static void flexibleBoxRendererBeganLayout(const RenderObject&);
@@ -204,6 +208,7 @@ public:
     static void didReceiveData(LocalFrame*, ResourceLoaderIdentifier, const SharedBuffer*, int encodedDataLength);
     static void didFinishLoading(LocalFrame*, DocumentLoader*, ResourceLoaderIdentifier, const NetworkLoadMetrics&, ResourceLoader*);
     static void didFailLoading(LocalFrame*, DocumentLoader*, ResourceLoaderIdentifier, const ResourceError&);
+    static void didReceiveMainResourceError(LocalFrame&, const ResourceError&);
 
     static void willSendRequest(WorkerOrWorkletGlobalScope&, ResourceLoaderIdentifier, ResourceRequest&);
     static void didReceiveResourceResponse(WorkerOrWorkletGlobalScope&, ResourceLoaderIdentifier, const ResourceResponse&);
@@ -230,13 +235,13 @@ public:
     static void frameDetachedFromParent(LocalFrame&);
     static void didCommitLoad(LocalFrame&, DocumentLoader*);
     static void frameDocumentUpdated(LocalFrame&);
-    static void loaderDetachedFromFrame(LocalFrame&, DocumentLoader&);
     static void frameStartedLoading(LocalFrame&);
     static void frameStoppedLoading(LocalFrame&);
     static void didCompleteRenderingFrame(LocalFrame&);
-    static void frameScheduledNavigation(Frame&, Seconds delay);
+    static void frameScheduledNavigation(Frame&, Seconds delay, bool targetIsCurrentFrame);
     static void frameClearedScheduledNavigation(Frame&);
     static void accessibilitySettingsDidChange(Page&);
+    static void didNavigateWithinPage(LocalFrame&);
 #if ENABLE(DARK_MODE_CSS) || HAVE(OS_DARK_MODE_SUPPORT)
     static void defaultAppearanceDidChange(Page&);
 #endif
@@ -268,6 +273,7 @@ public:
     static void stopProfiling(Page&, JSC::JSGlobalObject*, const String& title);
     static void consoleStartRecordingCanvas(CanvasRenderingContext&, JSC::JSGlobalObject&, JSC::JSObject* options);
     static void consoleStopRecordingCanvas(CanvasRenderingContext&);
+    static void bindingCalled(Page& , JSC::JSGlobalObject*, const String& name, const String& arg);
 
     static void performanceMark(ScriptExecutionContext&, const String&, std::optional<MonotonicTime>, LocalFrame*);
 
@@ -326,6 +332,12 @@ public:
     static void layerTreeDidChange(Page*);
     static void renderLayerDestroyed(Page*, const RenderLayer&);
 
+    static void runOpenPanel(LocalFrame*, HTMLInputElement*, bool*);
+    static void frameAttached(LocalFrame*);
+    static bool shouldBypassCSP(ScriptExecutionContext*);
+    static void willCheckNavigationPolicy(LocalFrame&);
+    static void didCheckNavigationPolicy(LocalFrame&, bool cancel);
+
     static void frontendCreated();
     static void frontendDeleted();
     static bool hasFrontends() { return InspectorInstrumentationPublic::hasFrontends(); }
@@ -341,6 +353,8 @@ public:
 
     static void registerInstrumentingAgents(InstrumentingAgents&);
     static void unregisterInstrumentingAgents(InstrumentingAgents&);
+
+    static void maybeOverrideDefaultObjectInclusion(Page&, AccessibilityObjectInclusion&);
 
 private:
     static void didClearWindowObjectInWorldImpl(InstrumentingAgents&, LocalFrame&, DOMWrapperWorld&);
@@ -421,6 +435,7 @@ private:
     static void didRecalculateStyleImpl(InstrumentingAgents&);
     static void didScheduleStyleRecalculationImpl(InstrumentingAgents&, Document&);
     static void applyUserAgentOverrideImpl(InstrumentingAgents&, String&);
+    static void applyPlatformOverrideImpl(InstrumentingAgents&, String&);
     static void applyEmulatedMediaImpl(InstrumentingAgents&, AtomString&);
 
     static void flexibleBoxRendererBeganLayoutImpl(InstrumentingAgents&, const RenderObject&);
@@ -435,6 +450,7 @@ private:
     static void didReceiveDataImpl(InstrumentingAgents&, ResourceLoaderIdentifier, const SharedBuffer*, int encodedDataLength);
     static void didFinishLoadingImpl(InstrumentingAgents&, ResourceLoaderIdentifier, DocumentLoader*, const NetworkLoadMetrics&, ResourceLoader*);
     static void didFailLoadingImpl(InstrumentingAgents&, ResourceLoaderIdentifier, DocumentLoader*, const ResourceError&);
+    static void didReceiveMainResourceErrorImpl(InstrumentingAgents&, LocalFrame&, const ResourceError&);
     static void willLoadXHRSynchronouslyImpl(InstrumentingAgents&);
     static void didLoadXHRSynchronouslyImpl(InstrumentingAgents&);
     static void scriptImportedImpl(InstrumentingAgents&, ResourceLoaderIdentifier, const String& sourceString);
@@ -445,13 +461,13 @@ private:
     static void frameDetachedFromParentImpl(InstrumentingAgents&, LocalFrame&);
     static void didCommitLoadImpl(InstrumentingAgents&, LocalFrame&, DocumentLoader*);
     static void frameDocumentUpdatedImpl(InstrumentingAgents&, LocalFrame&);
-    static void loaderDetachedFromFrameImpl(InstrumentingAgents&, DocumentLoader&);
     static void frameStartedLoadingImpl(InstrumentingAgents&, LocalFrame&);
     static void didCompleteRenderingFrameImpl(InstrumentingAgents&);
     static void frameStoppedLoadingImpl(InstrumentingAgents&, LocalFrame&);
-    static void frameScheduledNavigationImpl(InstrumentingAgents&, Frame&, Seconds delay);
+    static void frameScheduledNavigationImpl(InstrumentingAgents&, Frame&, Seconds delay, bool targetIsCurrentFrame);
     static void frameClearedScheduledNavigationImpl(InstrumentingAgents&, Frame&);
     static void accessibilitySettingsDidChangeImpl(InstrumentingAgents&);
+    static void didNavigateWithinPageImpl(InstrumentingAgents&, LocalFrame&);
 #if ENABLE(DARK_MODE_CSS) || HAVE(OS_DARK_MODE_SUPPORT)
     static void defaultAppearanceDidChangeImpl(InstrumentingAgents&);
 #endif
@@ -478,6 +494,7 @@ private:
     static void stopProfilingImpl(InstrumentingAgents&, JSC::JSGlobalObject*, const String& title);
     static void consoleStartRecordingCanvasImpl(InstrumentingAgents&, CanvasRenderingContext&, JSC::JSGlobalObject&, JSC::JSObject* options);
     static void consoleStopRecordingCanvasImpl(InstrumentingAgents&, CanvasRenderingContext&);
+    static void bindingCalledImpl(InstrumentingAgents&, JSC::JSGlobalObject*, const String& name, const String& arg);
 
     static void performanceMarkImpl(InstrumentingAgents&, const String& label, std::optional<MonotonicTime>, LocalFrame*);
 
@@ -535,6 +552,12 @@ private:
 
     static void layerTreeDidChangeImpl(InstrumentingAgents&);
     static void renderLayerDestroyedImpl(InstrumentingAgents&, const RenderLayer&);
+
+    static void runOpenPanelImpl(InstrumentingAgents&, HTMLInputElement*, bool*);
+    static void frameAttachedImpl(InstrumentingAgents&, LocalFrame&);
+    static bool shouldBypassCSPImpl(InstrumentingAgents&);
+    static void willCheckNavigationPolicyImpl(InstrumentingAgents&, LocalFrame&);
+    static void didCheckNavigationPolicyImpl(InstrumentingAgents&, LocalFrame&, bool cancel);
 
     static InstrumentingAgents& instrumentingAgents(Page&);
     static InstrumentingAgents& instrumentingAgents(WorkerOrWorkletGlobalScope&);
@@ -1068,6 +1091,13 @@ inline void InspectorInstrumentation::applyUserAgentOverride(LocalFrame& frame, 
         applyUserAgentOverrideImpl(*agents, userAgent);
 }
 
+inline void InspectorInstrumentation::applyPlatformOverride(LocalFrame& frame, String& platform)
+{
+    FAST_RETURN_IF_NO_FRONTENDS(void());
+    if (auto* agents = instrumentingAgents(frame))
+        applyPlatformOverrideImpl(*agents, platform);
+}
+
 inline void InspectorInstrumentation::applyEmulatedMedia(LocalFrame& frame, AtomString& media)
 {
     FAST_RETURN_IF_NO_FRONTENDS(void());
@@ -1170,6 +1200,13 @@ inline void InspectorInstrumentation::didFailLoading(WorkerOrWorkletGlobalScope&
     didFailLoadingImpl(instrumentingAgents(globalScope), identifier, nullptr, error);
 }
 
+inline void InspectorInstrumentation::didReceiveMainResourceError(LocalFrame& frame, const ResourceError& error)
+{
+    FAST_RETURN_IF_NO_FRONTENDS(void());
+    if (auto* agents = instrumentingAgents(frame))
+        didReceiveMainResourceErrorImpl(*agents, frame, error);
+}
+
 inline void InspectorInstrumentation::continueAfterXFrameOptionsDenied(LocalFrame& frame, ResourceLoaderIdentifier identifier, DocumentLoader& loader, const ResourceResponse& response)
 {
     // Treat the same as didReceiveResponse.
@@ -1260,13 +1297,6 @@ inline void InspectorInstrumentation::frameDocumentUpdated(LocalFrame& frame)
         frameDocumentUpdatedImpl(*agents, frame);
 }
 
-inline void InspectorInstrumentation::loaderDetachedFromFrame(LocalFrame& frame, DocumentLoader& loader)
-{
-    FAST_RETURN_IF_NO_FRONTENDS(void());
-    if (auto* agents = instrumentingAgents(frame))
-        loaderDetachedFromFrameImpl(*agents, loader);
-}
-
 inline void InspectorInstrumentation::frameStartedLoading(LocalFrame& frame)
 {
     FAST_RETURN_IF_NO_FRONTENDS(void());
@@ -1288,11 +1318,11 @@ inline void InspectorInstrumentation::frameStoppedLoading(LocalFrame& frame)
         frameStoppedLoadingImpl(*agents, frame);
 }
 
-inline void InspectorInstrumentation::frameScheduledNavigation(Frame& frame, Seconds delay)
+inline void InspectorInstrumentation::frameScheduledNavigation(Frame& frame, Seconds delay, bool targetIsCurrentFrame)
 {
     FAST_RETURN_IF_NO_FRONTENDS(void());
     if (auto* agents = instrumentingAgents(frame))
-        frameScheduledNavigationImpl(*agents, frame, delay);
+        frameScheduledNavigationImpl(*agents, frame, delay, targetIsCurrentFrame);
 }
 
 inline void InspectorInstrumentation::frameClearedScheduledNavigation(Frame& frame)
@@ -1306,6 +1336,13 @@ inline void InspectorInstrumentation::accessibilitySettingsDidChange(Page& page)
 {
     FAST_RETURN_IF_NO_FRONTENDS(void());
     accessibilitySettingsDidChangeImpl(instrumentingAgents(page));
+}
+
+inline void InspectorInstrumentation::didNavigateWithinPage(LocalFrame& frame)
+{
+    FAST_RETURN_IF_NO_FRONTENDS(void());
+    if (auto* agents = instrumentingAgents(frame))
+        didNavigateWithinPageImpl(*agents, frame);
 }
 
 #if ENABLE(DARK_MODE_CSS) || HAVE(OS_DARK_MODE_SUPPORT)
@@ -1696,6 +1733,11 @@ inline void InspectorInstrumentation::performanceMark(ScriptExecutionContext& co
         performanceMarkImpl(*agents, label, WTFMove(startTime), frame);
 }
 
+inline void InspectorInstrumentation::bindingCalled(Page& page, JSC::JSGlobalObject* globalObject, const String& name, const String& arg)
+{
+    bindingCalledImpl(instrumentingAgents(page), globalObject, name, arg);
+}
+
 inline void InspectorInstrumentation::didRequestAnimationFrame(Document& document, int callbackId)
 {
     FAST_RETURN_IF_NO_FRONTENDS(void());
@@ -1750,6 +1792,42 @@ inline void InspectorInstrumentation::renderLayerDestroyed(Page* page, const Ren
     FAST_RETURN_IF_NO_FRONTENDS(void());
     if (auto* agents = instrumentingAgents(page))
         renderLayerDestroyedImpl(*agents, renderLayer);
+}
+
+inline void InspectorInstrumentation::runOpenPanel(LocalFrame* frame, HTMLInputElement* element, bool* intercept)
+{
+    FAST_RETURN_IF_NO_FRONTENDS(void());
+    if (auto* agents = instrumentingAgents(*frame))
+        runOpenPanelImpl(*agents, element, intercept);
+}
+
+inline void InspectorInstrumentation::frameAttached(LocalFrame* frame)
+{
+    FAST_RETURN_IF_NO_FRONTENDS(void());
+    if (auto* agents = instrumentingAgents(frame))
+        frameAttachedImpl(*agents, *frame);
+}
+
+inline bool InspectorInstrumentation::shouldBypassCSP(ScriptExecutionContext* context)
+{
+    FAST_RETURN_IF_NO_FRONTENDS(false);
+    if (auto* agents = instrumentingAgents(context))
+        return shouldBypassCSPImpl(*agents);
+    return false;
+}
+
+inline void InspectorInstrumentation::willCheckNavigationPolicy(LocalFrame& frame)
+{
+    FAST_RETURN_IF_NO_FRONTENDS(void());
+    if (auto* agents = instrumentingAgents(frame))
+        willCheckNavigationPolicyImpl(*agents, frame);
+}
+
+inline void InspectorInstrumentation::didCheckNavigationPolicy(LocalFrame& frame, bool cancel)
+{
+    FAST_RETURN_IF_NO_FRONTENDS(void());
+    if (auto* agents = instrumentingAgents(frame))
+        didCheckNavigationPolicyImpl(*agents, frame, cancel);
 }
 
 inline InstrumentingAgents* InspectorInstrumentation::instrumentingAgents(ScriptExecutionContext* context)
