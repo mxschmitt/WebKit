@@ -41,6 +41,7 @@
 #include <wtf/persistence/PersistentDecoder.h>
 #include <wtf/persistence/PersistentEncoder.h>
 #include <wtf/text/StringView.h>
+#include <wtf/StringExtras.h>
 
 namespace WebCore {
 
@@ -872,7 +873,9 @@ bool ResourceResponseBase::equalForWebKitLegacyChallengeComparison(const Resourc
 bool ResourceResponseBase::containsInvalidHTTPHeaders() const
 {
     for (auto& header : httpHeaderFields()) {
-        if (!isValidHTTPHeaderValue(header.value.trim(isASCIIWhitespaceWithoutFF<UChar>)))
+        // Playwright concatenates multiple Set-Cookie headers into a single header via '\n'.
+        auto allowLineFeeds = !equalLettersIgnoringASCIICase(header.key, "Set-Cookie"_s);
+        if (!isValidHTTPHeaderValue(allowLineFeeds, header.value.trim(isASCIIWhitespaceWithoutFF<UChar>)))
             return true;
     }
     return false;

@@ -121,7 +121,7 @@ bool isValidReasonPhrase(const String& value)
 }
 
 // See https://fetch.spec.whatwg.org/#concept-header
-bool isValidHTTPHeaderValue(const String& value)
+bool isValidHTTPHeaderValue(bool allowLineFeeds, const String& value)
 {
     UChar c = value[0];
     if (isTabOrSpace(c))
@@ -131,10 +131,15 @@ bool isValidHTTPHeaderValue(const String& value)
         return false;
     for (unsigned i = 0; i < value.length(); ++i) {
         c = value[i];
-        if (c == 0x00 || c == 0x0A || c == 0x0D)
+        if (c == 0x00 || (!allowLineFeeds && c == 0x0A) || c == 0x0D)
             return false;
     }
     return true;
+}
+
+bool isValidHTTPHeaderValue(const String& value)
+{
+    return isValidHTTPHeaderValue(false, value);
 }
 
 // See RFC 7231, Section 5.3.2.
