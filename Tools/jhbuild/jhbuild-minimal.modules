@@ -32,7 +32,6 @@
       <dep package="libjxl"/>
       <dep package="libsoup"/>
       <dep package="libvpx"/>
-      <dep package="openxr"/>
       <dep package="wayland"/>
       <dep package="wayland-protocols"/>
       <dep package="wpebackend-fdo"/>
@@ -121,23 +120,22 @@
   <meson id="libdrm" mesonargs="-Dtegra=enabled -Dcairo-tests=disabled -Dman-pages=disabled -Dvalgrind=disabled -Dudev=false -Dtests=false">
     <pkg-config>libdrm.pc</pkg-config>
     <branch module="mesa/drm.git"
-            version="2.4.113"
-            tag="libdrm-2.4.113"
-            checkoutdir="libdrm-2.4.113"
+            version="2.4.120"
+            tag="libdrm-2.4.120"
+            checkoutdir="libdrm-2.4.120"
             repo="git.freedesktop.org" />
   </meson>
 
   <meson id="libsoup" mesonargs="-Dgssapi=disabled -Dvapi=disabled -Dntlm=disabled -Dsysprof=disabled -Dautobahn=disabled -Dpkcs11_tests=disabled">
-    <pkg-config>libsoup-3.0.pc</pkg-config>
     <dependencies>
       <dep package="glib"/>
       <dep package="glib-networking"/>
       <dep package="libpsl"/>
     </dependencies>
-    <branch module="/sources/libsoup/3.0/libsoup-${version}.tar.xz"
-            version="3.0.7"
+    <branch module="/sources/libsoup/3.4/libsoup-${version}.tar.xz"
+            version="3.4.4"
             repo="download.gnome.org"
-            hash="sha256:ebdf90cf3599c11acbb6818a9d9e3fc9d2c68e56eb829b93962972683e1bf7c8">
+            hash="sha256:291c67725f36ed90ea43efff25064b69c5a2d1981488477c05c481a3b4b0c5aa">
     </branch>
   </meson>
 
@@ -231,6 +229,16 @@
       <dep package="atk"/>
       <dep package="at-spi2-core"/>
     </dependencies>
+  </meson>
+
+  <!-- libdrm required for function 'drmGetDeviceFromDevId' -->
+  <meson id="libdrm" mesonargs="-Dtegra=enabled -Dcairo-tests=disabled -Dman-pages=disabled -Dvalgrind=disabled -Dudev=false -Dtests=false">
+    <pkg-config>libdrm.pc</pkg-config>
+    <branch module="mesa/drm.git"
+            version="2.4.120"
+            tag="libdrm-2.4.120"
+            checkoutdir="libdrm-2.4.120"
+            repo="git.freedesktop.org" />
   </meson>
 
   <!-- libjxl required for JPEGXL support -->

@@ -59,6 +59,7 @@
 #include "MIMETypeRegistry.h"
 #include "MemoryCache.h"
 #include "NetworkResourcesData.h"
+#include "NetworkStateNotifier.h"
 #include "Page.h"
 #include "PlatformStrategies.h"
 #include "ProgressTracker.h"
@@ -339,8 +340,8 @@ static Ref<Inspector::Protocol::Network::Request> buildObjectForResourceRequest(
         .release();
 
     if (request.httpBody() && !request.httpBody()->isEmpty()) {
-        auto bytes = request.httpBody()->flatten();
-        requestObject->setPostData(String::fromUTF8WithLatin1Fallback(bytes.span()));
+        Vector<uint8_t> bytes = request.httpBody()->flatten();
+        requestObject->setPostData(base64EncodeToString(bytes));
     }
 
     if (resourceLoader) {
@@ -392,6 +393,8 @@ RefPtr<Inspector::Protocol::Network::Response> InspectorNetworkAgent::buildObjec
         .setMimeType(response.mimeType())
         .setSource(responseSource(response.source()))
         .release();
+
+    responseObject->setRequestHeaders(buildObjectForHeaders(response.m_httpRequestHeaderFields));
 
     if (resourceLoader) {
         auto* metrics = response.deprecatedNetworkLoadMetricsOrNull();
@@ -960,6 +963,7 @@ void InspectorNetworkAgent::continuePendingResponses()
 
 Inspector::Protocol::ErrorStringOr<void> InspectorNetworkAgent::setExtraHTTPHeaders(Ref<JSON::Object>&& headers)
 {
+    m_extraRequestHeaders.clear();
     for (auto& entry : headers.get()) {
         auto stringValue = entry.value->asString();
         if (!!stringValue)
@@ -1238,6 +1242,9 @@ Inspector::Protocol::ErrorStringOr<void> InspectorNetworkAgent::interceptWithReq
         return makeUnexpected("Missing pending intercept request for given requestId"_s);
 
     auto& loader = *pendingRequest->m_loader;
+    if (loader.reachedTerminalState())
+        return makeUnexpected("Unable to intercept request, it has already been processed"_s);
+
     ResourceRequest request = loader.request();
     if (!!url)
         request.setURL(URL({ }, url));
@@ -1333,14 +1340,23 @@ Inspector::Protocol::ErrorStringOr<void> InspectorNetworkAgent::interceptRequest
     response.setHTTPStatusCode(status);
     response.setHTTPStatusText(String { statusText });
     HTTPHeaderMap explicitHeaders;
+    String setCookieValue;
     for (auto& header : headers.get()) {
         auto headerValue = header.value->asString();
-        if (!!headerValue)
+        if (equalIgnoringASCIICase(header.key, "Set-Cookie"_s))
+            setCookieValue = headerValue;
+        else if (!!headerValue)
             explicitHeaders.add(header.key, headerValue);
+
     }
     response.setHTTPHeaderFields(WTFMove(explicitHeaders));
     response.setHTTPHeaderField(HTTPHeaderName::ContentType, response.mimeType());
-    loader->didReceiveResponse(response, [loader, buffer = data.releaseNonNull()]() {
+
+    auto* frame = loader->frame();
+    if (!setCookieValue.isEmpty() && frame && frame->page())
+        frame->page()->cookieJar().setCookieFromResponse(*loader.get(), setCookieValue);
+
+    loader->didReceiveResponse(response, [loader, buffer = data.releaseNonNull()]() mutable {
         if (loader->reachedTerminalState())
             return;
 
@@ -1402,6 +1418,12 @@ Inspector::Protocol::ErrorStringOr<void> InspectorNetworkAgent::setEmulatedCondi
 }
 
 #endif // ENABLE(INSPECTOR_NETWORK_THROTTLING)
+
+Inspector::Protocol::ErrorStringOr<void> InspectorNetworkAgent::setEmulateOfflineState(bool offline)
+{
+    platformStrategies()->loaderStrategy()->setEmulateOfflineState(offline);
+    return { };
+}
 
 bool InspectorNetworkAgent::shouldTreatAsText(const String& mimeType)
 {

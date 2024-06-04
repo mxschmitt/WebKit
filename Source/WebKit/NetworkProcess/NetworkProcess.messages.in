@@ -79,6 +79,8 @@ messages -> NetworkProcess LegacyReceiver {
 
     SetInspectionForServiceWorkersAllowed(PAL::SessionID sessionID, bool inspectable)
 
+    SetIgnoreCertificateErrors(PAL::SessionID sessionID, bool ignoreTLSErrors)
+
     ClearPrevalentResource(PAL::SessionID sessionID, WebCore::RegistrableDomain resourceDomain) -> ()
     ClearUserInteraction(PAL::SessionID sessionID, WebCore::RegistrableDomain resourceDomain) -> ()
     DumpResourceLoadStatistics(PAL::SessionID sessionID) -> (String dumpedStatistics)

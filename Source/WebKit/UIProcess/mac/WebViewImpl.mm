@@ -2409,6 +2409,11 @@ WebCore::DestinationColorSpace WebViewImpl::colorSpace()
         if (!m_colorSpace)
             m_colorSpace = [NSColorSpace sRGBColorSpace];
     }
+    // Playwright begin
+    // window.colorSpace is sometimes null on popup windows in headless mode
+    if (!m_colorSpace)
+        return WebCore::DestinationColorSpace::SRGB();
+    // Playwright end
 
     ASSERT(m_colorSpace);
     return WebCore::DestinationColorSpace { [m_colorSpace CGColorSpace] };
@@ -4524,6 +4529,18 @@ ALLOW_DEPRECATED_DECLARATIONS_BEGIN
     return adoptCF(CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, windowID, imageOptions));
 ALLOW_DEPRECATED_DECLARATIONS_END
 }
+
+// Paywright begin
+RetainPtr<CGImageRef> WebViewImpl::takeSnapshotForAutomation() {
+    NSWindow *window = [m_view window];
+
+    CGSWindowID windowID = (CGSWindowID)window.windowNumber;
+    if (!windowID || !window.isVisible)
+        return nullptr;
+
+    return takeWindowSnapshot(windowID, true);
+}
+// Paywright end
 
 RefPtr<ViewSnapshot> WebViewImpl::takeViewSnapshot()
 {

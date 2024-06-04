@@ -4214,7 +4214,7 @@ ALLOW_DEPRECATED_DECLARATIONS_END
     _private->handlingMouseDownEvent = NO;
 }
 
-#if ENABLE(TOUCH_EVENTS)
+#if ENABLE(IOS_TOUCH_EVENTS)
 
 - (void)touch:(WebEvent *)event
 {
