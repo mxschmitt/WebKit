@@ -835,7 +835,8 @@
                 { "name": "objectId", "$ref": "Runtime.RemoteObjectId", "description": "Input element handle." },
                 { "name": "files", "type": "array", "items": { "$ref": "FilePayload" }, "optional": true, "description": "Files to set" },
                 { "name": "paths", "type": "array", "items": { "type": "string" }, "optional": true, "description": "File paths to set" }
-            ]
+            ],
+            "async": true
         }
     ],
     "events": [

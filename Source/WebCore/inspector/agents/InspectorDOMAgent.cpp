@@ -55,6 +55,7 @@
 #include "ContainerNode.h"
 #include "Cookie.h"
 #include "CookieJar.h"
+#include "DirectoryFileListCreator.h"
 #include "DOMEditor.h"
 #include "DOMException.h"
 #include "DOMPatchSupport.h"
@@ -66,6 +67,7 @@
 #include "EventListener.h"
 #include "EventNames.h"
 #include "File.h"
+#include <WebCore/FileChooser.h>
 #include "FileList.h"
 #include "FrameTree.h"
 #include "FullscreenManager.h"
@@ -3355,20 +3357,28 @@ Inspector::Protocol::ErrorStringOr<Ref<Inspector::Protocol::DOM::MediaStats>> In
 #endif
 }
 
-Protocol::ErrorStringOr<void> InspectorDOMAgent::setInputFiles(const String& objectId, RefPtr<JSON::Array>&& files, RefPtr<JSON::Array>&& paths) {
+void InspectorDOMAgent::setInputFiles(const String& objectId, RefPtr<JSON::Array>&& files, RefPtr<JSON::Array>&& paths, Ref<SetInputFilesCallback>&& callback) {
     InjectedScript injectedScript = m_injectedScriptManager.injectedScriptForObjectId(objectId);
-    if (injectedScript.hasNoValue())
-        return makeUnexpected("Can not find element's context for given id"_s);
+    if (injectedScript.hasNoValue()) {
+        callback->sendFailure("Can not find element's context for given id"_s);
+        return;
+    }
 
     Node* node = scriptValueAsNode(injectedScript.findObjectById(objectId));
-    if (!node)
-        return makeUnexpected("Can not find element for given id"_s);
+    if (!node) {
+        callback->sendFailure("Can not find element for given id"_s);
+        return;
+    }
 
-    if (node->nodeType() != Node::ELEMENT_NODE || node->nodeName() != "INPUT"_s)
-        return makeUnexpected("Not an input node"_s);
+    if (node->nodeType() != Node::ELEMENT_NODE || node->nodeName() != "INPUT"_s) {
+        callback->sendFailure("Not an input node"_s);
+        return;
+    }
 
-    if (!(bool(files) ^ bool(paths)))
-        return makeUnexpected("Exactly one of files and paths should be specified"_s);
+    if (!(bool(files) ^ bool(paths))) {
+        callback->sendFailure("Exactly one of files and paths should be specified"_s);
+        return;
+    }
 
     HTMLInputElement* element = static_cast<HTMLInputElement*>(node);
     Vector<Ref<File>> fileObjects;
@@ -3376,36 +3386,60 @@ Protocol::ErrorStringOr<void> InspectorDOMAgent::setInputFiles(const String& obj
         for (unsigned i = 0; i < files->length(); ++i) {
             RefPtr<JSON::Value> item = files->get(i);
             RefPtr<JSON::Object> obj = item->asObject();
-            if (!obj)
-                return makeUnexpected("Invalid file payload format"_s);
+            if (!obj) {
+                callback->sendFailure("Invalid file payload format"_s);
+                return;
+            }
 
             String name;
             String type;
             String data;
-            if (!obj->getString("name"_s, name) || !obj->getString("type"_s, type) || !obj->getString("data"_s, data))
-                return makeUnexpected("Invalid file payload format"_s);
+            if (!obj->getString("name"_s, name) || !obj->getString("type"_s, type) || !obj->getString("data"_s, data)) {
+                callback->sendFailure("Invalid file payload format"_s);
+                return;
+            }
 
             std::optional<Vector<uint8_t>> buffer = base64Decode(data);
-            if (!buffer)
-                return makeUnexpected("Unable to decode given content"_s);
+            if (!buffer) {
+                callback->sendFailure("Unable to decode given content"_s);
+                return;
+            }
 
             ScriptExecutionContext* context = element->scriptExecutionContext();
             fileObjects.append(File::create(context, Blob::create(context, WTFMove(*buffer), type), name));
         }
+        RefPtr<FileList> fileList = FileList::create(WTFMove(fileObjects));
+        element->setFiles(WTFMove(fileList));
+        callback->sendSuccess();
     } else {
-        for (unsigned i = 0; i < paths->length(); ++i) {
-            RefPtr<JSON::Value> item = paths->get(i);
-            String path = item->asString();
-            if (path.isEmpty())
-                return makeUnexpected("Invalid file path"_s);
+        if (element->hasAttributeWithoutSynchronization(webkitdirectoryAttr)) {
+            auto m_directoryFileListCreator = DirectoryFileListCreator::create([element = RefPtr { element }, callback = WTFMove(callback)](Ref<FileList>&& fileList) mutable {
+                ASSERT(isMainThread());
+                element->setFiles(WTFMove(fileList));
+                callback->sendSuccess();
+            });
+            Vector<FileChooserFileInfo> filesChooserFiles;
+            for (size_t i = 0; i < paths->length(); ++i) {
+                filesChooserFiles.append(FileChooserFileInfo { paths->get(i)->asString(), nullString(), { } });
+            }
+            m_directoryFileListCreator->start(m_document.get(), filesChooserFiles);
+        } else {
+            for (unsigned i = 0; i < paths->length(); ++i) {
+                RefPtr<JSON::Value> item = paths->get(i);
+                String path = item->asString();
+                if (path.isEmpty()) {
+                    callback->sendFailure("Invalid file path"_s);
+                    return;
+                }
 
-            ScriptExecutionContext* context = element->scriptExecutionContext();
-            fileObjects.append(File::create(context, path));
+                ScriptExecutionContext* context = element->scriptExecutionContext();
+                fileObjects.append(File::create(context, path));
+            }
+            RefPtr<FileList> fileList = FileList::create(WTFMove(fileObjects));
+            element->setFiles(WTFMove(fileList));
+            callback->sendSuccess();
         }
     }
-    RefPtr<FileList> fileList = FileList::create(WTFMove(fileObjects));
-    element->setFiles(WTFMove(fileList));
-    return { };
 }
 
 } // namespace WebCore

@@ -176,7 +176,7 @@ public:
     Inspector::Protocol::ErrorStringOr<std::tuple<String /* contentFrameId */, String /* ownerFrameId */>> describeNode(const String& objectId);
     Inspector::Protocol::ErrorStringOr<void> scrollIntoViewIfNeeded(const String& objectId, RefPtr<JSON::Object>&& rect);
     Inspector::Protocol::ErrorStringOr<Ref<JSON::ArrayOf<Inspector::Protocol::DOM::Quad>>> getContentQuads(const String& objectId);
-    Inspector::Protocol::ErrorStringOr<void> setInputFiles(const String& objectId, RefPtr<JSON::Array>&& files, RefPtr<JSON::Array>&& paths);
+    void setInputFiles(const String& objectId, RefPtr<JSON::Array>&& files, RefPtr<JSON::Array>&& paths, Ref<SetInputFilesCallback>&& callback);
 
     // InspectorInstrumentation
     Inspector::Protocol::DOM::NodeId identifierForNode(Node&);
