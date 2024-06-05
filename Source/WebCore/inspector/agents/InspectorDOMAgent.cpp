@@ -67,7 +67,7 @@
 #include "EventListener.h"
 #include "EventNames.h"
 #include "File.h"
-#include <WebCore/FileChooser.h>
+#include <FileChooser.h>
 #include "FileList.h"
 #include "FrameTree.h"
 #include "FullscreenManager.h"
