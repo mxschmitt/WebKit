@@ -49,7 +49,7 @@ public:
     {
     }
 
-#if PLATFORM(WPE)
+#if !ENABLE(IOS_TOUCH_EVENTS)
     // FIXME: since WPE currently does not send touch stationary events, we need to be able to
     // create a PlatformTouchPoint of type TouchCancelled artificially
     PlatformTouchPoint(unsigned id, State state, IntPoint screenPos, IntPoint pos)

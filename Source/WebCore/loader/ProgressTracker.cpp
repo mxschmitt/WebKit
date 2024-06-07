@@ -161,6 +161,8 @@ void ProgressTracker::progressCompleted(LocalFrame& frame)
     if (!m_numProgressTrackedFrames || m_originatingProgressFrame == &frame)
         finalProgressComplete();
 
+    InspectorInstrumentation::frameStoppedLoading(frame);
+
     m_client->didChangeEstimatedProgress();
 }
 
@@ -187,8 +189,6 @@ void ProgressTracker::finalProgressComplete()
     m_client->progressFinished(*frame);
     protectedPage()->progressFinished(*frame);
     frame->checkedLoader()->loadProgressingStatusChanged();
-
-    InspectorInstrumentation::frameStoppedLoading(*frame);
 }
 
 void ProgressTracker::incrementProgress(ResourceLoaderIdentifier identifier, const ResourceResponse& response)

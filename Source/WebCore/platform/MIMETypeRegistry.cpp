@@ -666,6 +666,9 @@ bool MIMETypeRegistry::canShowMIMEType(const String& mimeType)
     if (startsWithLettersIgnoringASCIICase(mimeType, "text/"_s))
         return !isUnsupportedTextMIMEType(mimeType);
 
+    if (equalLettersIgnoringASCIICase(mimeType, "application/x-zerosize"_s))
+        return true;
+
     return false;
 }
 

@@ -31,6 +31,7 @@
 #if USE(APPKIT)
 #include <wtf/RetainPtr.h>
 OBJC_CLASS NSView;
+OBJC_CLASS NSEvent;
 #endif
 
 #if PLATFORM(GTK)
@@ -84,6 +85,11 @@ public:
 #endif
 #elif PLATFORM(WIN)
     NativeWebMouseEvent(HWND, UINT message, WPARAM, LPARAM, bool);
+#endif
+
+#if PLATFORM(GTK) || USE(LIBWPE) || PLATFORM(WIN)
+    NativeWebMouseEvent(WebEventType type, WebMouseEventButton button, unsigned short buttons, const WebCore::IntPoint& position, const WebCore::IntPoint& globalPosition, float deltaX, float deltaY, float deltaZ, int clickCount, OptionSet<WebEventModifier> modifiers, WallTime timestamp)
+        : WebMouseEvent({type, modifiers, timestamp}, button, buttons, position, globalPosition, deltaX, deltaY, deltaZ, clickCount) { }
 #endif
 
 #if USE(APPKIT)

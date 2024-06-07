@@ -88,6 +88,10 @@ bool WebProcessCache::canCacheProcess(WebProcessProxy& process) const
         return false;
     }
 
+    auto sessionID = process.websiteDataStore()->sessionID();
+    if (sessionID.isEphemeral() && !process.processPool().hasPagesUsingWebsiteDataStore(*process.websiteDataStore()))
+        return false;
+
     return true;
 }
 

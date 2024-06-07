@@ -115,6 +115,13 @@ public:
 #if PLATFORM(WPE) && USE(GBM) && ENABLE(WPE_PLATFORM)
     void preferredBufferFormatsDidChange();
 #endif
+
+// Playwright begin
+#if USE(COORDINATED_GRAPHICS)
+    const SimpleViewportController& viewportController() const { return m_viewportController; }
+#endif
+// Playwright end
+
 private:
 #if USE(COORDINATED_GRAPHICS)
     void layerFlushTimerFired();

@@ -32,8 +32,10 @@
 #pragma once
 
 #include "CachedResource.h"
+#include "FrameIdentifier.h"
 #include "InspectorWebAgentBase.h"
 #include "LayoutRect.h"
+#include "ProcessIdentifier.h"
 #include <JavaScriptCore/InspectorBackendDispatchers.h>
 #include <JavaScriptCore/InspectorFrontendDispatchers.h>
 #include <JavaScriptCore/InspectorProtocolObjects.h>
@@ -41,11 +43,16 @@
 #include <wtf/Seconds.h>
 #include <wtf/text/WTFString.h>
 
+namespace Inspector {
+class InjectedScriptManager;
+}
+
 namespace WebCore {
 
 class DOMWrapperWorld;
 class DocumentLoader;
 class Frame;
+class HTMLInputElement;
 class InspectorClient;
 class InspectorOverlay;
 class LocalFrame;
@@ -78,6 +85,7 @@ public:
         OtherResource,
     };
 
+    WEBCORE_EXPORT static String makeFrameID(ProcessIdentifier processID,  FrameIdentifier frameID);
     static bool sharedBufferContent(RefPtr<FragmentedSharedBuffer>&&, const String& textEncodingName, bool withBase64Encode, String* result);
     static Vector<CachedResource*> cachedResourcesForFrame(LocalFrame*);
     static void resourceContent(Inspector::Protocol::ErrorString&, LocalFrame*, const URL&, String* result, bool* base64Encoded);
@@ -98,8 +106,11 @@ public:
     Inspector::Protocol::ErrorStringOr<void> enable();
     Inspector::Protocol::ErrorStringOr<void> disable();
     Inspector::Protocol::ErrorStringOr<void> reload(std::optional<bool>&& ignoreCache, std::optional<bool>&& revalidateAllResources);
+    Inspector::Protocol::ErrorStringOr<void> goBack();
+    Inspector::Protocol::ErrorStringOr<void> goForward();
     Inspector::Protocol::ErrorStringOr<void> navigate(const String& url);
     Inspector::Protocol::ErrorStringOr<void> overrideUserAgent(const String&);
+    Inspector::Protocol::ErrorStringOr<void> overridePlatform(const String&);
     Inspector::Protocol::ErrorStringOr<void> overrideSetting(Inspector::Protocol::Page::Setting, std::optional<bool>&& value);
     Inspector::Protocol::ErrorStringOr<void> overrideUserPreference(Inspector::Protocol::Page::UserPreferenceName, std::optional<Inspector::Protocol::Page::UserPreferenceValue>&&);
     Inspector::Protocol::ErrorStringOr<Ref<JSON::ArrayOf<Inspector::Protocol::Page::Cookie>>> getCookies();
@@ -115,45 +126,66 @@ public:
 #endif
     Inspector::Protocol::ErrorStringOr<void> setShowPaintRects(bool);
     Inspector::Protocol::ErrorStringOr<void> setEmulatedMedia(const String&);
+    Inspector::Protocol::ErrorStringOr<void> setForcedColors(std::optional<Inspector::Protocol::Page::ForcedColors>&&);
+    Inspector::Protocol::ErrorStringOr<void> setTimeZone(const String&);
+    Inspector::Protocol::ErrorStringOr<void> setTouchEmulationEnabled(bool);
     Inspector::Protocol::ErrorStringOr<String> snapshotNode(Inspector::Protocol::DOM::NodeId);
-    Inspector::Protocol::ErrorStringOr<String> snapshotRect(int x, int y, int width, int height, Inspector::Protocol::Page::CoordinateSystem);
+    Inspector::Protocol::ErrorStringOr<String> snapshotRect(int x, int y, int width, int height, Inspector::Protocol::Page::CoordinateSystem, std::optional<bool>&& omitDeviceScaleFactor);
 #if ENABLE(WEB_ARCHIVE) && USE(CF)
     Inspector::Protocol::ErrorStringOr<String> archive();
 #endif
-#if !PLATFORM(COCOA)
     Inspector::Protocol::ErrorStringOr<void> setScreenSizeOverride(std::optional<int>&& width, std::optional<int>&& height);
-#endif
+
+    Inspector::Protocol::ErrorStringOr<void> insertText(const String& text);
+    Inspector::Protocol::ErrorStringOr<Ref<Inspector::Protocol::Page::AXNode>> accessibilitySnapshot(const String& objectId);
+    Inspector::Protocol::ErrorStringOr<void> setInterceptFileChooserDialog(bool enabled);
+    Inspector::Protocol::ErrorStringOr<void> setDefaultBackgroundColorOverride(RefPtr<JSON::Object>&&);
+    Inspector::Protocol::ErrorStringOr<void> createUserWorld(const String&);
+    Inspector::Protocol::ErrorStringOr<void> setBypassCSP(bool);
+    Inspector::Protocol::ErrorStringOr<void> crash();
+    Inspector::Protocol::ErrorStringOr<void> setOrientationOverride(std::optional<int>&& angle);
+    Inspector::Protocol::ErrorStringOr<void> updateScrollingState();
 
     // InspectorInstrumentation
-    void domContentEventFired();
-    void loadEventFired();
+    void domContentEventFired(LocalFrame&);
+    void loadEventFired(LocalFrame&);
     void frameNavigated(LocalFrame&);
     void frameDetached(LocalFrame&);
-    void loaderDetachedFromFrame(DocumentLoader&);
     void frameStartedLoading(LocalFrame&);
     void frameStoppedLoading(LocalFrame&);
-    void frameScheduledNavigation(Frame&, Seconds delay);
+    void frameScheduledNavigation(Frame&, Seconds delay, bool targetIsCurrentFrame);
     void frameClearedScheduledNavigation(Frame&);
     void accessibilitySettingsDidChange();
     void defaultUserPreferencesDidChange();
+    void didNavigateWithinPage(LocalFrame&);
 #if ENABLE(DARK_MODE_CSS) || HAVE(OS_DARK_MODE_SUPPORT)
     void defaultAppearanceDidChange();
 #endif
     void applyUserAgentOverride(String&);
+    void applyPlatformOverride(String&);
     void applyEmulatedMedia(AtomString&);
     void didClearWindowObjectInWorld(LocalFrame&, DOMWrapperWorld&);
     void didPaint(RenderObject&, const LayoutRect&);
     void didLayout();
     void didScroll();
     void didRecalculateStyle();
+    void runOpenPanel(HTMLInputElement* element, bool* intercept);
+    void frameAttached(LocalFrame&);
+    bool shouldBypassCSP();
+    void willCheckNavigationPolicy(LocalFrame&);
+    void didCheckNavigationPolicy(LocalFrame&, bool cancel);
+    bool doingAccessibilitySnapshot() const { return m_doingAccessibilitySnapshot; };
 
     Frame* frameForId(const Inspector::Protocol::Network::FrameId&);
     WEBCORE_EXPORT String frameId(Frame*);
     String loaderId(DocumentLoader*);
     LocalFrame* assertFrame(Inspector::Protocol::ErrorString&, const Inspector::Protocol::Network::FrameId&);
+    void setIgnoreDidClearWindowObject(bool ignore) { m_ignoreDidClearWindowObject = ignore; }
+    bool ignoreDidClearWindowObject() const { return m_ignoreDidClearWindowObject; }
 
 private:
     double timestamp();
+    void ensureUserWorldsExistInAllFrames(const Vector<DOMWrapperWorld*>&);
 
     static bool mainResourceContent(LocalFrame*, bool withBase64Encode, String* result);
     static bool dataContent(std::span<const uint8_t> data, const String& textEncodingName, bool withBase64Encode, String* result);
@@ -169,17 +201,21 @@ private:
     RefPtr<Inspector::PageBackendDispatcher> m_backendDispatcher;
 
     Page& m_inspectedPage;
+    Inspector::InjectedScriptManager& m_injectedScriptManager;
     InspectorClient* m_client { nullptr };
     InspectorOverlay* m_overlay { nullptr };
 
-    WeakHashMap<Frame, String> m_frameToIdentifier;
     MemoryCompactRobinHoodHashMap<String, WeakPtr<Frame>> m_identifierToFrame;
-    HashMap<DocumentLoader*, String> m_loaderToIdentifier;
     String m_userAgentOverride;
+    String m_platformOverride;
     AtomString m_emulatedMedia;
     String m_bootstrapScript;
     bool m_isFirstLayoutAfterOnLoad { false };
     bool m_showPaintRects { false };
+    bool m_interceptFileChooserDialog { false };
+    bool m_bypassCSP { false };
+    bool m_doingAccessibilitySnapshot { false };
+    bool m_ignoreDidClearWindowObject { false };
 };
 
 } // namespace WebCore

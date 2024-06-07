@@ -40,7 +40,7 @@
 
 namespace WebCore {
 
-DragData::DragData(const DragDataMap& data, const IntPoint& clientPosition, const IntPoint& globalPosition, OptionSet<DragOperation> sourceOperationMask, OptionSet<DragApplicationFlags> flags, std::optional<PageIdentifier> pageID)
+DragData::DragData(const DragDataMap& data, const IntPoint& clientPosition, const IntPoint& globalPosition, OptionSet<DragOperation> sourceOperationMask, OptionSet<DragApplicationFlags> flags, OptionSet<DragDestinationAction> dragDestinationAction, std::optional<PageIdentifier> pageID)
     : m_clientPosition(clientPosition)
     , m_globalPosition(globalPosition)
     , m_platformDragData(0)
@@ -48,6 +48,7 @@ DragData::DragData(const DragDataMap& data, const IntPoint& clientPosition, cons
     , m_applicationFlags(flags)
     , m_pageID(pageID)
     , m_dragDataMap(data)
+    , m_dragDestinationActionMask(dragDestinationAction)
 {
 }
 
@@ -63,7 +64,7 @@ bool DragData::containsURL(FilenameConversionPolicy filenamePolicy) const
         || (filenamePolicy == ConvertFilenames && (m_dragDataMap.contains(filenameWFormat()->cfFormat) || m_dragDataMap.contains(filenameFormat()->cfFormat)));
 }
 
-const DragDataMap& DragData::dragDataMap()
+const DragDataMap& DragData::dragDataMap() const
 {
     if (!m_dragDataMap.isEmpty() || !m_platformDragData)
         return m_dragDataMap;

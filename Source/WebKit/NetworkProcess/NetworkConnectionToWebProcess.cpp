@@ -96,6 +96,8 @@
 
 #if PLATFORM(COCOA)
 #include <wtf/OSObjectPtr.h>
+#include "NetworkDataTaskCocoa.h"
+#include "NetworkSessionCocoa.h"
 #endif
 
 #if ENABLE(APPLE_PAY_REMOTE_UI)
@@ -1096,6 +1098,14 @@ void NetworkConnectionToWebProcess::clearPageSpecificData(PageIdentifier pageID)
 
     if (auto* storageSession = networkProcess().storageSession(m_sessionID))
         storageSession->clearPageSpecificDataForResourceLoadStatistics(pageID);
+}
+
+void NetworkConnectionToWebProcess::setCookieFromResponse(const URL& firstParty, const SameSiteInfo& sameSiteInfo, const URL& url, const String& setCookieValue)
+{
+    auto* networkStorageSession = storageSession();
+    if (!networkStorageSession)
+        return;
+    networkStorageSession->setCookiesFromResponse(firstParty, sameSiteInfo, url, setCookieValue);
 }
 
 void NetworkConnectionToWebProcess::removeStorageAccessForFrame(FrameIdentifier frameID, PageIdentifier pageID)

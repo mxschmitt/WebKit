@@ -90,6 +90,9 @@ private:
         unsigned responseSignalId;
     } m_portal;
     GRefPtr<GCancellable> m_cancellable;
+    GRefPtr<GCancellable> m_cancellable_start;
+    GRefPtr<GCancellable> m_cancellable_setup;
+    GRefPtr<GCancellable> m_cancellable_create;
     UpdateNotifyFunction m_updateNotifyFunction;
     LocationProviderSource m_sourceType { LocationProviderSource::Unknown };
     RunLoop::Timer m_destroyLaterTimer;

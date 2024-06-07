@@ -33,9 +33,13 @@
 #include "NativeWebWheelEvent.h"
 #include "TouchGestureController.h"
 #include "WPEWebView.h"
+#include "WebColorPickerWPE.h"
+#include "WebDateTimePickerWPE.h"
 #include "WebContextMenuProxy.h"
 #include "WebContextMenuProxyWPE.h"
+#include "WebKitDataListSuggestionsDropdown.h"
 #include "WebKitPopupMenu.h"
+#include "WebColorPicker.h"
 #include <WebCore/ActivityState.h>
 #include <WebCore/Cursor.h>
 #include <WebCore/DOMPasteAccess.h>
@@ -203,7 +207,7 @@ WebCore::IntPoint PageClientImpl::accessibilityScreenToRootView(const WebCore::I
 
 WebCore::IntRect PageClientImpl::rootViewToAccessibilityScreen(const WebCore::IntRect& rect)
 {
-    return rootViewToScreen(rect);    
+    return rootViewToScreen(rect);
 }
 
 void PageClientImpl::doneWithKeyEvent(const NativeWebKeyboardEvent&, bool)
@@ -465,6 +469,33 @@ void PageClientImpl::selectionDidChange()
     m_view.selectionDidChange();
 }
 
+RefPtr<cairo_surface_t> PageClientImpl::takeViewSnapshot(std::optional<WebCore::IntRect>&& clipRect, bool nominalResolution)
+{
+    RefPtr<cairo_surface_t> fullScreenshot = adoptRef(m_view.client().takeViewScreenshot());
+    float deviceScale = m_view.page().deviceScaleFactor();
+    if (!clipRect && (!nominalResolution || deviceScale == 1))
+        return fullScreenshot;
+
+    WebCore::IntSize size = clipRect ? clipRect->size() : m_view.page().viewSize();
+    if (!nominalResolution) {
+        size.scale(deviceScale);
+        if (clipRect)
+            clipRect->scale(deviceScale);
+    }
+    RefPtr<cairo_surface_t> surface = adoptRef(cairo_image_surface_create(CAIRO_FORMAT_RGB24, size.width(), size.height()));
+    RefPtr<cairo_t> cr = adoptRef(cairo_create(surface.get()));
+    if (clipRect) {
+        cairo_translate(cr.get(), -clipRect->x(), -clipRect->y());
+        cairo_rectangle(cr.get(), clipRect->x(), clipRect->y(), clipRect->width(), clipRect->height());
+        cairo_clip(cr.get());
+    }
+    if (nominalResolution)
+        cairo_scale(cr.get(), 1/deviceScale, 1/deviceScale);
+    cairo_set_source_surface(cr.get(), fullScreenshot.get(), 0, 0);
+    cairo_paint(cr.get());
+    return surface;
+}
+
 WebKitWebResourceLoadManager* PageClientImpl::webResourceLoadManager()
 {
     return m_view.webResourceLoadManager();
@@ -474,5 +505,24 @@ void PageClientImpl::callAfterNextPresentationUpdate(CompletionHandler<void()>&&
 {
     m_view.callAfterNextPresentationUpdate(WTFMove(callback));
 }
+
+#if ENABLE(DATALIST_ELEMENT)
+RefPtr<WebKit::WebDataListSuggestionsDropdown> PageClientImpl::createDataListSuggestionsDropdown(WebKit::WebPageProxy& page)
+{
+    return WebKitDataListSuggestionsDropdown::create(page);
+}
+#endif
+
+RefPtr<WebColorPicker> PageClientImpl::createColorPicker(WebPageProxy* page, const WebCore::Color& color, const WebCore::IntRect& rect, Vector<WebCore::Color>&&)
+{
+    return WebColorPickerWPE::create(*page, color, rect);
+}
+
+#if ENABLE(DATE_AND_TIME_INPUT_TYPES)
+RefPtr<WebDateTimePicker> PageClientImpl::createDateTimePicker(WebPageProxy& page)
+{
+    return WebDateTimePickerWPE::create(page);
+}
+#endif
 
 } // namespace WebKit
