@@ -3582,6 +3582,13 @@ void WebPage::setLastKnownMousePosition(WebCore::FrameIdentifier frameID, IntPoi
     frame->coreLocalFrame()->eventHandler().setLastKnownMousePosition(eventPoint, globalPoint);
 }
 
+#if ENABLE(ORIENTATION_EVENTS)
+void WebPage::setDeviceOrientation(WebCore::IntDegrees deviceOrientation)
+{
+    m_page->setOverrideOrientation(deviceOrientation);
+}
+#endif
+
 void WebPage::flushDeferredDidReceiveMouseEvent()
 {
     if (auto info = std::exchange(m_deferredMouseEventCompletionHandler, std::nullopt))

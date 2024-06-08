@@ -473,13 +473,6 @@
             "description": "Crashes the page process"
         },
         {
-            "name": "setOrientationOverride",
-            "description": "Overrides window.orientation with provided value.",
-            "parameters": [
-                { "name": "angle", "type": "integer", "optional": true }
-            ]
-        },
-        {
             "name": "updateScrollingState",
             "description": "Ensures that the scroll regions are up to date."
         }

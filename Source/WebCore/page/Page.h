@@ -1028,7 +1028,7 @@ public:
 
 #if ENABLE(ORIENTATION_EVENTS)
     int orientation() const;
-    void setOverrideOrientation(std::optional<int>);
+    WEBCORE_EXPORT void setOverrideOrientation(std::optional<int>);
 #endif
 
 #if ENABLE(DEVICE_ORIENTATION) && PLATFORM(IOS_FAMILY)

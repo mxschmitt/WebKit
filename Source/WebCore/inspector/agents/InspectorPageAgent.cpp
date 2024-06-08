@@ -1951,17 +1951,6 @@ Protocol::ErrorStringOr<void> InspectorPageAgent::crash()
     return { };
 }
 
-Protocol::ErrorStringOr<void> InspectorPageAgent::setOrientationOverride(std::optional<int>&& angle)
-{
-#if ENABLE(ORIENTATION_EVENTS)
-    m_inspectedPage.setOverrideOrientation(WTFMove(angle));
-    return { };
-#else
-    UNUSED_PARAM(angle);
-    return makeUnexpected("Orientation events are disabled in this build"_s);
-#endif
-}
-
 Protocol::ErrorStringOr<void> InspectorPageAgent::updateScrollingState()
 {
     auto* scrollingCoordinator = m_inspectedPage.scrollingCoordinator();

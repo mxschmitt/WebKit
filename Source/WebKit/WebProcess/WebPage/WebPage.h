@@ -1246,8 +1246,11 @@ public:
     void gestureEvent(WebCore::FrameIdentifier, const WebGestureEvent&, CompletionHandler<void(std::optional<WebEventType>, bool, std::optional<WebCore::RemoteUserInputEventData>)>&&);
 #endif
 
-#if PLATFORM(IOS_FAMILY)
+#if ENABLE(ORIENTATION_EVENTS)
     void setDeviceOrientation(WebCore::IntDegrees);
+#endif
+
+#if PLATFORM(IOS_FAMILY)
     void dynamicViewportSizeUpdate(const DynamicViewportSizeUpdate&);
     bool scaleWasSetByUIProcess() const { return m_scaleWasSetByUIProcess; }
     void willStartUserTriggeredZooming();

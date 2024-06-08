@@ -59,6 +59,7 @@ public:
     Inspector::Protocol::ErrorStringOr<void> setActiveAndFocused(std::optional<bool>&&) override;
     Inspector::Protocol::ErrorStringOr<void> grantPermissions(const String& origin, Ref<JSON::Array>&& permissions) override;
     Inspector::Protocol::ErrorStringOr<void> resetPermissions() override;
+    Inspector::Protocol::ErrorStringOr<void> setOrientationOverride(std::optional<int>&& angle) override;
 
     void didShowPage();
 

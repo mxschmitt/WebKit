@@ -137,6 +137,18 @@ Inspector::Protocol::ErrorStringOr<void> WebPageInspectorEmulationAgent::resetPe
     return { };
 }
 
+Inspector::Protocol::ErrorStringOr<void> WebPageInspectorEmulationAgent::setOrientationOverride(std::optional<int>&& angle)
+{
+#if ENABLE(ORIENTATION_EVENTS)
+    m_page.setOrientationOverride(WTFMove(angle));
+    return { };
+#else
+    UNUSED_PARAM(angle);
+    return makeUnexpected("Orientation events are disabled in this build"_s);
+#endif
+}
+
+
 void WebPageInspectorEmulationAgent::didShowPage()
 {
     for (auto& command : m_commandsToRunWhenShown)

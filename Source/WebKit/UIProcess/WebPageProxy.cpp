@@ -230,6 +230,7 @@
 #include <WebCore/RuntimeApplicationChecks.h>
 #include <WebCore/SecurityOriginData.h>
 #include <WebCore/SerializedCryptoKeyWrap.h>
+#include <WebCore/ScreenOrientationType.h>
 #include <WebCore/ShareData.h>
 #include <WebCore/SharedBuffer.h>
 #include <WebCore/ShouldTreatAsContinuingLoad.h>
@@ -2404,6 +2405,25 @@ void WebPageProxy::setAuthCredentialsForAutomation(std::optional<WebCore::Creden
 void WebPageProxy::setPermissionsForAutomation(const HashMap<String, HashSet<String>>& permissions)
 {
     m_permissionsForAutomation = permissions;
+}
+
+static inline WebCore::ScreenOrientationType toScreenOrientationType(int angle)
+{
+    if (angle == -90)
+        return WebCore::ScreenOrientationType::LandscapeSecondary;
+    if (angle == 180)
+        return WebCore::ScreenOrientationType::PortraitSecondary;
+    if (angle == 90)
+        return WebCore::ScreenOrientationType::LandscapePrimary;
+    return WebCore::ScreenOrientationType::PortraitPrimary;
+}
+
+void WebPageProxy::setOrientationOverride(std::optional<int>&& angle)
+{
+    auto deviceOrientation = toScreenOrientationType(angle.value_or(0));
+    if (m_screenOrientationManager)
+        m_screenOrientationManager->setCurrentOrientation(deviceOrientation);
+    m_process->send(Messages::WebPage::SetDeviceOrientation(angle.value_or(0)), webPageID());
 }
 
 std::optional<bool> WebPageProxy::permissionForAutomation(const String& origin, const String& permission) const

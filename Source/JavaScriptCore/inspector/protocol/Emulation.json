@@ -47,6 +47,13 @@
         {
             "name": "resetPermissions",
             "description": "Clears permission overrides."
+        },
+        {
+            "name": "setOrientationOverride",
+            "description": "Overrides window.orientation with provided value.",
+            "parameters": [
+                { "name": "angle", "type": "integer", "optional": true }
+            ]
         }
     ]
 }

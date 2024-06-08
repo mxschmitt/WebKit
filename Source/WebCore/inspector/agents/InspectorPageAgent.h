@@ -143,7 +143,6 @@ public:
     Inspector::Protocol::ErrorStringOr<void> createUserWorld(const String&);
     Inspector::Protocol::ErrorStringOr<void> setBypassCSP(bool);
     Inspector::Protocol::ErrorStringOr<void> crash();
-    Inspector::Protocol::ErrorStringOr<void> setOrientationOverride(std::optional<int>&& angle);
     Inspector::Protocol::ErrorStringOr<void> updateScrollingState();
 
     // InspectorInstrumentation
