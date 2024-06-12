@@ -28,6 +28,15 @@
 #include <wpe/WebKitDefines.h>
 #include <wpe/wpe.h>
 
+#if defined(USE_CAIRO) && USE_CAIRO
+#include <cairo.h>
+using PlatformImage = cairo_surface_t*;
+#endif
+#if defined(USE_SKIA) && USE_SKIA
+#include <skia/core/SkImage.h>
+using PlatformImage = SkImage*;
+#endif
+
 G_BEGIN_DECLS
 
 #define WEBKIT_TYPE_WEB_VIEW_BACKEND (webkit_web_view_backend_get_type())
@@ -43,6 +52,12 @@ webkit_web_view_backend_new             (struct wpe_view_backend *backend,
                                          gpointer                 user_data);
 WEBKIT_API struct wpe_view_backend *
 webkit_web_view_backend_get_wpe_backend (WebKitWebViewBackend    *view_backend);
+
+typedef PlatformImage (*take_screenshot_callback)(gpointer              user_data);
+
+WEBKIT_API void
+webkit_web_view_backend_set_screenshot_callback   (WebKitWebViewBackend      *view_backend,
+                                                   take_screenshot_callback  callback);
 
 G_END_DECLS
 

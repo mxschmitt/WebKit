@@ -16,6 +16,7 @@
 
 #include <deque>
 #include <memory>
+#include <optional>
 #include <queue>
 
 #include "api/array_view.h"

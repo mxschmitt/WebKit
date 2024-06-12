@@ -27,9 +27,11 @@
 #include "PointerEvent.h"
 
 #include "EventNames.h"
+#include "MouseEvent.h"
 #include "Node.h"
 #include "PlatformMouseEvent.h"
 #include "PointerEventTypeNames.h"
+#include "PlatformTouchEvent.h"
 #include <wtf/IsoMallocInlines.h>
 
 namespace WebCore {
@@ -121,5 +123,52 @@ PointerEvent::PointerEvent(const AtomString& type, PointerID pointerId, const St
 }
 
 PointerEvent::~PointerEvent() = default;
+
+#if ENABLE(TOUCH_EVENTS) && !PLATFORM(IOS_FAMILY) && !PLATFORM(WPE)
+
+static const AtomString& pointerEventType(PlatformTouchPoint::State state)
+{
+    switch (state) {
+    case PlatformTouchPoint::State::TouchPressed:
+        return eventNames().pointerdownEvent;
+    case PlatformTouchPoint::State::TouchMoved:
+        return eventNames().pointermoveEvent;
+    case PlatformTouchPoint::State::TouchStationary:
+        return eventNames().pointermoveEvent;
+    case PlatformTouchPoint::State::TouchReleased:
+        return eventNames().pointerupEvent;
+    case PlatformTouchPoint::State::TouchCancelled:
+        return eventNames().pointercancelEvent;
+    case PlatformTouchPoint::State::TouchStateEnd:
+        break;
+    }
+    ASSERT_NOT_REACHED();
+    return nullAtom();
+}
+
+Ref<PointerEvent> PointerEvent::create(const PlatformTouchEvent& event, unsigned index, bool isPrimary, Ref<WindowProxy>&& view, const IntPoint& touchDelta)
+{
+    const auto& type = pointerEventType(event.touchPoints().at(index).state());
+    return adoptRef(*new PointerEvent(type, event, typeIsCancelable(type), index, isPrimary, WTFMove(view), touchDelta));
+}
+
+Ref<PointerEvent> PointerEvent::create(const AtomString& type, const PlatformTouchEvent& event, unsigned index, bool isPrimary, Ref<WindowProxy>&& view, const IntPoint& touchDelta)
+{
+    return adoptRef(*new PointerEvent(type, event, typeIsCancelable(type), index, isPrimary, WTFMove(view), touchDelta));
+}
+
+PointerEvent::PointerEvent(const AtomString& type, const PlatformTouchEvent& event, IsCancelable isCancelable, unsigned index, bool isPrimary, Ref<WindowProxy>&& view, const IntPoint& touchDelta)
+    : MouseEvent(EventInterfaceType::PointerEvent, type, typeCanBubble(type), isCancelable, typeIsComposed(type), event.timestamp().approximateMonotonicTime(), WTFMove(view), 0,
+        event.touchPoints().at(index).pos(), event.touchPoints().at(index).pos(), touchDelta.x(), touchDelta.y(), event.modifiers(), buttonForType(type), buttonsForType(type), nullptr, 0, SyntheticClickType::NoTap, IsSimulated::No, IsTrusted::Yes)
+    , m_pointerId(event.touchPoints().at(index).id())
+    , m_width(2 * event.touchPoints().at(index).radiusX())
+    , m_height(2 * event.touchPoints().at(index).radiusY())
+    , m_pressure(event.touchPoints().at(index).force())
+    , m_pointerType(touchPointerEventType())
+    , m_isPrimary(isPrimary)
+{
+}
+
+#endif // ENABLE(TOUCH_EVENTS) && !PLATFORM(IOS_FAMILY)
 
 } // namespace WebCore

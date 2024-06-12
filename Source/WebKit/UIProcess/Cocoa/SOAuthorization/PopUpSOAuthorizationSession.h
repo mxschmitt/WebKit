@@ -29,6 +29,7 @@
 
 #include "SOAuthorizationSession.h"
 #include <wtf/CompletionHandler.h>
+#include <wtf/Forward.h>
 
 OBJC_CLASS WKSOSecretDelegate;
 OBJC_CLASS WKWebView;
@@ -38,6 +39,8 @@ class NavigationAction;
 }
 
 namespace WebKit {
+
+class WebPageProxy;
 
 // FSM: Idle => Active => Completed
 class PopUpSOAuthorizationSession final : public SOAuthorizationSession {

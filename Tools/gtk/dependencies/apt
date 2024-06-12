@@ -33,6 +33,9 @@ PACKAGES+=(
     libxtst-dev
     unifdef
     xfonts-utils
+    $(aptIfElse libenchant-dev libenchant-2-dev)
+    $(aptIfExists libwpe-1.0-dev)
+    $(aptIfExists libwpebackend-fdo-1.0-dev)
 
     # These are dependencies necessary for running tests.
     cups-daemon

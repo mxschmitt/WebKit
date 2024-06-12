@@ -96,6 +96,16 @@ public:
     bool shouldThrowExceptionForGlobalConstantRedeclaration() const { return m_shouldThrowExceptionForGlobalConstantRedeclaration; }
     void setShouldThrowExceptionForGlobalConstantRedeclaration(bool shouldThrow) { m_shouldThrowExceptionForGlobalConstantRedeclaration = shouldThrow; }
     
+#if PLATFORM(MAC)
+    bool forceOverlayScrollbars() const { return m_forceOverlayScrollbars; }
+    void setForceOverlayScrollbars(bool forceOverlayScrollbars) { m_forceOverlayScrollbars = forceOverlayScrollbars; }
+#endif
+
+    /* playwright revert fb205fb */
+    const Vector<WTF::String>& overrideLanguages() const { return m_overrideLanguages; }
+    void setOverrideLanguages(Vector<WTF::String>&& languages) { m_overrideLanguages = WTFMove(languages); }
+    /* end playwright revert fb205fb */
+
     bool alwaysRunsAtBackgroundPriority() const { return m_alwaysRunsAtBackgroundPriority; }
     void setAlwaysRunsAtBackgroundPriority(bool alwaysRunsAtBackgroundPriority) { m_alwaysRunsAtBackgroundPriority = alwaysRunsAtBackgroundPriority; }
 
@@ -173,6 +183,10 @@ private:
     bool m_ignoreSynchronousMessagingTimeoutsForTesting { false };
     bool m_attrStyleEnabled { false };
     bool m_shouldThrowExceptionForGlobalConstantRedeclaration { true };
+#if PLATFORM(MAC)
+    bool m_forceOverlayScrollbars { false };
+#endif
+    Vector<WTF::String> m_overrideLanguages; /* playwright revert fb205fb */
     bool m_alwaysRunsAtBackgroundPriority { false };
     bool m_shouldTakeUIBackgroundAssertion { true };
     bool m_shouldCaptureDisplayInUIProcess { DEFAULT_CAPTURE_DISPLAY_IN_UI_PROCESS };
