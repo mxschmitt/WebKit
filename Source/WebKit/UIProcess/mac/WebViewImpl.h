@@ -538,6 +538,9 @@ public:
     void provideDataForPasteboard(NSPasteboard *, NSString *type);
     NSArray *namesOfPromisedFilesDroppedAtDestination(NSURL *dropDestination);
 
+// Paywright begin
+    RetainPtr<CGImageRef> takeSnapshotForAutomation();
+// Paywright end
     RefPtr<ViewSnapshot> takeViewSnapshot();
     RefPtr<ViewSnapshot> takeViewSnapshot(ForceSoftwareCapturingViewportSnapshot);
     void saveBackForwardSnapshotForCurrentItem();

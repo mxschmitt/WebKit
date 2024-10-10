@@ -185,6 +185,8 @@ namespace WebCore {
     macro(DelayNode) \
     macro(DeprecationReportBody) \
     macro(DigitalCredential) \
+    macro(DeviceMotionEvent) \
+    macro(DeviceOrientationEvent) \
     macro(DocumentTimeline) \
     macro(DynamicsCompressorNode) \
     macro(ElementInternals) \

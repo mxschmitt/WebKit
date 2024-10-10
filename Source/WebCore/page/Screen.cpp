@@ -124,6 +124,9 @@ int Screen::availLeft() const
     if (shouldApplyScreenFingerprintingProtections(*frame))
         return 0;
 
+    if (frame->hasScreenSizeOverride())
+        return 0;
+
     return static_cast<int>(screenAvailableRect(frame->protectedView().get()).x());
 }
 
@@ -137,6 +140,9 @@ int Screen::availTop() const
         ResourceLoadObserver::shared().logScreenAPIAccessed(*frame->protectedDocument(), ScreenAPIsAccessed::AvailTop);
 
     if (shouldApplyScreenFingerprintingProtections(*frame))
+        return 0;
+
+    if (frame->hasScreenSizeOverride())
         return 0;
 
     return static_cast<int>(screenAvailableRect(frame->protectedView().get()).y());
@@ -154,6 +160,9 @@ int Screen::availHeight() const
     if (shouldApplyScreenFingerprintingProtections(*frame))
         return static_cast<int>(frame->screenSize().height());
 
+    if (frame->hasScreenSizeOverride())
+        return static_cast<int>(frame->screenSize().height());
+
     return static_cast<int>(screenAvailableRect(frame->protectedView().get()).height());
 }
 
@@ -167,6 +176,9 @@ int Screen::availWidth() const
         ResourceLoadObserver::shared().logScreenAPIAccessed(*frame->protectedDocument(), ScreenAPIsAccessed::AvailWidth);
 
     if (shouldApplyScreenFingerprintingProtections(*frame))
+        return static_cast<int>(frame->screenSize().width());
+
+    if (frame->hasScreenSizeOverride())
         return static_cast<int>(frame->screenSize().width());
 
     return static_cast<int>(screenAvailableRect(frame->protectedView().get()).width());

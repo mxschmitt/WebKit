@@ -75,9 +75,14 @@ static char* timeZone;
 static gboolean enableITP;
 static gboolean exitAfterLoad;
 static gboolean webProcessCrashed;
+static gboolean inspectorPipe;
+static gboolean headless;
+static gboolean noStartupWindow;
+static const char *userDataDir;
 static gboolean printVersion;
 static char *configFile;
 static GSettings *interfaceSettings;
+static GtkApplication *browserApplication = NULL;
 
 #if !GTK_CHECK_VERSION(3, 98, 0)
 static gboolean enableSandbox;
@@ -182,6 +187,10 @@ static const GOptionEntry commandLineOptions[] =
     { "time-zone", 't', 0, G_OPTION_ARG_STRING, &timeZone, "Set time zone", "TIMEZONE" },
     { "version", 'v', 0, G_OPTION_ARG_NONE, &printVersion, "Print the WebKitGTK version", NULL },
     { "config", 'C', 0, G_OPTION_ARG_FILENAME, &configFile, "Path to a configuration file", "PATH" },
+    { "inspector-pipe", 0, 0, G_OPTION_ARG_NONE, &inspectorPipe, "Open pipe connection to the remote inspector", NULL },
+    { "user-data-dir", 0, 0, G_OPTION_ARG_STRING, &userDataDir, "Default profile persistence folder location", NULL },
+    { "headless", 0, 0, G_OPTION_ARG_NONE, &headless, "Noop headless operation", NULL },
+    { "no-startup-window", 0, 0, G_OPTION_ARG_NONE, &noStartupWindow, "Do not open default page", NULL },
     { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &uriArguments, 0, "[URL…]" },
     { 0, 0, 0, 0, 0, 0, 0 }
 };
@@ -739,6 +748,70 @@ static void filterSavedCallback(WebKitUserContentFilterStore *store, GAsyncResul
     g_main_loop_quit(data->mainLoop);
 }
 
+static WebKitSettings* createPlaywrightSettings() {
+    WebKitSettings* webkitSettings = webkit_settings_new();
+#if GTK_CHECK_VERSION(3, 98, 0)
+    // FIXME(Playwright): in GTK4, WEBKIT_HARDWARE_ACCELERATION_POLICY_ALWAYS is the default, but the page content is just black in that case.
+    webkit_settings_set_hardware_acceleration_policy(webkitSettings, WEBKIT_HARDWARE_ACCELERATION_POLICY_NEVER);
+#else
+    // Playwright: revert to the default state before https://github.com/WebKit/WebKit/commit/a73a25b9ea9229987c8fa7b2e092e6324cb17913
+    webkit_settings_set_hardware_acceleration_policy(webkitSettings, WEBKIT_HARDWARE_ACCELERATION_POLICY_NEVER);
+    webkit_settings_set_hardware_acceleration_policy(webkitSettings, WEBKIT_HARDWARE_ACCELERATION_POLICY_ON_DEMAND);
+#endif
+    return webkitSettings;
+}
+
+static WebKitWebContext *persistentWebContext = NULL;
+
+static WebKitWebView *createNewPage(WebKitBrowserInspector *browser_inspector, WebKitWebContext *context)
+{
+    if (context == NULL)
+        context = persistentWebContext;
+
+    WebKitWebView *newWebView = WEBKIT_WEB_VIEW(g_object_new(WEBKIT_TYPE_WEB_VIEW,
+        "web-context", context,
+        "settings", createPlaywrightSettings(),
+#if GTK_CHECK_VERSION(3, 98, 0)
+        "network-session", webkit_web_context_get_network_session_for_automation(context),
+#else
+        "is-ephemeral", webkit_web_context_is_ephemeral(context),
+#endif
+        "is-controlled-by-automation", TRUE,
+        NULL));
+#if GTK_CHECK_VERSION(3, 98, 0)
+    GtkWidget *newWindow = browser_window_new(NULL, context, webkit_web_context_get_network_session_for_automation(context));
+#else
+    GtkWidget *newWindow = browser_window_new(NULL, context);
+#endif
+    gtk_window_set_application(GTK_WINDOW(newWindow), browserApplication);
+    browser_window_append_view(BROWSER_WINDOW(newWindow), newWebView);
+    gtk_widget_grab_focus(GTK_WIDGET(newWebView));
+    gtk_widget_show(GTK_WIDGET(newWindow));
+    webkit_web_view_load_uri(newWebView, "about:blank");
+    return newWebView;
+}
+
+static void quitBroserApplication(WebKitBrowserInspector* browser_inspector)
+{
+    g_application_release(G_APPLICATION(browserApplication));
+}
+
+static void keepApplicationAliveUntilQuit(GApplication *application)
+{
+    // Reference the application, it will be released in quitBroserApplication.
+    g_application_hold(application);
+    WebKitBrowserInspector* browserInspector = webkit_browser_inspector_get_default();
+    g_signal_connect(browserInspector, "quit-application", G_CALLBACK(quitBroserApplication), NULL);
+}
+
+static void configureBrowserInspectorPipe()
+{
+    WebKitBrowserInspector* browserInspector = webkit_browser_inspector_get_default();
+    g_signal_connect(browserInspector, "create-new-page", G_CALLBACK(createNewPage), NULL);
+ 
+    webkit_browser_inspector_initialize_pipe(proxy, ignoreHosts);
+}
+
 static void startup(GApplication *application)
 {
     const char *actionAccels[] = {
@@ -797,23 +870,38 @@ static void setupDarkMode(GtkSettings *settings)
 
 static void activate(GApplication *application, WebKitSettings *webkitSettings)
 {
+    if (inspectorPipe)
+        configureBrowserInspectorPipe();
+
+    if (noStartupWindow) {
+        keepApplicationAliveUntilQuit(application);
+        g_clear_object(&webkitSettings);
+        return;
+    }
 #if GTK_CHECK_VERSION(3, 98, 0)
     WebKitWebContext *webContext = g_object_new(WEBKIT_TYPE_WEB_CONTEXT, "time-zone-override", timeZone, NULL);
     webkit_web_context_set_automation_allowed(webContext, automationMode);
     g_signal_connect(webContext, "automation-started", G_CALLBACK(automationStartedCallback), application);
 
     WebKitNetworkSession *networkSession;
-    if (automationMode)
-        networkSession = g_object_ref(webkit_web_context_get_network_session_for_automation(webContext));
-    else if (privateMode)
+    if (userDataDir) {
+        char *dataDirectory = g_build_filename(userDataDir, "data", NULL);
+        char *cacheDirectory = g_build_filename(userDataDir, "cache", NULL);
+        networkSession = webkit_network_session_new(dataDirectory, cacheDirectory);
+        g_free(dataDirectory);
+        g_free(cacheDirectory);
+        cookiesFile = g_build_filename(userDataDir, "cookies.txt", NULL);
+    } else if (inspectorPipe || privateMode || automationMode) {
         networkSession = webkit_network_session_new_ephemeral();
-    else {
+    } else {
         char *dataDirectory = g_build_filename(g_get_user_data_dir(), "webkitgtk-" WEBKITGTK_API_VERSION, "MiniBrowser", NULL);
         char *cacheDirectory = g_build_filename(g_get_user_cache_dir(), "webkitgtk-" WEBKITGTK_API_VERSION, "MiniBrowser", NULL);
         networkSession = webkit_network_session_new(dataDirectory, cacheDirectory);
         g_free(dataDirectory);
         g_free(cacheDirectory);
     }
+
+    webkit_web_context_set_network_session_for_automation(webContext, networkSession);
 
     webkit_network_session_set_itp_enabled(networkSession, enableITP);
 
@@ -849,9 +937,12 @@ static void activate(GApplication *application, WebKitSettings *webkitSettings)
     }
 #else
     WebKitWebsiteDataManager *manager;
-    if (privateMode || automationMode)
+    if (userDataDir) {
+        manager = webkit_website_data_manager_new("base-data-directory", userDataDir, "base-cache-directory", userDataDir, NULL);
+        cookiesFile = g_build_filename(userDataDir, "cookies.txt", NULL);
+    } else if (inspectorPipe || privateMode || automationMode) {
         manager = webkit_website_data_manager_new_ephemeral();
-    else {
+    } else {
         char *dataDirectory = g_build_filename(g_get_user_data_dir(), "webkitgtk-" WEBKITGTK_API_VERSION, "MiniBrowser", NULL);
         char *cacheDirectory = g_build_filename(g_get_user_cache_dir(), "webkitgtk-" WEBKITGTK_API_VERSION, "MiniBrowser", NULL);
         manager = webkit_website_data_manager_new("base-data-directory", dataDirectory, "base-cache-directory", cacheDirectory, NULL);
@@ -901,6 +992,7 @@ static void activate(GApplication *application, WebKitSettings *webkitSettings)
     // Enable the favicon database.
     webkit_web_context_set_favicon_database_directory(webContext, NULL);
 #endif
+    persistentWebContext = webContext;
 
     webkit_web_context_register_uri_scheme(webContext, BROWSER_ABOUT_SCHEME, (WebKitURISchemeRequestCallback)aboutURISchemeRequestCallback, NULL, NULL);
 
@@ -965,9 +1057,7 @@ static void activate(GApplication *application, WebKitSettings *webkitSettings)
                 if (exitAfterLoad)
                     exitAfterWebViewLoadFinishes(webView, application);
             }
-            gchar *url = argumentToURL(uriArguments[i]);
-            webkit_web_view_load_uri(webView, url);
-            g_free(url);
+            webkit_web_view_load_uri(webView, uriArguments[i]);
         }
     } else {
         WebKitWebView *webView = createBrowserTab(mainWindow, webkitSettings, userContentManager, defaultWebsitePolicies);
@@ -1017,7 +1107,7 @@ int main(int argc, char *argv[])
     g_option_context_add_group(context, gst_init_get_option_group());
 #endif
 
-    WebKitSettings *webkitSettings = webkit_settings_new();
+    WebKitSettings *webkitSettings = createPlaywrightSettings();
     webkit_settings_set_enable_developer_extras(webkitSettings, TRUE);
     webkit_settings_set_enable_webgl(webkitSettings, TRUE);
     webkit_settings_set_enable_media_stream(webkitSettings, TRUE);
@@ -1069,9 +1159,11 @@ int main(int argc, char *argv[])
     }
 
     GtkApplication *application = gtk_application_new("org.webkitgtk.MiniBrowser", G_APPLICATION_NON_UNIQUE);
+    browserApplication = application;
     g_signal_connect(application, "startup", G_CALLBACK(startup), NULL);
     g_signal_connect(application, "activate", G_CALLBACK(activate), webkitSettings);
     g_application_run(G_APPLICATION(application), 0, NULL);
+    browserApplication = NULL;
     g_object_unref(application);
 
     g_clear_object(&interfaceSettings);

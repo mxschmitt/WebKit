@@ -68,6 +68,7 @@ PACKAGES=(
     libwebp-dev
     libwoff-dev
     libxml2-utils
+    libxcb-glx0-dev
     libxslt1-dev
     mesa-common-dev
     ninja-build

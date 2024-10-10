@@ -161,6 +161,8 @@ void ProgressTracker::progressCompleted(LocalFrame& frame)
     if (!m_numProgressTrackedFrames || m_originatingProgressFrame == &frame)
         finalProgressComplete();
 
+    InspectorInstrumentation::frameStoppedLoading(frame);
+
     m_client->didChangeEstimatedProgress();
 }
 
@@ -186,9 +188,17 @@ void ProgressTracker::finalProgressComplete()
     frame->protectedLoader()->client().setMainFrameDocumentReady(true);
     m_client->progressFinished(*frame);
     protectedPage()->progressFinished(*frame);
+<<<<<<< HEAD
     frame->protectedLoader()->loadProgressingStatusChanged();
 
     InspectorInstrumentation::frameStoppedLoading(*frame);
+||||||| parent of baefdc20e316 (chore(webkit): bootstrap build #2090)
+    frame->checkedLoader()->loadProgressingStatusChanged();
+
+    InspectorInstrumentation::frameStoppedLoading(*frame);
+=======
+    frame->checkedLoader()->loadProgressingStatusChanged();
+>>>>>>> baefdc20e316 (chore(webkit): bootstrap build #2090)
 }
 
 void ProgressTracker::incrementProgress(ResourceLoaderIdentifier identifier, const ResourceResponse& response)

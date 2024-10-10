@@ -26,6 +26,7 @@
 #pragma once
 
 #include "MessageReceiver.h"
+#include "SharedPreferencesForWebProcess.h"
 #include <WebCore/ScreenOrientationLockType.h>
 #include <WebCore/ScreenOrientationType.h>
 #include <wtf/CompletionHandler.h>

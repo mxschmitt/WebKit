@@ -33,6 +33,7 @@
 #include "DownloadManager.h"
 #include "NetworkContentRuleListManager.h"
 #include "QuotaIncreaseRequestIdentifier.h"
+#include "StorageNamespaceIdentifier.h"
 #include "UseDownloadPlaceholder.h"
 #include "WebPageProxyIdentifier.h"
 #include "WebResourceLoadStatisticsStore.h"
@@ -84,6 +85,7 @@ class SessionID;
 
 namespace WebCore {
 class CertificateInfo;
+struct Cookie;
 class CurlProxySettings;
 class ProtectionSpace;
 class NetworkStorageSession;
@@ -220,6 +222,9 @@ public:
 
     void registrableDomainsWithLastAccessedTime(PAL::SessionID, CompletionHandler<void(std::optional<HashMap<RegistrableDomain, WallTime>>)>&&);
     void registrableDomainsExemptFromWebsiteDataDeletion(PAL::SessionID, CompletionHandler<void(HashSet<RegistrableDomain>)>&&);
+
+    void setIgnoreCertificateErrors(PAL::SessionID, bool);
+
     void clearPrevalentResource(PAL::SessionID, RegistrableDomain&&, CompletionHandler<void()>&&);
     void clearUserInteraction(PAL::SessionID, RegistrableDomain&&, CompletionHandler<void()>&&);
     void deleteAndRestrictWebsiteDataForRegistrableDomains(PAL::SessionID, OptionSet<WebsiteDataType>, RegistrableDomainsToDeleteOrRestrictWebsiteDataFor&&, CompletionHandler<void(HashSet<RegistrableDomain>&&)>&&);
