@@ -162,11 +162,6 @@ void DownloadProxy::decideDestinationWithSuggestedFilename(const WebCore::Resour
         suggestedFilename = m_suggestedFilename;
     suggestedFilename = MIMETypeRegistry::appendFileExtensionIfNecessary(suggestedFilename, response.mimeType());
 
-<<<<<<< HEAD
-    protectedClient()->decideDestinationWithSuggestedFilename(*this, response, ResourceResponseBase::sanitizeSuggestedFilename(suggestedFilename), [this, protectedThis = Ref { *this }, completionHandler = WTFMove(completionHandler)] (AllowOverwrite allowOverwrite, String destination) mutable {
-||||||| parent of baefdc20e316 (chore(webkit): bootstrap build #2090)
-    m_client->decideDestinationWithSuggestedFilename(*this, response, ResourceResponseBase::sanitizeSuggestedFilename(suggestedFilename), [this, protectedThis = Ref { *this }, completionHandler = WTFMove(completionHandler)] (AllowOverwrite allowOverwrite, String destination) mutable {
-=======
     if (auto* instrumentation = m_dataStore->downloadInstrumentation())
       instrumentation->downloadFilenameSuggested(m_uuid, suggestedFilename);
 
@@ -178,7 +173,7 @@ void DownloadProxy::decideDestinationWithSuggestedFilename(const WebCore::Resour
             if (auto handle = SandboxExtension::createHandle(destination, SandboxExtension::Type::ReadWrite))
                 sandboxExtensionHandle = WTFMove(*handle);
         }
-        m_client->decidePlaceholderPolicy(*this, [completionHandler = WTFMove(completionHandler), destination = WTFMove(destination), sandboxExtensionHandle = WTFMove(sandboxExtensionHandle)] (WebKit::UseDownloadPlaceholder usePlaceholder, const URL& url) mutable {
+        protectedClient()->decidePlaceholderPolicy(*this, [completionHandler = WTFMove(completionHandler), destination = WTFMove(destination), sandboxExtensionHandle = WTFMove(sandboxExtensionHandle)] (WebKit::UseDownloadPlaceholder usePlaceholder, const URL& url) mutable {
             SandboxExtension::Handle placeHolderSandboxExtensionHandle;
             Vector<uint8_t> bookmarkData;
             Vector<uint8_t> activityTokenData;
@@ -194,8 +189,7 @@ void DownloadProxy::decideDestinationWithSuggestedFilename(const WebCore::Resour
         return;
     }
 
-    m_client->decideDestinationWithSuggestedFilename(*this, response, ResourceResponseBase::sanitizeSuggestedFilename(suggestedFilename), [this, protectedThis = Ref { *this }, completionHandler = WTFMove(completionHandler)] (AllowOverwrite allowOverwrite, String destination) mutable {
->>>>>>> baefdc20e316 (chore(webkit): bootstrap build #2090)
+    protectedClient()->decideDestinationWithSuggestedFilename(*this, response, ResourceResponseBase::sanitizeSuggestedFilename(suggestedFilename), [this, protectedThis = Ref { *this }, completionHandler = WTFMove(completionHandler)] (AllowOverwrite allowOverwrite, String destination) mutable {
         SandboxExtension::Handle sandboxExtensionHandle;
         if (!destination.isNull()) {
             if (auto handle = SandboxExtension::createHandle(destination, SandboxExtension::Type::ReadWrite))
