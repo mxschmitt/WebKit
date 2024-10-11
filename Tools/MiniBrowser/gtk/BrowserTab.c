@@ -121,7 +121,11 @@ static gboolean response_policy_decision_can_show(WebKitResponsePolicyDecision *
 {
     if (webkit_response_policy_decision_is_mime_type_supported(responseDecision))
         return TRUE;
-    const gchar* mimeType = webkit_uri_response_get_mime_type(webkit_response_policy_decision_get_response(responseDecision));
+    WebKitURIResponse* response = webkit_response_policy_decision_get_response(responseDecision);
+    const guint statusCode = webkit_uri_response_get_status_code(response);
+    if (statusCode == 205 || statusCode == 204)
+        return TRUE;
+    const gchar* mimeType = webkit_uri_response_get_mime_type(response);
     if (!mimeType || mimeType[0] == '\0')
         return FALSE;
     // https://bugs.webkit.org/show_bug.cgi?id=277204 / Ubuntu 24.04 / glib 2.76+ or higher
