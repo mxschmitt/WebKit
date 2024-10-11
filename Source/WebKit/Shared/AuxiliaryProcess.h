@@ -215,6 +215,11 @@ struct AuxiliaryProcessInitializationParameters {
 #if PLATFORM(COCOA)
     SDKAlignedBehaviors clientSDKAlignedBehaviors;
 #endif
+// Playwright begin
+#if !PLATFORM(COCOA)
+    bool shouldEnableSharedArrayBuffer { false };
+#endif
+// Playwright end
 };
 
 } // namespace WebKit

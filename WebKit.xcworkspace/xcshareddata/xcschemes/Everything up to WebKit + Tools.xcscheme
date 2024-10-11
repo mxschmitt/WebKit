@@ -196,6 +196,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "8D1107260486CEB800E47091"
+               BuildableName = "Playwright.app"
+               BlueprintName = "Playwright"
+               ReferencedContainer = "container:Tools/Playwright/Playwright.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "8D07F2BC0486CC7A007CD1D0"
                BuildableName = "gtest.framework"
                BlueprintName = "gtest-framework"

@@ -43,3 +43,4 @@ void webkitWebContextInitializeNotificationPermissions(WebKitWebContext*);
 #if ENABLE(REMOTE_INSPECTOR)
 void webkitWebContextWillCloseAutomationSession(WebKitWebContext*);
 #endif
+int webkitWebContextExistingCount();

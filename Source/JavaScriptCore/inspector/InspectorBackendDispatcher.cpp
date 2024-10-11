@@ -100,7 +100,7 @@ void BackendDispatcher::registerDispatcherForDomain(const String& domain, Supple
     m_dispatchers.set(domain, dispatcher);
 }
 
-void BackendDispatcher::dispatch(const String& message)
+void BackendDispatcher::dispatch(const String& message, Interceptor&& interceptor)
 {
     Ref<BackendDispatcher> protect(*this);
 
@@ -144,6 +144,9 @@ void BackendDispatcher::dispatch(const String& message)
 
         requestId = *requestIdInt;
     }
+
+    if (interceptor && interceptor(messageObject) == InterceptionResult::Intercepted)
+        return;
 
     {
         // We could be called re-entrantly from a nested run loop, so restore the previous id.

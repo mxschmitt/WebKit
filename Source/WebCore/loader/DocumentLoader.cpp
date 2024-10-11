@@ -769,8 +769,10 @@ void DocumentLoader::willSendRequest(ResourceRequest&& newRequest, const Resourc
     if (!didReceiveRedirectResponse)
         return completionHandler(WTFMove(newRequest));
 
+    InspectorInstrumentation::willCheckNavigationPolicy(*m_frame);
     auto navigationPolicyCompletionHandler = [this, protectedThis = Ref { *this }, protectedFrame = Ref { *m_frame }, completionHandler = WTFMove(completionHandler)] (ResourceRequest&& request, WeakPtr<FormState>&&, NavigationPolicyDecision navigationPolicyDecision) mutable {
         m_waitingForNavigationPolicy = false;
+        InspectorInstrumentation::didCheckNavigationPolicy(protectedFrame.get(), navigationPolicyDecision != NavigationPolicyDecision::ContinueLoad);
         switch (navigationPolicyDecision) {
         case NavigationPolicyDecision::IgnoreLoad:
         case NavigationPolicyDecision::LoadWillContinueInAnotherProcess:
@@ -1538,9 +1540,15 @@ void DocumentLoader::detachFromFrame(LoadWillContinueInAnotherProcess loadWillCo
     if (auto navigationID = std::exchange(m_navigationID, { }))
         m_frame->loader().client().documentLoaderDetached(*navigationID, loadWillContinueInAnotherProcess);
 
-    InspectorInstrumentation::loaderDetachedFromFrame(*m_frame, *this);
-
     observeFrame(nullptr);
+}
+
+void DocumentLoader::replacedByFragmentNavigation(LocalFrame& frame)
+{
+    ASSERT(!this->frame());
+    // Notify WebPageProxy that the navigation has been converted into same page navigation.
+    if (auto navigationID = std::exchange(m_navigationID, { }))
+        frame.loader().client().documentLoaderDetached(*navigationID, LoadWillContinueInAnotherProcess::No);
 }
 
 void DocumentLoader::setNavigationID(NavigationIdentifier navigationID)

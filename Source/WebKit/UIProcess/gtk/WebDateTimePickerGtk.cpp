@@ -35,6 +35,8 @@
 #include <wtf/glib/GRefPtr.h>
 #include <wtf/text/MakeString.h>
 
+using namespace WebCore;
+
 namespace WebKit {
 
 Ref<WebDateTimePickerGtk> WebDateTimePickerGtk::create(WebPageProxy& page)

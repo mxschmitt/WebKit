@@ -27,6 +27,7 @@
 
 #if HAVE(APP_SSO)
 
+#import "APIPageConfiguration.h"
 #include <wtf/Forward.h>
 #include <wtf/Noncopyable.h>
 #include <wtf/RetainPtr.h>
