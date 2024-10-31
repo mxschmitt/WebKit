@@ -43,32 +43,22 @@ WTF_MAKE_TZONE_ALLOCATED_IMPL(InspectorTargetProxy);
 
 std::unique_ptr<InspectorTargetProxy> InspectorTargetProxy::create(WebPageProxy& page, const String& targetId, Inspector::InspectorTargetType type)
 {
-    return makeUnique<InspectorTargetProxy>(page, nullptr, targetId, type);
+    return makeUnique<InspectorTargetProxy>(page, targetId, type);
 }
 
 std::unique_ptr<InspectorTargetProxy> InspectorTargetProxy::create(ProvisionalPageProxy& provisionalPage, const String& targetId)
 {
-<<<<<<< HEAD
     RefPtr page = provisionalPage.page();
     if (!page)
         return nullptr;
 
-    auto target = InspectorTargetProxy::create(*page, targetId, type);
+    auto target = InspectorTargetProxy::create(*page, targetId, Inspector::InspectorTargetType::Page);
     target->m_provisionalPage = provisionalPage;
     return target;
-||||||| parent of 51bebc7dfe86 (chore(webkit): bootstrap build #2099)
-    Ref page = provisionalPage.page();
-    auto target = InspectorTargetProxy::create(page, targetId, type);
-    target->m_provisionalPage = provisionalPage;
-    return target;
-=======
-    return makeUnique<InspectorTargetProxy>(provisionalPage.page(), &provisionalPage, targetId, Inspector::InspectorTargetType::Page);
->>>>>>> 51bebc7dfe86 (chore(webkit): bootstrap build #2099)
 }
 
 InspectorTargetProxy::InspectorTargetProxy(WebPageProxy& page, ProvisionalPageProxy* provisionalPage, const String& targetId, Inspector::InspectorTargetType type)
     : m_page(page)
-    , m_provisionalPage(provisionalPage)
     , m_identifier(targetId)
     , m_type(type)
 {

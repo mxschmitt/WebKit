@@ -174,16 +174,11 @@ private:
     WeakRef<WebPageProxy> m_inspectedPage;
 
     CheckedPtr<Inspector::InspectorTargetAgent> m_targetAgent;
-<<<<<<< HEAD
     HashMap<String, std::unique_ptr<InspectorTargetProxy>> m_targets;
-||||||| parent of 51bebc7dfe86 (chore(webkit): bootstrap build #2099)
-    UncheckedKeyHashMap<String, std::unique_ptr<InspectorTargetProxy>> m_targets;
-=======
-    UncheckedKeyHashMap<String, std::unique_ptr<InspectorTargetProxy>> m_targets;
+
     WebPageInspectorEmulationAgent* m_emulationAgent { nullptr };
     WebPageInspectorInputAgent* m_inputAgent { nullptr };
     InspectorScreencastAgent* m_screecastAgent { nullptr };
->>>>>>> 51bebc7dfe86 (chore(webkit): bootstrap build #2099)
 
     CheckedPtr<InspectorBrowserAgent> m_enabledBrowserAgent;
 

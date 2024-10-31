@@ -1448,7 +1448,7 @@ Protocol::ErrorStringOr<void> InspectorPageAgent::setTimeZone(const String& time
 Protocol::ErrorStringOr<void> InspectorPageAgent::setTouchEmulationEnabled(bool enabled)
 {
   setScreenHasTouchDeviceOverride(enabled);
-  m_inspectedPage.settings().setTouchEventsEnabled(enabled);
+  m_inspectedPage.settings().setTouchEventDOMAttributesEnabled(enabled);
   return { };
 }
 

@@ -576,7 +576,7 @@ RefPtr<WebKit::WebDataListSuggestionsDropdown> PageClientImpl::createDataListSug
 }
 #endif
 
-RefPtr<WebColorPicker> PageClientImpl::createColorPicker(WebPageProxy* page, const WebCore::Color& color, const WebCore::IntRect& rect, Vector<WebCore::Color>&&)
+RefPtr<WebColorPicker> PageClientImpl::createColorPicker(WebPageProxy* page, const WebCore::Color& color, const WebCore::IntRect& rect, ColorControlSupportsAlpha, Vector<WebCore::Color>&&)
 {
     return WebColorPickerWPE::create(*page, color, rect);
 }
