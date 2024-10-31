@@ -70,6 +70,7 @@ public:
 
     WebMouseEventButton button() const { return m_button; }
     unsigned short buttons() const { return m_buttons; }
+    void playwrightSetButtons(unsigned short buttons) { m_buttons = buttons; }
     const WebCore::IntPoint& position() const { return m_position; } // Relative to the view.
     void setPosition(const WebCore::IntPoint& position) { m_position = position; }
     const WebCore::IntPoint& globalPosition() const { return m_globalPosition; }

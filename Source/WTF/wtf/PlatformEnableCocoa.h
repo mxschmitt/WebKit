@@ -802,7 +802,7 @@
 #endif
 
 #if !defined(ENABLE_SEC_ITEM_SHIM)
-#define ENABLE_SEC_ITEM_SHIM 1
+#define ENABLE_SEC_ITEM_SHIM 0
 #endif
 
 #if !defined(ENABLE_SERVER_PRECONNECT)

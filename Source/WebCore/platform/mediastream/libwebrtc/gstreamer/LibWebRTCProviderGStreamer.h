@@ -31,6 +31,8 @@
 #include "GStreamerVideoEncoderFactory.h"
 #include "LibWebRTCProvider.h"
 
+#include "LibWebRTCProvider.h"
+
 namespace WebCore {
 
 class WEBCORE_EXPORT LibWebRTCProviderGStreamer : public LibWebRTCProvider {

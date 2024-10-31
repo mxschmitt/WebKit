@@ -31,6 +31,7 @@
 #include "PageClientImpl.h"
 #include "UserMessage.h"
 #include "WebProcessProxy.h"
+#include <wpe/wpe-platform.h>
 #include <WebCore/PlatformEvent.h>
 
 #if USE(ATK)
