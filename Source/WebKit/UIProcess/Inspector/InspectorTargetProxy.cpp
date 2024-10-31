@@ -57,7 +57,7 @@ std::unique_ptr<InspectorTargetProxy> InspectorTargetProxy::create(ProvisionalPa
     return target;
 }
 
-InspectorTargetProxy::InspectorTargetProxy(WebPageProxy& page, ProvisionalPageProxy* provisionalPage, const String& targetId, Inspector::InspectorTargetType type)
+InspectorTargetProxy::InspectorTargetProxy(WebPageProxy& page, const String& targetId, Inspector::InspectorTargetType type)
     : m_page(page)
     , m_identifier(targetId)
     , m_type(type)
