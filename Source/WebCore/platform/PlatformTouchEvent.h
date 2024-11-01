@@ -42,7 +42,7 @@ public:
 
     const Vector<PlatformTouchEvent>& predictedEvents() const { return m_predictedEvents; }
 
-#if PLATFORM(WPE)
+#if !ENABLE(IOS_TOUCH_EVENTS)
     // FIXME: since WPE currently does not send touch stationary events, we need to be able to set
     // TouchCancelled touchPoints subsequently
     void setTouchPoints(Vector<PlatformTouchPoint>& touchPoints) { m_touchPoints = touchPoints; }

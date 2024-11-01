@@ -165,6 +165,9 @@ public:
     virtual bool enterAcceleratedCompositingModeIfNeeded() = 0;
     virtual void backgroundColorDidChange() { };
 #endif
+#if PLATFORM(WIN)
+    void didChangeAcceleratedCompositingMode(bool enabled);
+#endif
 
 #if PLATFORM(WPE) && USE(GBM) && ENABLE(WPE_PLATFORM)
     virtual void preferredBufferFormatsDidChange() { }

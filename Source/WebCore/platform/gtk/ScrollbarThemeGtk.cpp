@@ -39,6 +39,8 @@
 
 namespace WebCore {
 
+ScrollbarThemeGtk::~ScrollbarThemeGtk() = default;
+
 ScrollbarTheme& ScrollbarTheme::nativeTheme()
 {
     static ScrollbarThemeGtk theme;

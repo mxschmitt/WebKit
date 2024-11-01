@@ -117,6 +117,8 @@ int SystemSettingsManagerProxy::xftDPI() const
 
 bool SystemSettingsManagerProxy::followFontSystemSettings() const
 {
+    // Align with WPE's behavior, which always returns false.
+    return false;
 #if USE(GTK4)
 #if GTK_CHECK_VERSION(4, 16, 0)
     GtkFontRendering fontRendering;

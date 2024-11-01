@@ -67,7 +67,6 @@ class WebProcessProxy;
 
 struct FrameInfoData;
 struct FrameTreeCreationParameters;
-struct NavigationActionData;
 
 enum class ProcessTerminationReason : uint8_t;
 

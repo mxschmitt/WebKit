@@ -194,9 +194,8 @@ void InspectorRuntimeAgent::callFunctionOn(const Protocol::Runtime::RemoteObject
 void InspectorRuntimeAgent::callFunctionOn(InjectedScript& injectedScript, const Protocol::Runtime::RemoteObjectId& objectId, const String& functionDeclaration, RefPtr<JSON::Array>&& arguments, std::optional<bool>&& doNotPauseOnExceptionsAndMuteConsole, std::optional<bool>&& returnByValue, std::optional<bool>&& generatePreview, std::optional<bool>&& /* emulateUserGesture */, std::optional<bool>&& awaitPromise, Ref<CallFunctionOnCallback>&& callback)
 {
     ASSERT(!injectedScript.hasNoValue());
-
     JSC::Debugger::TemporarilyDisableExceptionBreakpoints temporarilyDisableExceptionBreakpoints(m_debugger);
-
+    
     bool pauseAndMute = doNotPauseOnExceptionsAndMuteConsole.value_or(false);
     if (pauseAndMute) {
         temporarilyDisableExceptionBreakpoints.replace();
@@ -213,6 +212,11 @@ void InspectorRuntimeAgent::callFunctionOn(InjectedScript& injectedScript, const
 
     if (pauseAndMute)
         unmuteConsole();
+}
+
+Protocol::ErrorStringOr<void> InspectorRuntimeAgent::addBinding(const String&)
+{
+    return makeUnexpected("Not implemented in this type of agent."_s);
 }
 
 Protocol::ErrorStringOr<Ref<Protocol::Runtime::ObjectPreview>> InspectorRuntimeAgent::getPreview(const Protocol::Runtime::RemoteObjectId& objectId)

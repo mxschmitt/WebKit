@@ -3,6 +3,7 @@ set_property(DIRECTORY . PROPERTY FOLDER "skia")
 # Skia dependencies not used directly in WebKit.
 find_package(Freetype 2.9.0 REQUIRED)
 find_package(Fontconfig 2.13.0 REQUIRED)
+find_package(Threads REQUIRED)
 find_package(WebP REQUIRED COMPONENTS mux)
 
 if (ANDROID)
@@ -919,6 +920,7 @@ target_link_libraries(Skia PRIVATE
     Freetype::Freetype
     JPEG::JPEG
     PNG::PNG
+    Threads::Threads
     WebP::mux
 )
 

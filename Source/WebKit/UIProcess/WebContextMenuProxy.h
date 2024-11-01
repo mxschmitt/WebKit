@@ -49,6 +49,7 @@ public:
     void deref() const final { RefCounted::deref(); }
 
     virtual void show();
+    virtual void hide() {}
 
     WebPageProxy* page() const { return m_page.get(); }
 

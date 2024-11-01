@@ -41,6 +41,10 @@ bool AuxiliaryProcessMainCommon::parseCommandLine(int argc, char** argv)
             m_parameters.connectionIdentifier = IPC::Connection::Identifier { reinterpret_cast<HANDLE>(parseIntegerAllowingTrailingJunk<uint64_t>(StringView::fromLatin1(argv[++i])).value_or(0)) };
         else if (!strcmp(argv[i], "-processIdentifier") && i + 1 < argc)
             m_parameters.processIdentifier = ObjectIdentifier<WebCore::ProcessIdentifierType>(parseIntegerAllowingTrailingJunk<uint64_t>(StringView::fromLatin1(argv[++i])).value_or(0));
+// Playwright begin
+        else if (!strcmp(argv[i], "-enable-shared-array-buffer"))
+            m_parameters.shouldEnableSharedArrayBuffer = true;
+// Playwright end
         else if (!strcmp(argv[i], "-configure-jsc-for-testing"))
             JSC::Config::configureForTesting();
         else if (!strcmp(argv[i], "-disable-jit"))
