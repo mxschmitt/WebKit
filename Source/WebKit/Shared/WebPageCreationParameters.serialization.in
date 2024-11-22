@@ -227,6 +227,8 @@ enum class WebCore::UserInterfaceLayoutDirection : bool;
 
     bool httpsUpgradeEnabled;
 
+    bool shouldPauseInInspectorWhenShown;
+
 #if PLATFORM(IOS) || PLATFORM(VISION)
     bool allowsDeprecatedSynchronousXMLHttpRequestDuringUnload;
 #endif

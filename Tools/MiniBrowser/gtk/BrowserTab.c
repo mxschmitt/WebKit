@@ -117,19 +117,38 @@ static void isLoadingChanged(WebKitWebView *webView, GParamSpec *paramSpec, Brow
     }
 }
 
+static gboolean response_policy_decision_can_show(WebKitResponsePolicyDecision *responseDecision)
+{
+    if (webkit_response_policy_decision_is_mime_type_supported(responseDecision))
+        return TRUE;
+    WebKitURIResponse* response = webkit_response_policy_decision_get_response(responseDecision);
+    const guint statusCode = webkit_uri_response_get_status_code(response);
+    if (statusCode == 205 || statusCode == 204)
+        return TRUE;
+    const gchar* mimeType = webkit_uri_response_get_mime_type(response);
+    if (!mimeType || mimeType[0] == '\0')
+        return FALSE;
+    // https://bugs.webkit.org/show_bug.cgi?id=277204 / Ubuntu 24.04 / glib 2.76+ or higher
+    if (g_ascii_strcasecmp(mimeType, "application/x-zerosize") == 0)
+        return TRUE;
+    return FALSE;
+}
+
 static gboolean decidePolicy(WebKitWebView *webView, WebKitPolicyDecision *decision, WebKitPolicyDecisionType decisionType, BrowserTab *tab)
 {
     if (decisionType != WEBKIT_POLICY_DECISION_TYPE_RESPONSE)
         return FALSE;
 
     WebKitResponsePolicyDecision *responseDecision = WEBKIT_RESPONSE_POLICY_DECISION(decision);
-    if (webkit_response_policy_decision_is_mime_type_supported(responseDecision))
-        return FALSE;
-
     if (!webkit_response_policy_decision_is_main_frame_main_resource(responseDecision))
         return FALSE;
 
-    webkit_policy_decision_download(decision);
+    if (!response_policy_decision_can_show(responseDecision)) {
+        webkit_policy_decision_download(decision);
+        return TRUE;
+    }
+
+    webkit_policy_decision_use(decision);
     return TRUE;
 }
 
@@ -178,6 +197,11 @@ static void loadChanged(WebKitWebView *webView, WebKitLoadEvent loadEvent, Brows
 #else
     gtk_container_foreach(GTK_CONTAINER(tab), (GtkCallback)removeChildIfInfoBar, tab);
 #endif
+}
+
+static gboolean loadFailed()
+{
+    return TRUE;
 }
 
 static GtkWidget *createInfoBarQuestionMessage(const char *title, const char *text)
@@ -746,6 +770,7 @@ static void browserTabConstructed(GObject *gObject)
     g_signal_connect(tab->webView, "notify::is-loading", G_CALLBACK(isLoadingChanged), tab);
     g_signal_connect(tab->webView, "decide-policy", G_CALLBACK(decidePolicy), tab);
     g_signal_connect(tab->webView, "load-changed", G_CALLBACK(loadChanged), tab);
+    g_signal_connect(tab->webView, "load-failed", G_CALLBACK(loadFailed), tab);
     g_signal_connect(tab->webView, "load-failed-with-tls-errors", G_CALLBACK(loadFailedWithTLSerrors), tab);
     g_signal_connect(tab->webView, "permission-request", G_CALLBACK(decidePermissionRequest), tab);
     g_signal_connect(tab->webView, "run-color-chooser", G_CALLBACK(runColorChooserCallback), tab);
@@ -797,6 +822,9 @@ static char *getInternalURI(const char *uri)
     /* Internally we use minibrowser-about: as about: prefix is ignored by WebKit. */
     if (g_str_has_prefix(uri, "about:") && !g_str_equal(uri, "about:blank"))
         return g_strconcat(BROWSER_ABOUT_SCHEME, uri + strlen ("about"), NULL);
+
+    if (!g_str_has_prefix(uri, "http://") && !g_str_has_prefix(uri, "https://") && !g_str_has_prefix(uri, "file://"))
+        return g_strconcat("http://", uri, NULL);
 
     return g_strdup(uri);
 }

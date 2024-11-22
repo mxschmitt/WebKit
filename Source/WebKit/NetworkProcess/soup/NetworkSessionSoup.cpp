@@ -100,6 +100,11 @@ void NetworkSessionSoup::clearCredentials(WallTime)
 #endif
 }
 
+static gboolean webSocketAcceptCertificateCallbackIgnoreTLSErrors(GTlsConnection* connection, GTlsCertificate* certificate, GTlsCertificateFlags errors, NetworkSessionSoup* session)
+{
+    return TRUE;
+}
+
 #if USE(SOUP2)
 static gboolean webSocketAcceptCertificateCallback(GTlsConnection* connection, GTlsCertificate* certificate, GTlsCertificateFlags errors, NetworkSessionSoup* session)
 {
@@ -130,12 +135,16 @@ std::unique_ptr<WebSocketTask> NetworkSessionSoup::createWebSocketTask(WebPagePr
 #if USE(SOUP2)
         g_signal_connect(soupMessage.get(), "network-event", G_CALLBACK(webSocketMessageNetworkEventCallback), this);
 #else
-        g_signal_connect(soupMessage.get(), "accept-certificate", G_CALLBACK(+[](SoupMessage* message, GTlsCertificate* certificate, GTlsCertificateFlags errors,  NetworkSessionSoup* session) -> gboolean {
-            if (DeprecatedGlobalSettings::allowsAnySSLCertificate())
-                return TRUE;
+        if (ignoreCertificateErrors()) {
+            g_signal_connect(soupMessage.get(), "accept-certificate", G_CALLBACK(webSocketAcceptCertificateCallbackIgnoreTLSErrors), this);
+        } else {
+            g_signal_connect(soupMessage.get(), "accept-certificate", G_CALLBACK(+[](SoupMessage* message, GTlsCertificate* certificate, GTlsCertificateFlags errors,  NetworkSessionSoup* session) -> gboolean {
+                if (DeprecatedGlobalSettings::allowsAnySSLCertificate())
+                    return TRUE;
 
-            return !session->soupNetworkSession().checkTLSErrors(soup_message_get_uri(message), certificate, errors);
-        }), this);
+                return !session->soupNetworkSession().checkTLSErrors(soup_message_get_uri(message), certificate, errors);
+            }), this);
+        }
 #endif
     }
 

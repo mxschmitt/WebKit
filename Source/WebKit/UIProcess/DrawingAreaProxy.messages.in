@@ -30,4 +30,7 @@ messages -> DrawingAreaProxy NotRefCounted {
     Update(uint64_t stateID, struct WebKit::UpdateInfo updateInfo) CanDispatchOutOfOrder
     ExitAcceleratedCompositingMode(uint64_t backingStoreStateID, struct WebKit::UpdateInfo updateInfo)
 #endif
+#if PLATFORM(WIN)
+    DidChangeAcceleratedCompositingMode(bool enabled)
+#endif
 }

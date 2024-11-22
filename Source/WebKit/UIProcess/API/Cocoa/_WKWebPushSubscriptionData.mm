@@ -28,6 +28,9 @@
 #import <WebCore/WebCoreObjCExtras.h>
 #import <wtf/cocoa/SpanCocoa.h>
 
+#import <WebCore/WebCoreObjCExtras.h>
+#import <wtf/cocoa/SpanCocoa.h>
+
 @implementation _WKWebPushSubscriptionData
 
 - (void)dealloc

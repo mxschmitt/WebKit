@@ -5,6 +5,7 @@ if (NOT WIN32)
     find_package(Freetype 2.9.0 REQUIRED)
     find_package(Fontconfig 2.13.0 REQUIRED)
 endif ()
+find_package(Threads REQUIRED)
 find_package(WebP REQUIRED COMPONENTS mux)
 
 if (ANDROID)
@@ -950,6 +951,7 @@ endif ()
 target_link_libraries(Skia PRIVATE
     JPEG::JPEG
     PNG::PNG
+    Threads::Threads
     WebP::mux
 )
 

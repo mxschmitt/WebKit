@@ -707,6 +707,16 @@ static _WKStorageBlockingPolicy toAPI(WebCore::StorageBlockingPolicy policy)
     _preferences->setMediaCaptureRequiresSecureConnection(requiresSecureConnection);
 }
 
+- (BOOL)_alternateWebMPlayerEnabled
+{
+    return _preferences->alternateWebMPlayerEnabled();
+}
+
+- (void)_setAlternateWebMPlayerEnabled:(BOOL)enabled
+{
+    _preferences->setAlternateWebMPlayerEnabled(enabled);
+}
+
 - (double)_inactiveMediaCaptureStreamRepromptIntervalInMinutes
 {
     return _preferences->inactiveMediaCaptureStreamRepromptIntervalInMinutes();

@@ -40,6 +40,15 @@
 
 namespace WebKit {
 
+static bool hasArgument(const char* argument, int argc, char** argv)
+{
+    for (int i = 0; i < argc; ++i) {
+        if (!strcmp(argument, argv[i]))
+            return true;
+    }
+    return false;
+}
+
 AuxiliaryProcessMainCommon::AuxiliaryProcessMainCommon()
 {
 #if ENABLE(BREAKPAD)
@@ -94,6 +103,10 @@ WTF_ALLOW_UNSAFE_BUFFER_USAGE_END
     }
 #endif
 
+// Playwright begin
+    if (hasArgument("--enable-shared-array-buffer", argc, argv))
+        m_parameters.shouldEnableSharedArrayBuffer = true;
+// Playwright end
     return true;
 }
 

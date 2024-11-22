@@ -5,6 +5,9 @@
       location = "group:Configurations">
    </FileRef>
    <FileRef
+      location = "group:Tools/Playwright/Playwright.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:Source/bmalloc/bmalloc.xcodeproj">
    </FileRef>
    <FileRef

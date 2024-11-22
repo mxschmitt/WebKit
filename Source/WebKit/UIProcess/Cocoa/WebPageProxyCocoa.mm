@@ -42,7 +42,9 @@
 #import "NativeWebKeyboardEvent.h"
 #import "NativeWebMouseEvent.h"
 #import "NavigationState.h"
+#import "NetworkProcessMessages.h"
 #import "PageClient.h"
+#import "PasteboardTypes.h"
 #import "PlatformXRSystem.h"
 #import "PlaybackSessionManagerProxy.h"
 #import "QuickLookThumbnailLoader.h"
@@ -317,11 +319,86 @@ bool WebPageProxy::scrollingUpdatesDisabledForTesting()
 
 void WebPageProxy::startDrag(const DragItem& dragItem, ShareableBitmap::Handle&& dragImageHandle)
 {
+    if (m_interceptDrags) {
+        NSPasteboard *pasteboard = [NSPasteboard pasteboardWithName: m_overrideDragPasteboardName];
+
+        m_dragSelectionData = String([pasteboard name]);
+        if (auto replyID = grantAccessToCurrentPasteboardData(String([pasteboard name]), [] () { }))
+            websiteDataStore().protectedNetworkProcess()->connection().waitForAsyncReplyAndDispatchImmediately<Messages::NetworkProcess::AllowFilesAccessFromWebProcess>(*replyID, 100_ms);
+        m_dragSourceOperationMask = WebCore::anyDragOperation();
+
+        if (auto& info = dragItem.promisedAttachmentInfo) {
+            auto attachment = attachmentForIdentifier(info.attachmentIdentifier);
+            if (!attachment) {
+                dragCancelled();
+                return;
+            }
+            NSString *utiType = attachment->utiType();
+            if (!utiType.length) {
+                dragCancelled();
+                return;
+            }
+
+            for (size_t index = 0; index < info.additionalTypesAndData.size(); ++index) {
+                auto nsData = info.additionalTypesAndData[index].second->createNSData();
+                [pasteboard setData:nsData.get() forType:info.additionalTypesAndData[index].first];
+            }
+        } else {
+            [pasteboard setString:@"" forType:PasteboardTypes::WebDummyPboardType];
+        }
+        didStartDrag();
+        return;
+    }
+
     if (RefPtr pageClient = this->pageClient())
         pageClient->startDrag(dragItem, WTFMove(dragImageHandle));
 }
 
-#endif
+void WebPageProxy::releaseInspectorDragPasteboard() {
+    if (!!m_dragSelectionData)
+        m_dragSelectionData = std::nullopt;
+    if (!m_overrideDragPasteboardName.isEmpty()) {
+        NSPasteboard *pasteboard = [NSPasteboard pasteboardWithUniqueName];
+        [pasteboard releaseGlobally];
+        m_overrideDragPasteboardName = ""_s;
+    }
+}
+
+
+void WebPageProxy::setInterceptDrags(bool shouldIntercept) {
+    m_interceptDrags = shouldIntercept;
+    if (m_interceptDrags) {
+        if (m_overrideDragPasteboardName.isEmpty()) {
+            NSPasteboard *pasteboard = [NSPasteboard pasteboardWithUniqueName];
+            m_overrideDragPasteboardName = String([pasteboard name]);
+        }
+        legacyMainFrameProcess().send(Messages::WebPage::SetDragPasteboardName(m_overrideDragPasteboardName), webPageIDInMainFrameProcess());
+    } else {
+        legacyMainFrameProcess().send(Messages::WebPage::SetDragPasteboardName(""_s), webPageIDInMainFrameProcess());
+    }
+}
+
+// FIXME: Move these functions to WebPageProxyIOS.mm.
+#if PLATFORM(IOS_FAMILY)
+
+void WebPageProxy::setPromisedDataForImage(const String&, const SharedMemory::Handle&, const String&, const String&, const String&, const String&, const String&, const SharedMemory::Handle&, const String&)
+{
+    notImplemented();
+}
+
+void WebPageProxy::setDragCaretRect(const IntRect& dragCaretRect)
+{
+    if (m_currentDragCaretRect == dragCaretRect)
+        return;
+
+    auto previousRect = m_currentDragCaretRect;
+    m_currentDragCaretRect = dragCaretRect;
+    pageClient()->didChangeDragCaretRect(previousRect, dragCaretRect);
+}
+
+#endif // PLATFORM(IOS_FAMILY)
+
+#endif // ENABLE(DRAG_SUPPORT)
 
 #if ENABLE(ATTACHMENT_ELEMENT)
 
