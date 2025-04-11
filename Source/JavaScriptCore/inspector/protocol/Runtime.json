@@ -273,6 +273,13 @@
             "async": true
         },
         {
+          "name": "addBinding",
+          "description": "Adds binding with the given name on the global objects of all inspected contexts. Each binding function call produces Runtime.bindingCalled event.",
+          "parameters": [
+              { "name": "name", "type": "string", "description": "Name of the bound function." }
+          ]
+        },
+        {
             "name": "getPreview",
             "description": "Returns a preview for the given object.",
             "parameters": [
@@ -408,6 +415,15 @@
             "parameters": [
                 { "name": "context", "$ref": "ExecutionContextDescription", "description": "A newly created execution context." }
             ]
-        }
+        },
+        {
+          "name": "bindingCalled",
+          "description": "Issued when new execution context is created.",
+          "parameters": [
+              { "name": "contextId", "$ref": "ExecutionContextId", "description": "Id of the execution context where the binding was called." },
+              { "name": "name", "type": "string", "description": "Name of the bound function." },
+              { "name": "argument", "type": "string", "description": "String argument passed to the function." }
+          ]
+      }
     ]
 }

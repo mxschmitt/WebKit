@@ -166,6 +166,7 @@ private:
 #if HAVE(MODERN_DOWNLOADPROGRESS)
     RefPtr<ProcessAssertion> m_assertion;
 #endif
+    String m_uuid;
 };
 
 } // namespace WebKit

@@ -38,12 +38,12 @@ class WebPageProxy;
 // NOTE: This UIProcess side InspectorTarget doesn't care about the frontend channel, since
 // any target -> frontend messages will be routed to the WebPageProxy with a targetId.
 
-class InspectorTargetProxy final : public Inspector::InspectorTarget {
+class InspectorTargetProxy : public Inspector::InspectorTarget {
     WTF_MAKE_TZONE_ALLOCATED(InspectorTargetProxy);
     WTF_MAKE_NONCOPYABLE(InspectorTargetProxy);
 public:
     static std::unique_ptr<InspectorTargetProxy> create(WebPageProxy&, const String& targetId, Inspector::InspectorTargetType);
-    static std::unique_ptr<InspectorTargetProxy> create(ProvisionalPageProxy&, const String& targetId, Inspector::InspectorTargetType);
+    static std::unique_ptr<InspectorTargetProxy> create(ProvisionalPageProxy&, const String& targetId);
     InspectorTargetProxy(WebPageProxy&, const String& targetId, Inspector::InspectorTargetType);
     ~InspectorTargetProxy() = default;
 
@@ -56,8 +56,13 @@ public:
     void connect(Inspector::FrontendChannel::ConnectionType) override;
     void disconnect() override;
     void sendMessageToTargetBackend(const String&) override;
+    void activate(String& error) override;
+    void close(String& error, bool runBeforeUnload) override;
 
 private:
+    void willResume() override;
+    void platformActivate(String& error) const;
+
     WeakRef<WebPageProxy> m_page;
     String m_identifier;
     Inspector::InspectorTargetType m_type;

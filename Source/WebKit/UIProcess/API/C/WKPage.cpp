@@ -1935,6 +1935,13 @@ void WKPageSetPageUIClient(WKPageRef pageRef, const WKPageUIClientBase* wkClient
             m_client.addMessageToConsole(toAPI(&page), toAPI(message.impl()), m_client.base.clientInfo);
         }
 
+        void handleJavaScriptDialog(WebPageProxy& page, bool accept, const String& value) final {
+            if (m_client.handleJavaScriptDialog) {
+                m_client.handleJavaScriptDialog(toAPI(&page), accept, toAPI(value.impl()), m_client.base.clientInfo);
+                return;
+            }
+        }
+
         void setStatusText(WebPageProxy* page, const String& text) final
         {
             if (!m_client.setStatusText)
@@ -1963,6 +1970,8 @@ void WKPageSetPageUIClient(WKPageRef pageRef, const WKPageUIClientBase* wkClient
         void didNotHandleKeyEvent(WebPageProxy* page, const NativeWebKeyboardEvent& event) final
         {
             if (!m_client.didNotHandleKeyEvent)
+                return;
+            if (!event.nativeEvent())
                 return;
             m_client.didNotHandleKeyEvent(toAPI(page), event.nativeEvent(), m_client.base.clientInfo);
         }

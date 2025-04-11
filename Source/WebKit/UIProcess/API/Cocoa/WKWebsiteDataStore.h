@@ -126,6 +126,8 @@ WK_CLASS_AVAILABLE(macos(10.11), ios(9.0))
 #endif
 #endif
 
+- (uint64_t)sessionID;
+
 @end
 
 NS_ASSUME_NONNULL_END

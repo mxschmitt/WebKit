@@ -161,6 +161,10 @@ webkit_web_context_set_automation_allowed           (WebKitWebContext           
 #if ENABLE(2022_GLIB_API)
 WEBKIT_API WebKitNetworkSession *
 webkit_web_context_get_network_session_for_automation(WebKitWebContext             *context);
+
+WEBKIT_API void
+webkit_web_context_set_network_session_for_automation(WebKitWebContext             *context,
+                                                      WebKitNetworkSession          *session);
 #endif
 
 WEBKIT_API void

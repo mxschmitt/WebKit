@@ -210,16 +210,23 @@ String WebPage::platformUserAgent(const URL& url) const
 
 bool WebPage::hoverSupportedByPrimaryPointingDevice() const
 {
+    if (screenHasTouchDeviceOverride())
+        return !screenHasTouchDeviceOverride().value();
     return WebProcess::singleton().primaryPointingDevice() == AvailableInputDevices::Mouse;
 }
 
 bool WebPage::hoverSupportedByAnyAvailablePointingDevice() const
 {
+    if (screenHasTouchDeviceOverride())
+        return !screenHasTouchDeviceOverride().value();
     return WebProcess::singleton().availableInputDevices().contains(AvailableInputDevices::Mouse);
 }
 
 std::optional<PointerCharacteristics> WebPage::pointerCharacteristicsOfPrimaryPointingDevice() const
 {
+    if (screenHasTouchDeviceOverride() && screenHasTouchDeviceOverride().value())
+        return PointerCharacteristics::Coarse;
+
     const auto& primaryPointingDevice = WebProcess::singleton().primaryPointingDevice();
     if (primaryPointingDevice == AvailableInputDevices::Mouse)
         return PointerCharacteristics::Fine;
@@ -230,6 +237,9 @@ std::optional<PointerCharacteristics> WebPage::pointerCharacteristicsOfPrimaryPo
 
 OptionSet<PointerCharacteristics> WebPage::pointerCharacteristicsOfAllAvailablePointingDevices() const
 {
+    if (screenHasTouchDeviceOverride() && screenHasTouchDeviceOverride().value())
+        return PointerCharacteristics::Coarse;
+
     OptionSet<PointerCharacteristics> pointerCharacteristics;
     const auto& availableInputs = WebProcess::singleton().availableInputDevices();
     if (availableInputs.contains(AvailableInputDevices::Mouse))

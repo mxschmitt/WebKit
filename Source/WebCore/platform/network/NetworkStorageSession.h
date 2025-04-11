@@ -202,6 +202,7 @@ public:
 
     NetworkingContext* context() const;
 #endif
+    WEBCORE_EXPORT void setCookiesFromResponse(const URL& firstParty, const SameSiteInfo&, const URL&, const String& setCookieValue);
 
     WEBCORE_EXPORT HTTPCookieAcceptPolicy cookieAcceptPolicy() const;
     WEBCORE_EXPORT void setCookie(const Cookie&);

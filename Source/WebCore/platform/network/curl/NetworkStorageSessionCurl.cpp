@@ -136,6 +136,12 @@ void NetworkStorageSession::setCookieAcceptPolicy(CookieAcceptPolicy policy) con
     cookieDatabase().setAcceptPolicy(policy);
 }
 
+void  NetworkStorageSession::setCookiesFromResponse(const URL& firstParty, const SameSiteInfo&, const URL& url, const String& setCookieValue)
+{
+    for (auto& cookieString : setCookieValue.split('\n'))
+        cookieDatabase().setCookie(firstParty, url, cookieString, CookieJarDB::Source::Network);
+}
+
 HTTPCookieAcceptPolicy NetworkStorageSession::cookieAcceptPolicy() const
 {
     switch (cookieDatabase().acceptPolicy()) {

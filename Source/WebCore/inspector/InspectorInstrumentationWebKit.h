@@ -33,6 +33,7 @@
 namespace WebCore {
 
 class LocalFrame;
+class Page;
 class ResourceLoader;
 class ResourceRequest;
 class ResourceResponse;
@@ -44,12 +45,14 @@ public:
     static bool shouldInterceptResponse(const LocalFrame*, const ResourceResponse&);
     static void interceptRequest(ResourceLoader&, Function<void(const ResourceRequest&)>&&);
     static void interceptResponse(const LocalFrame*, const ResourceResponse&, ResourceLoaderIdentifier, CompletionHandler<void(const ResourceResponse&, RefPtr<FragmentedSharedBuffer>)>&&);
+    static void setStoppingLoadingDueToProcessSwap(Page*, bool);
 
 private:
     static bool shouldInterceptRequestInternal(const ResourceLoader&);
     static bool shouldInterceptResponseInternal(const LocalFrame&, const ResourceResponse&);
     static void interceptRequestInternal(ResourceLoader&, Function<void(const ResourceRequest&)>&&);
     static void interceptResponseInternal(const LocalFrame&, const ResourceResponse&, ResourceLoaderIdentifier, CompletionHandler<void(const ResourceResponse&, RefPtr<FragmentedSharedBuffer>)>&&);
+    static void setStoppingLoadingDueToProcessSwapInternal(Page*, bool);
 };
 
 inline bool InspectorInstrumentationWebKit::shouldInterceptRequest(const ResourceLoader& loader)
@@ -77,6 +80,12 @@ inline void InspectorInstrumentationWebKit::interceptResponse(const LocalFrame* 
 {
     ASSERT(InspectorInstrumentationWebKit::shouldInterceptResponse(frame, response));
     interceptResponseInternal(*frame, response, identifier, WTFMove(handler));
+}
+
+inline void InspectorInstrumentationWebKit::setStoppingLoadingDueToProcessSwap(Page* page, bool value)
+{
+    FAST_RETURN_IF_NO_FRONTENDS(void());
+    setStoppingLoadingDueToProcessSwapInternal(page, value);
 }
 
 }

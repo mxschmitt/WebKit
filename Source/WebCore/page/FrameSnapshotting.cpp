@@ -115,7 +115,7 @@ RefPtr<ImageBuffer> snapshotFrameRectWithClip(LocalFrame& frame, const IntRect& 
     // Other paint behaviors are set by paintContentsForSnapshot.
     frame.view()->setPaintBehavior(paintBehavior);
 
-    float scaleFactor = frame.page()->deviceScaleFactor();
+    float scaleFactor = options.flags.contains(SnapshotFlags::OmitDeviceScaleFactor) ? 1 : frame.page()->deviceScaleFactor();
     if (options.flags.contains(SnapshotFlags::PaintWith3xBaseScale))
         scaleFactor = 3;
 
@@ -134,6 +134,8 @@ RefPtr<ImageBuffer> snapshotFrameRectWithClip(LocalFrame& frame, const IntRect& 
         return nullptr;
 
     buffer->context().translate(-imageRect.location());
+    if (coordinateSpace != LocalFrameView::ViewCoordinates)
+        buffer->context().scale(1 / frame.page()->pageScaleFactor());
 
     if (!clipRects.isEmpty()) {
         Path clipPath;
@@ -142,7 +144,10 @@ RefPtr<ImageBuffer> snapshotFrameRectWithClip(LocalFrame& frame, const IntRect& 
         buffer->context().clipPath(clipPath);
     }
 
-    frame.view()->paintContentsForSnapshot(buffer->context(), imageRect, shouldIncludeSelection, coordinateSpace);
+    FloatRect fr = imageRect;
+    if (coordinateSpace != LocalFrameView::ViewCoordinates)
+        fr.scale(frame.page()->pageScaleFactor());
+    frame.view()->paintContentsForSnapshot(buffer->context(), enclosingIntRect(fr), shouldIncludeSelection, coordinateSpace);
     return buffer;
 }
 

@@ -85,3 +85,24 @@ OptionSet<ContentsFormat> screenContentsFormatsForTesting()
 } // namespace WebCore
 
 #endif // PLATFORM(COCOA) || PLATFORM(GTK) || (PLATFORM(WPE) && ENABLE(WPE_PLATFORM))
+
+#if ENABLE(TOUCH_EVENTS)
+namespace WebCore {
+
+static std::optional<bool> _screenHasTouchDeviceOverride = std::nullopt;
+
+void setScreenHasTouchDeviceOverride(bool value) {
+  _screenHasTouchDeviceOverride = value;
+}
+std::optional<bool> screenHasTouchDeviceOverride() {
+    return _screenHasTouchDeviceOverride;
+}
+
+bool screenHasTouchDevice() {
+    if (screenHasTouchDeviceOverride())
+        return screenHasTouchDeviceOverride().value();
+    return platformScreenHasTouchDevice();
+}
+
+} // namespace WebCore
+#endif

@@ -32,6 +32,7 @@
 #include <wtf/WeakPtr.h>
 
 typedef struct _cairo cairo_t;
+typedef struct _cairo_surface cairo_surface_t;
 
 #if USE(GTK4)
 typedef struct _GdkSnapshot GdkSnapshot;
@@ -62,6 +63,8 @@ public:
 #else
     virtual bool paint(cairo_t*, const WebCore::IntRect&) = 0;
 #endif
+    virtual cairo_surface_t* surface() { return nullptr; }
+
     virtual void realize() { };
     virtual void unrealize() { };
     virtual int renderHostFileDescriptor() { return -1; }

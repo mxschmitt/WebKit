@@ -51,6 +51,13 @@ private:
     bool isGLibBasedAPI() override { return true; }
 
     void frameDisplayed(WKWPE::View&) override;
+// Playwright begin
+#if USE(CAIRO)
+    cairo_surface_t* takeViewScreenshot() override;
+#elif USE(SKIA)
+    sk_sp<SkImage> takeViewScreenshot() override;
+#endif
+// Playwright end
     void willStartLoad(WKWPE::View&) override;
     void didChangePageID(WKWPE::View&) override;
     void didReceiveUserMessage(WKWPE::View&, WebKit::UserMessage&&, CompletionHandler<void(WebKit::UserMessage&&)>&&) override;

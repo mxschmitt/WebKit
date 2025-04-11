@@ -33,6 +33,10 @@ void WebPreferences::platformInitializeStore()
     setAcceleratedCompositingEnabled(true);
     setForceCompositingMode(true);
     setThreadedScrollingEnabled(true);
+
+    // Playwright override begin
+    setThreadedScrollingEnabled(false);
+    // Playwright override end
 }
 
 } // namespace WebKit

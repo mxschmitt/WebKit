@@ -91,14 +91,21 @@ void ProcessLauncher::launchProcess()
         commandLineBuilder.append(" -configure-jsc-for-testing"_s);
     if (!m_client->isJITEnabled())
         commandLineBuilder.append(" -disable-jit"_s);
+// Playwright begin
+    if (m_launchOptions.processType == ProcessLauncher::ProcessType::Web && m_client->shouldEnableSharedArrayBuffer())
+        commandLineBuilder.append(" -enable-shared-array-buffer"_s);
+// Playwright end
     commandLineBuilder.append('\0');
 
     auto commandLine = commandLineBuilder.toString().wideCharacters();
 
     STARTUPINFO startupInfo { };
     startupInfo.cb = sizeof(startupInfo);
-    startupInfo.dwFlags = STARTF_USESHOWWINDOW;
+    startupInfo.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
     startupInfo.wShowWindow = SW_HIDE;
+    startupInfo.hStdInput = ::GetStdHandle(STD_INPUT_HANDLE);
+    startupInfo.hStdOutput = ::GetStdHandle(STD_OUTPUT_HANDLE);
+    startupInfo.hStdError = ::GetStdHandle(STD_ERROR_HANDLE);
     PROCESS_INFORMATION processInformation { };
     BOOL result = ::CreateProcess(0, commandLine.data(), 0, 0, true, 0, 0, 0, &startupInfo, &processInformation);
 

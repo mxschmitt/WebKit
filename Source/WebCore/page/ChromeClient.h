@@ -364,7 +364,7 @@ public:
 #endif
 
 #if ENABLE(ORIENTATION_EVENTS)
-    virtual IntDegrees deviceOrientation() const = 0;
+    virtual IntDegrees deviceOrientation() const { return 0; }
 #endif
 
     virtual RefPtr<ColorChooser> createColorChooser(ColorChooserClient&, const Color&) = 0;

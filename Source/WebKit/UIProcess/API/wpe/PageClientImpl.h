@@ -181,8 +181,16 @@ private:
     void didChangeWebPageID() const override;
 
     void selectionDidChange() override;
-
+#if USE(SKIA)
+    sk_sp<SkImage> takeViewSnapshot(std::optional<WebCore::IntRect>&&, bool nominalResolution) override;
+#elif USE(CAIRO)
+    RefPtr<cairo_surface_t> takeViewSnapshot(std::optional<WebCore::IntRect>&&, bool nominalResolution) override;
+#endif
     WebKitWebResourceLoadManager* webResourceLoadManager() override;
+
+#if ENABLE(DATE_AND_TIME_INPUT_TYPES)
+    RefPtr<WebDateTimePicker> createDateTimePicker(WebPageProxy&) override;
+#endif
 
     WKWPE::View& m_view;
 #if ENABLE(FULLSCREEN_API)

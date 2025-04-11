@@ -168,6 +168,13 @@ void ProcessLauncher::launchProcess()
         nargs++;
     }
 #endif
+// Playwright begin
+    bool enableSharedArrayBuffer = false;
+    if (m_launchOptions.processType == ProcessLauncher::ProcessType::Web && m_client && m_client->shouldEnableSharedArrayBuffer()) {
+        enableSharedArrayBuffer = true;
+        nargs++;
+    }
+// Playwright end
 
     WTF_ALLOW_UNSAFE_BUFFER_USAGE_BEGIN // GTK/WPE port
 
@@ -188,6 +195,10 @@ void ProcessLauncher::launchProcess()
     if (configureJSCForTesting)
         argv[i++] = const_cast<char*>("--configure-jsc-for-testing");
 #endif
+// Playwright begin
+    if (enableSharedArrayBuffer)
+        argv[i++] = const_cast<char*>("--enable-shared-array-buffer");
+// Playwright end
     argv[i++] = nullptr;
 
     WTF_ALLOW_UNSAFE_BUFFER_USAGE_END

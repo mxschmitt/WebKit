@@ -24,6 +24,7 @@
  */
 
 [
+    EnabledBySetting=PointerLockEnabled,
     Conditional=POINTER_LOCK
 ] partial interface Element {
     // Returns Promise<undefined> if PointerLockOptionsEnabled Runtime Flag is set, otherwise returns undefined.

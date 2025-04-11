@@ -160,10 +160,14 @@ WEBCORE_EXPORT float screenScaleFactor(UIScreen * = nullptr);
 #endif
 
 #if ENABLE(TOUCH_EVENTS)
-#if PLATFORM(GTK)
+WEBCORE_EXPORT void setScreenHasTouchDeviceOverride(bool);
+WEBCORE_EXPORT std::optional<bool> screenHasTouchDeviceOverride();
+
 WEBCORE_EXPORT bool screenHasTouchDevice();
+#if PLATFORM(GTK)
+bool platformScreenHasTouchDevice();
 #else
-constexpr bool screenHasTouchDevice() { return true; }
+constexpr bool platformScreenHasTouchDevice() { return true; }
 #endif
 #endif
 

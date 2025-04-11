@@ -25,6 +25,7 @@
 
 #if HAVE(APP_SSO)
 
+#import "SOAuthorizationSession.h"
 #import <pal/cocoa/AppSSOSoftLink.h>
 
 namespace WebKit {

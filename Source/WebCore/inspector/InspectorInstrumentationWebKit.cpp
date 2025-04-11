@@ -50,4 +50,9 @@ void InspectorInstrumentationWebKit::interceptResponseInternal(const LocalFrame&
     InspectorInstrumentation::interceptResponse(frame, response, identifier, WTFMove(handler));
 }
 
+void InspectorInstrumentationWebKit::setStoppingLoadingDueToProcessSwapInternal(Page* page, bool value)
+{
+    InspectorInstrumentation::setStoppingLoadingDueToProcessSwap(page, value);
+}
+
 } // namespace WebCore

@@ -31,3 +31,5 @@ template <> void derefGPtr(WebKitWebViewBackend* ptr);
 }
 
 void webkitWebViewBackendUnref(WebKitWebViewBackend*);
+
+PlatformImage webkitWebViewBackendTakeScreenshot(WebKitWebViewBackend*);

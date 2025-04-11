@@ -121,7 +121,7 @@ bool screenSupportsExtendedColor(Widget*)
 }
 
 #if ENABLE(TOUCH_EVENTS)
-bool screenHasTouchDevice()
+bool platformScreenHasTouchDevice()
 {
     return getScreenProperties().screenHasTouchDevice;
 }

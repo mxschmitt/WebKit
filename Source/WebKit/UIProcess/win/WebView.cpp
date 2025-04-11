@@ -576,7 +576,7 @@ LRESULT WebView::onSizeEvent(HWND hwnd, UINT, WPARAM, LPARAM lParam, bool& handl
     float intrinsicDeviceScaleFactor = deviceScaleFactorForWindow(hwnd);
     if (m_page)
         m_page->setIntrinsicDeviceScaleFactor(intrinsicDeviceScaleFactor);
-    m_viewSize = expandedIntSize(FloatSize(LOWORD(lParam), HIWORD(lParam)) / intrinsicDeviceScaleFactor);
+    m_viewSize = expandedIntSize(FloatSize(LOWORD(lParam), HIWORD(lParam)));
 
     if (m_page && m_page->drawingArea()) {
         // FIXME specify correctly layerPosition.

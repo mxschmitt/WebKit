@@ -31,6 +31,7 @@ namespace Inspector {
 
 class IdentifiersFactory {
 public:
+    JS_EXPORT_PRIVATE static void initializeWithProcessID(uint64_t);
     JS_EXPORT_PRIVATE static String createIdentifier();
     JS_EXPORT_PRIVATE static String requestId(unsigned long identifier);
 };

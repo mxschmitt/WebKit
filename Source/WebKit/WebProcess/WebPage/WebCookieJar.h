@@ -77,6 +77,8 @@ public:
 
     void clearCache() final;
 
+    void setCookieFromResponse(WebCore::ResourceLoader&, const String& setCookieValue);
+
 #if HAVE(ALLOW_ONLY_PARTITIONED_COOKIES)
     void setOptInCookiePartitioningEnabled(bool);
 #endif

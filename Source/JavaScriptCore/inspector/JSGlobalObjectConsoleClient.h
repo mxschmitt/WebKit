@@ -64,6 +64,7 @@ private:
     void record(JSC::JSGlobalObject*, Ref<ScriptArguments>&&) final;
     void recordEnd(JSC::JSGlobalObject*, Ref<ScriptArguments>&&) final;
     void screenshot(JSC::JSGlobalObject*, Ref<ScriptArguments>&&) final;
+    void bindingCalled(JSC::JSGlobalObject*, const String&, const String&) final;
 
     void warnUnimplemented(const String& method);
     void internalAddMessage(MessageType, MessageLevel, JSC::JSGlobalObject*, Ref<ScriptArguments>&&);

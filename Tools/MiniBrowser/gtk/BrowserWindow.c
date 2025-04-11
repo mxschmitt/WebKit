@@ -73,7 +73,7 @@ struct _BrowserWindowClass {
     GtkApplicationWindowClass parent;
 };
 
-static const char *defaultWindowTitle = "WebKitGTK MiniBrowser";
+static const char *defaultWindowTitle = "🎭 Playwright";
 static const gdouble minimumZoomLevel = 0.5;
 static const gdouble maximumZoomLevel = 3;
 static const gdouble defaultZoomLevel = 1;
@@ -157,17 +157,11 @@ static void webViewURIChanged(WebKitWebView *webView, GParamSpec *pspec, Browser
 static void webViewTitleChanged(WebKitWebView *webView, GParamSpec *pspec, BrowserWindow *window)
 {
     const char *title = webkit_web_view_get_title(webView);
+    char *privateTitle = NULL;
     if (!title)
         title = defaultWindowTitle;
-    char *privateTitle = NULL;
-    if (webkit_web_view_is_controlled_by_automation(webView))
-        privateTitle = g_strdup_printf("[Automation] %s", title);
-#if GTK_CHECK_VERSION(3, 98, 0)
-    else if (webkit_network_session_is_ephemeral(webkit_web_view_get_network_session(webView)))
-#else
-    else if (webkit_web_view_is_ephemeral(webView))
-#endif
-        privateTitle = g_strdup_printf("[Private] %s", title);
+    else
+        privateTitle = g_strdup_printf("🎭 Playwright: %s", title);
     gtk_window_set_title(GTK_WINDOW(window), privateTitle ? privateTitle : title);
     g_free(privateTitle);
 }
@@ -524,8 +518,12 @@ static gboolean webViewDecidePolicy(WebKitWebView *webView, WebKitPolicyDecision
         return FALSE;
 
     WebKitNavigationAction *navigationAction = webkit_navigation_policy_decision_get_navigation_action(WEBKIT_NAVIGATION_POLICY_DECISION(decision));
-    if (webkit_navigation_action_get_navigation_type(navigationAction) != WEBKIT_NAVIGATION_TYPE_LINK_CLICKED
-        || webkit_navigation_action_get_mouse_button(navigationAction) != GDK_BUTTON_MIDDLE)
+    if (webkit_navigation_action_get_navigation_type(navigationAction) != WEBKIT_NAVIGATION_TYPE_LINK_CLICKED)
+        return FALSE;
+
+    guint modifiers = webkit_navigation_action_get_modifiers(navigationAction);
+    if (webkit_navigation_action_get_mouse_button(navigationAction) != GDK_BUTTON_MIDDLE &&
+        (webkit_navigation_action_get_mouse_button(navigationAction) != GDK_BUTTON_PRIMARY || (modifiers & (GDK_CONTROL_MASK | GDK_SHIFT_MASK)) == 0))
         return FALSE;
 
     /* Multiple tabs are not allowed in editor mode. */
@@ -1502,6 +1500,28 @@ static gboolean browserWindowDeleteEvent(GtkWidget *widget, GdkEventAny* event)
 }
 #endif
 
+#if GTK_CHECK_VERSION(3, 98, 0)
+static void zero_widget_measure (GtkWidget      *widget,
+                    GtkOrientation  orientation,
+                    int             for_size,
+                    int            *minimum_size,
+                    int            *natural_size,
+                    int            *minimum_baseline,
+                    int            *natural_baseline)
+{
+    *minimum_size = 10;
+    *natural_size = 10;
+    // *minimum_baseline = 10;
+    // *natural_baseline = 10;
+}
+#else
+static void zeroPreferredSize(GtkWidget* widget, gint* minimumSize, gint* naturalSize)
+{
+    *minimumSize = 10;
+    *naturalSize = 10;
+}
+#endif
+
 static void browser_window_class_init(BrowserWindowClass *klass)
 {
     GObjectClass *gobjectClass = G_OBJECT_CLASS(klass);
@@ -1515,6 +1535,19 @@ static void browser_window_class_init(BrowserWindowClass *klass)
     GtkWidgetClass *widgetClass = GTK_WIDGET_CLASS(klass);
     widgetClass->delete_event = browserWindowDeleteEvent;
 #endif
+
+// Playwrigth begin
+// Override preferred (which is minimum :-) size to 0 so that we can
+// emulate arbitrary resolution.
+#if GTK_CHECK_VERSION(3, 98, 0)
+    GtkWidgetClass* browserWidgetClass = GTK_WIDGET_CLASS(klass);
+    browserWidgetClass->measure = zero_widget_measure;
+#else
+    GtkWidgetClass* browserWidgetClass = GTK_WIDGET_CLASS(klass);
+    browserWidgetClass->get_preferred_width = zeroPreferredSize;
+    browserWidgetClass->get_preferred_height = zeroPreferredSize;
+#endif
+// Playwrigth end
 }
 
 /* Public API. */

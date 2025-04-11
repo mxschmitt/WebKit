@@ -98,6 +98,7 @@ private:
 #else
     bool paint(cairo_t*, const WebCore::IntRect&) override;
 #endif
+    cairo_surface_t* surface() override;
     void unrealize() override;
     void update(const LayerTreeContext&) override;
     RendererBufferFormat bufferFormat() const override;
@@ -253,6 +254,9 @@ private:
     RefPtr<Buffer> m_committedBuffer;
     Rects m_pendingDamageRects;
     HashMap<uint64_t, RefPtr<Buffer>> m_buffers;
+// Playwright begin
+    RefPtr<cairo_surface_t> m_flippedSurface;
+// Playwright end
 };
 
 } // namespace WebKit

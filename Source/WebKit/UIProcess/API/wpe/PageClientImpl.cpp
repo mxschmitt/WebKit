@@ -35,9 +35,12 @@
 #include "WPEWebViewLegacy.h"
 #include "WPEWebViewPlatform.h"
 #include "WebColorPicker.h"
+#include "WebColorPickerWPE.h"
+#include "WebDateTimePickerWPE.h"
 #include "WebContextMenuProxy.h"
 #include "WebContextMenuProxyWPE.h"
 #include "WebDataListSuggestionsDropdown.h"
+#include "WebDataListSuggestionsDropdownWPE.h"
 #include "WebDateTimePicker.h"
 #include "WebKitPopupMenu.h"
 #include <WebCore/ActivityState.h>
@@ -53,6 +56,12 @@
 
 #if ENABLE(WPE_PLATFORM)
 #include <wpe/wpe-platform.h>
+#endif
+
+#if USE(SKIA)
+#include <skia/core/SkBitmap.h>
+#include <skia/core/SkCanvas.h>
+#include <skia/core/SkImage.h>
 #endif
 
 namespace WebKit {
@@ -299,14 +308,14 @@ Ref<WebContextMenuProxy> PageClientImpl::createContextMenuProxy(WebPageProxy& pa
 }
 #endif
 
-RefPtr<WebColorPicker> PageClientImpl::createColorPicker(WebPageProxy&, const WebCore::Color& intialColor, const WebCore::IntRect&, ColorControlSupportsAlpha supportsAlpha, Vector<WebCore::Color>&&)
+RefPtr<WebColorPicker> PageClientImpl::createColorPicker(WebPageProxy& page, const WebCore::Color& intialColor, const WebCore::IntRect& rect, ColorControlSupportsAlpha supportsAlpha, Vector<WebCore::Color>&&)
 {
-    return nullptr;
+    return WebColorPickerWPE::create(page, intialColor, rect);
 }
 
-RefPtr<WebDataListSuggestionsDropdown> PageClientImpl::createDataListSuggestionsDropdown(WebPageProxy&)
+RefPtr<WebKit::WebDataListSuggestionsDropdown> PageClientImpl::createDataListSuggestionsDropdown(WebKit::WebPageProxy& page)
 {
-    return nullptr;
+    return WebDataListSuggestionsDropdownWPE::create(page);
 }
 
 RefPtr<WebDateTimePicker> PageClientImpl::createDateTimePicker(WebPageProxy& page)
@@ -523,6 +532,64 @@ void PageClientImpl::selectionDidChange()
     m_view.selectionDidChange();
 }
 
+#if USE(SKIA)
+sk_sp<SkImage> PageClientImpl::takeViewSnapshot(std::optional<WebCore::IntRect>&& clipRect, bool nominalResolution)
+{
+    sk_sp<SkImage> fullScreenshot = m_view.client().takeViewScreenshot();
+    float deviceScale = m_view.page().deviceScaleFactor();
+    if (!clipRect && (!nominalResolution || deviceScale == 1))
+        return fullScreenshot;
+
+    WebCore::IntSize size = clipRect ? clipRect->size() : m_view.page().viewSize();
+    if (!nominalResolution) {
+        size.scale(deviceScale);
+        if (clipRect)
+            clipRect->scale(deviceScale);
+    }
+
+    SkBitmap bitmap;
+    bitmap.allocPixels(SkImageInfo::Make(size.width(), size.height(), kN32_SkColorType, kPremul_SkAlphaType));
+    SkCanvas canvas(bitmap);
+    if (clipRect) {
+        canvas.translate(-clipRect->x(), -clipRect->y());
+        SkRect rect = SkRect::MakeXYWH(clipRect->x(), clipRect->y(), clipRect->width(), clipRect->height());
+        canvas.clipRect(rect);
+    }
+    if (nominalResolution)
+        canvas.scale(1/deviceScale, 1/deviceScale);
+    canvas.drawImage(fullScreenshot, 0, 0);
+    return bitmap.asImage();
+}
+#elif USE(CAIRO)
+RefPtr<cairo_surface_t> PageClientImpl::takeViewSnapshot(std::optional<WebCore::IntRect>&& clipRect, bool nominalResolution)
+{
+    RefPtr<cairo_surface_t> fullScreenshot = adoptRef(m_view.client().takeViewScreenshot());
+    float deviceScale = m_view.page().deviceScaleFactor();
+    if (!clipRect && (!nominalResolution || deviceScale == 1))
+        return fullScreenshot;
+
+    WebCore::IntSize size = clipRect ? clipRect->size() : m_view.page().viewSize();
+    if (!nominalResolution) {
+        size.scale(deviceScale);
+        if (clipRect)
+            clipRect->scale(deviceScale);
+    }
+    RefPtr<cairo_surface_t> surface = adoptRef(cairo_image_surface_create(CAIRO_FORMAT_RGB24, size.width(), size.height()));
+    RefPtr<cairo_t> cr = adoptRef(cairo_create(surface.get()));
+    if (clipRect) {
+        cairo_translate(cr.get(), -clipRect->x(), -clipRect->y());
+        cairo_rectangle(cr.get(), clipRect->x(), clipRect->y(), clipRect->width(), clipRect->height());
+        cairo_clip(cr.get());
+    }
+    if (nominalResolution)
+        cairo_scale(cr.get(), 1/deviceScale, 1/deviceScale);
+    cairo_set_source_surface(cr.get(), fullScreenshot.get(), 0, 0);
+    cairo_paint(cr.get());
+    return surface;
+}
+#endif
+
+
 WebKitWebResourceLoadManager* PageClientImpl::webResourceLoadManager()
 {
     return m_view.webResourceLoadManager();
@@ -532,5 +599,12 @@ void PageClientImpl::callAfterNextPresentationUpdate(CompletionHandler<void()>&&
 {
     m_view.callAfterNextPresentationUpdate(WTFMove(callback));
 }
+
+#if ENABLE(DATE_AND_TIME_INPUT_TYPES)
+RefPtr<WebDateTimePicker> PageClientImpl::createDateTimePicker(WebPageProxy& page)
+{
+    return WebDateTimePickerWPE::create(page);
+}
+#endif
 
 } // namespace WebKit

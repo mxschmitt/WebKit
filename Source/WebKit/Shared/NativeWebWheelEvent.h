@@ -74,7 +74,8 @@ public:
 #elif PLATFORM(WIN)
     NativeWebWheelEvent(HWND, UINT message, WPARAM, LPARAM, float deviceScaleFactor);
 #endif
-
+    NativeWebWheelEvent(const WebWheelEvent & webWheelEvent)
+        : WebWheelEvent(webWheelEvent) { }
 #if USE(APPKIT)
     NSEvent* nativeEvent() const { return m_nativeEvent.get(); }
 #elif PLATFORM(GTK)

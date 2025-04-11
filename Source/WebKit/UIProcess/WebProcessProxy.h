@@ -185,6 +185,7 @@ public:
 
     static void forWebPagesWithOrigin(PAL::SessionID, const WebCore::SecurityOriginData&, NOESCAPE const Function<void(WebPageProxy&)>&);
     static Vector<std::pair<WebCore::ProcessIdentifier, WebCore::RegistrableDomain>> allowedFirstPartiesForCookies();
+    static Vector<Ref<WebProcessProxy>> allProcessesForInspector();
 
     void initializeWebProcess(WebProcessCreationParameters&&);
 

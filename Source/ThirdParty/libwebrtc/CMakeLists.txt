@@ -532,6 +532,11 @@ set(webrtc_SOURCES
     Source/third_party/crc32c/src/src/crc32c.cc
     Source/third_party/crc32c/src/src/crc32c_portable.cc
     Source/third_party/crc32c/src/src/crc32c_sse42.cc
+# Playwright begin
+    Source/third_party/libwebm/mkvmuxer/mkvmuxer.cc
+    Source/third_party/libwebm/mkvmuxer/mkvmuxerutil.cc
+    Source/third_party/libwebm/mkvmuxer/mkvwriter.cc
+# Playwright end
     Source/third_party/libyuv/source/compare.cc
     Source/third_party/libyuv/source/compare_common.cc
     Source/third_party/libyuv/source/compare_gcc.cc
@@ -2348,6 +2353,11 @@ set(webrtc_INCLUDE_DIRECTORIES PRIVATE
     Source/third_party/libsrtp/config
     Source/third_party/libsrtp/crypto/include
     Source/third_party/libsrtp/include
+# Playwright begin
+    Source/third_party/libwebm
+    Source/third_party/libvpx/source/libvpx
+    Source/third_party/libvpx/source/libvpx/third_party/googletest/src/include
+# Playwright end
     Source/third_party/libyuv/include
     Source/third_party/opus/src/celt
     Source/third_party/opus/src/include

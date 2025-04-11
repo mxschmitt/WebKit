@@ -10,6 +10,8 @@ if (USE_SKIA_ENCODERS)
     find_package(WebP REQUIRED COMPONENTS mux)
 endif ()
 
+find_package(Threads REQUIRED)
+
 if (ANDROID)
     find_package(EXPAT REQUIRED)
 endif ()
@@ -948,6 +950,7 @@ endif ()
 target_link_libraries(Skia PRIVATE
     JPEG::JPEG
     PNG::PNG
+    Threads::Threads
 )
 
 WEBKIT_ADD_TARGET_CXX_FLAGS(Skia
