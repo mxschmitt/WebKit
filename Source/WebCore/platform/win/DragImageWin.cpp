@@ -62,16 +62,22 @@ IntSize dragImageSize(DragImageRef image)
 {
     if (!image)
         return IntSize();
-    BITMAP b;
-    GetObject(image, sizeof(BITMAP), &b);
-    return IntSize(b.bmWidth, b.bmHeight);
+    return { image->width(), image->height() };
 }
 
+#if USE(CAIRO)
 void deleteDragImage(DragImageRef image)
 {
     if (image)
         ::DeleteObject(image);
 }
+#else
+void deleteDragImage(DragImageRef)
+{
+    // Since this is a RefPtr, there's nothing additional we need to do to
+    // delete it. It will be released when it falls out of scope.
+}
+#endif
 
 DragImageRef dissolveDragImageToFraction(DragImageRef image, float)
 {
@@ -79,8 +85,9 @@ DragImageRef dissolveDragImageToFraction(DragImageRef image, float)
     return image;
 }
         
-DragImageRef createDragImageIconForCachedImageFilename(const String& filename)
+DragImageRef createDragImageIconForCachedImageFilename(const String&)
 {
+#if USE(CAIRO)
     SHFILEINFO shfi { };
     auto fname = filename.wideCharacters();
     if (FAILED(SHGetFileInfo(fname.data(), FILE_ATTRIBUTE_NORMAL, &shfi, sizeof(shfi), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES)))
@@ -96,6 +103,9 @@ DragImageRef createDragImageIconForCachedImageFilename(const String& filename)
     DeleteObject(iconInfo.hbmMask);
 
     return iconInfo.hbmColor;
+#else
+    return nullptr;
+#endif
 }
 
 #if USE(CAIRO)
@@ -221,9 +231,9 @@ DragImageRef createDragImageForColor(const Color&, const FloatRect&, float, Path
 }
 
 #if USE(SKIA)
-DragImageRef createDragImageFromImage(Image*, ImageOrientation, GraphicsClient*, float)
+DragImageRef createDragImageFromImage(Image* image, ImageOrientation, GraphicsClient*, float)
 {
-    return nullptr;
+    return image->currentNativeImage()->platformImage();
 }
 
 DragImageRef scaleDragImage(DragImageRef, FloatSize)

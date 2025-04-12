@@ -53,10 +53,8 @@
 #endif
 
 #if PLATFORM(WIN)
-#include <cairo-win32.h>
 #include <windows.h>
 #include <WebCore/HWndDC.h>
-#include <WebCore/RefPtrCairo.h>
 #endif
 
 namespace WebKit {
@@ -265,16 +263,10 @@ void DrawingAreaProxyCoordinatedGraphics::didChangeAcceleratedCompositingMode(bo
 }
 #endif
 
-#if !PLATFORM(WPE)
+#if !PLATFORM(WPE) && !PLATFORM(WIN)
 void DrawingAreaProxyCoordinatedGraphics::captureFrame()
 {
     RefPtr<cairo_surface_t> surface;
-#if PLATFORM(WIN)
-    HWndDC dc;
-    if (m_isInAcceleratedCompositingMode) {
-        dc.setHWnd(reinterpret_cast<HWND>(protectedWebPageProxy()->viewWidget()));
-        surface = adoptRef(cairo_win32_surface_create(dc));
-#else
     if (isInAcceleratedCompositingMode()) {
 #  if PLATFORM(GTK)
         AcceleratedBackingStore* backingStore = webkitWebViewBaseGetAcceleratedBackingStore(WEBKIT_WEB_VIEW_BASE(protectedWebPageProxy()->viewWidget()));
@@ -282,10 +274,9 @@ void DrawingAreaProxyCoordinatedGraphics::captureFrame()
             return;
 
         surface = backingStore->surface();
-#  else
+#  else // PLATFORM(GTK)
         fprintf(stderr, "captureFrame() is not supported in accelerated compositing mode on this platform.\n");
-#  endif
-#endif
+#  endif // PLATFORM(GTK)
     } else if (m_backingStore) {
         surface = m_backingStore->surface();
     }
@@ -294,8 +285,22 @@ void DrawingAreaProxyCoordinatedGraphics::captureFrame()
         return;
 
     protectedWebPageProxy()->inspectorController().didPaint(surface.get());
+#endif // !PLATFORM(WPE)
+
+#if PLATFORM(WIN)
+void DrawingAreaProxyCoordinatedGraphics::captureFrame()
+{
+    if (!m_backingStore)
+        return;
+    auto surface = m_backingStore->surface();
+    if (!surface)
+        return;
+    auto image = surface->makeImageSnapshot();
+    if (!image)
+        return;
+    protectedWebPageProxy()->inspectorController().didPaint(WTFMove(image));
 }
-#endif
+#endif // PLATFORM(WIN)
 
 bool DrawingAreaProxyCoordinatedGraphics::alwaysUseCompositing() const
 {
