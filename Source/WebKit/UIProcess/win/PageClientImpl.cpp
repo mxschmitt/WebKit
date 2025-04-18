@@ -38,6 +38,9 @@
 #include <WebCore/DOMPasteAccess.h>
 #include <WebCore/LocalizedStrings.h>
 #include <WebCore/NotImplemented.h>
+#include "DragSourceWin.h"
+#include "DragTargetWin.h"
+#include "DragDataObjectWin.h"
 
 #if USE(GRAPHICS_LAYER_WC)
 #include "DrawingAreaProxyWC.h"
@@ -49,6 +52,10 @@ using namespace WebCore;
 PageClientImpl::PageClientImpl(WebView& view)
     : m_view(view)
 {
+#if ENABLE(DRAG_SUPPORT)
+
+#endif
+
 }
 
 // PageClient's pure virtual functions
@@ -441,6 +448,43 @@ HWND PageClientImpl::viewWidget()
 {
     return m_view.window();
 }
+
+#if ENABLE(DRAG_SUPPORT)
+void PageClientImpl::startDrag(WebCore::DragDataMap&& dragDataMap)
+{
+    if (!m_dropTarget) {
+        // Create and register the Windows drop target.
+        // m_page() is assumed to point to the WebPageProxy for this view.
+        m_dropTarget = makeUnique<DragTargetWin>(m_view.window(), m_view.page());
+        
+        // Register the drop target with the window.
+        HRESULT hr = RegisterDragDrop(m_view.window(), m_dropTarget.get());
+        if (FAILED(hr)) {
+            // Handle error if necessary (e.g. log failure).
+            fprintf(stderr, "Failed to register drop target: 0x%08lx\n", hr);
+        }
+    }
+
+    // 2) Wrap it in our COM object
+    auto dataObject = makeUnique<DragDataObjectWin>(WTFMove(dragDataMap));
+
+    // 3) Lazily create the source and kick off the drag loop
+    if (!m_dropSource)
+        m_dropSource = makeUnique<DragSourceWin>(m_view.window());
+    m_dropSource->begin(dataObject.get(), DROPEFFECT_COPY | DROPEFFECT_MOVE);
+
+    // 4) Notify UIProcess that the drag started
+    if (auto* page = m_view.page())
+        page->didStartDrag();
+}
+
+void PageClientImpl::didPerformDragOperation(bool)
+{
+    if (m_dropTarget)
+        m_dropTarget->didPerformDragOperation();
+}
+
+#endif
 
 void PageClientImpl::requestDOMPasteAccess(WebCore::DOMPasteAccessCategory, WebCore::DOMPasteRequiresInteraction, const IntRect&, const String&, CompletionHandler<void(WebCore::DOMPasteAccessResponse)>&& completionHandler)
 {

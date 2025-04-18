@@ -60,6 +60,9 @@ list(APPEND WebKit_SOURCES
     UIProcess/win/WebPopupMenuProxyWin.cpp
     UIProcess/win/WebProcessPoolWin.cpp
     UIProcess/win/WebView.cpp
+    UIProcess/win/DragDataObjectWin.cpp
+    UIProcess/win/DragSourceWin.cpp
+    UIProcess/win/DragTargetWin.cpp
 
     WebProcess/GPU/media/win/VideoLayerRemoteWin.cpp
 
@@ -71,6 +74,8 @@ list(APPEND WebKit_SOURCES
     WebProcess/MediaCache/WebMediaKeyStorageManager.cpp
 
     WebProcess/WebCoreSupport/win/WebPopupMenuWin.cpp
+
+    WebProcess/WebCoreSupport/win/WebDragClientWin.cpp
 
     WebProcess/WebPage/AcceleratedSurface.cpp
 

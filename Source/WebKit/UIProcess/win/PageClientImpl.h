@@ -32,11 +32,15 @@
 #include "PageClient.h"
 #include "WebFullScreenManagerProxy.h"
 #include "WebPageProxy.h"
+#include "DragSourceWin.h"
+#include "DragTargetWin.h"
 #include <WebCore/IntSize.h>
 
 namespace WebCore {
 enum class DOMPasteAccessCategory : uint8_t;
 enum class DOMPasteAccessResponse : uint8_t;
+typedef UncheckedKeyHashMap<unsigned, Vector<String>> DragDataMap;
+
 }
 
 namespace WebKit {
@@ -83,6 +87,8 @@ private:
     void clearAllEditCommands() override;
     bool canUndoRedo(UndoOrRedo) override;
     void executeUndoRedo(UndoOrRedo) override;
+    void startDrag(WebCore::DragDataMap&&) override;
+    void didPerformDragOperation(bool) override;
     WebCore::FloatRect convertToDeviceSpace(const WebCore::FloatRect&) override;
     WebCore::FloatRect convertToUserSpace(const WebCore::FloatRect&) override;
     WebCore::IntPoint screenToRootView(const WebCore::IntPoint&) override;
@@ -164,6 +170,11 @@ private:
 
     // Members of PageClientImpl class
     DefaultUndoController m_undoController;
+
+#if ENABLE(DRAG_SUPPORT)
+    std::unique_ptr<WebKit::DragSourceWin> m_dropSource;
+    std::unique_ptr<WebKit::DragTargetWin> m_dropTarget;
+#endif
 
     WebView& m_view;
 };

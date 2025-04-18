@@ -336,6 +336,9 @@ messages -> WebPageProxy {
 #if PLATFORM(GTK) && ENABLE(DRAG_SUPPORT)
     StartDrag(WebCore::SelectionData selectionData, OptionSet<WebCore::DragOperation> dragOperationMask, std::optional<WebCore::ShareableBitmapHandle> dragImage, WebCore::IntPoint dragImageHotspot)
 #endif
+#if PLATFORM(WIN) && ENABLE(DRAG_SUPPORT)
+    StartDrag(UncheckedKeyHashMap<unsigned, Vector<String>> dragDataMap)
+#endif
 
 #if PLATFORM(IOS_FAMILY) && ENABLE(DRAG_SUPPORT)
     DidHandleDragStartRequest(bool started)

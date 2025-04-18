@@ -936,6 +936,7 @@ static IntPoint dragLocForSelectionDrag(LocalFrame& src)
 
 void DragController::prepareForDragStart(LocalFrame& source, OptionSet<DragSourceAction> actionMask, Element& element, DataTransfer& dataTransfer, const IntPoint& dragOrigin) const
 {
+    fprintf(stderr, "DragController::prepareForDragStart\n");
 #if !PLATFORM(WIN)
     Ref protectedSource { source };
     auto hitTestResult = hitTestResultForDragStart(source, element, dragOrigin);
@@ -1380,6 +1381,7 @@ static RefPtr<Element> containingLinkElement(Element& element)
 
 void DragController::doSystemDrag(DragImage image, const IntPoint& dragLoc, const IntPoint& eventPos, LocalFrame& frame, const DragState& state, PromisedAttachmentInfo&& promisedAttachmentInfo)
 {
+    fprintf(stderr, "DragController::doSystemDrag\n");
     m_didInitiateDrag = true;
     m_dragInitiator = frame.document();
     // Protect this frame and view, as a load may occur mid drag and attempt to unload this frame

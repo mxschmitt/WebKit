@@ -109,6 +109,7 @@ class Color;
 class Cursor;
 class DestinationColorSpace;
 class FloatQuad;
+typedef UncheckedKeyHashMap<unsigned, Vector<String>> DragDataMap;
 class FloatRect;
 class Region;
 class TextIndicator;
@@ -341,7 +342,7 @@ public:
 #if PLATFORM(GTK)
     virtual void startDrag(WebCore::SelectionData&&, OptionSet<WebCore::DragOperation>, RefPtr<WebCore::ShareableBitmap>&& dragImage, WebCore::IntPoint&& dragImageHotspot) = 0;
 #else
-    virtual void startDrag(const WebCore::DragItem&, WebCore::ShareableBitmap::Handle&&) { }
+    virtual void startDrag(WebCore::DragDataMap&&) { }
 #endif
     virtual void didPerformDragOperation(bool) { }
     virtual void didPerformDragControllerAction() { }

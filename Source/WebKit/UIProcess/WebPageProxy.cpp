@@ -3639,7 +3639,7 @@ void WebPageProxy::discardQueuedMouseEvents()
         internals().mouseEventQueue.removeLast();
 }
 
-#if ENABLE(DRAG_SUPPORT)
+#if TRUE
 
 DragHandlingMethod WebPageProxy::currentDragHandlingMethod() const
 {
@@ -3658,6 +3658,7 @@ IntRect WebPageProxy::currentDragCaretEditableElementRect() const
 
 void WebPageProxy::dragEntered(DragData& dragData, const String& dragStorageName)
 {
+    fprintf(stderr, "WebPageProxy::dragEntered\n");
 #if PLATFORM(COCOA)
     WebPasteboardProxy::singleton().grantAccessToCurrentTypes(m_legacyMainFrameProcess.get(), dragStorageName);
 #endif
@@ -3667,7 +3668,8 @@ void WebPageProxy::dragEntered(DragData& dragData, const String& dragStorageName
 
 void WebPageProxy::dragUpdated(DragData& dragData, const String& dragStorageName)
 {
-#if PLATFORM(COCOA)
+    fprintf(stderr, "WebPageProxy::dragUpdated\n");
+    #if PLATFORM(COCOA)
     WebPasteboardProxy::singleton().grantAccessToCurrentTypes(m_legacyMainFrameProcess.get(), dragStorageName);
 #endif
     performDragControllerAction(DragControllerAction::Updated, dragData);
@@ -3675,6 +3677,7 @@ void WebPageProxy::dragUpdated(DragData& dragData, const String& dragStorageName
 
 void WebPageProxy::dragExited(DragData& dragData)
 {
+    fprintf(stderr, "WebPageProxy::dragExited\n");
     performDragControllerAction(DragControllerAction::Exited, dragData);
 }
 
@@ -3770,8 +3773,21 @@ void WebPageProxy::startDrag(SelectionData&& selectionData, OptionSet<WebCore::D
 }
 #endif
 
+#if PLATFORM(WIN)
+void WebPageProxy::startDrag(WebCore::DragDataMap&& dragDataMap)
+{
+    //m_dragSelectionData = WTFMove(dragDataMap);
+    // m_dragSourceOperationMask = WebCore::anyDragOperation();
+    if (RefPtr pageClient = this->pageClient()) {
+        pageClient->startDrag(WTFMove(dragDataMap));
+    }
+    didStartDrag();
+}
+#endif
+
 void WebPageProxy::dragEnded(const IntPoint& clientPosition, const IntPoint& globalPosition, OptionSet<WebCore::DragOperation> dragOperationMask, const std::optional<WebCore::FrameIdentifier>& frameID)
 {
+    fprintf(stderr, "WebPageProxy::dragEnded\n");
     if (!hasRunningProcess())
         return;
     auto completionHandler = [this, protectedThis = Ref { *this }, globalPosition, dragOperationMask] (std::optional<WebCore::RemoteUserInputEventData> remoteUserInputEventData) {
@@ -3788,6 +3804,7 @@ void WebPageProxy::dragEnded(const IntPoint& clientPosition, const IntPoint& glo
 
 void WebPageProxy::didStartDrag()
 {
+    fprintf(stderr, "WebPageProxy::didStartDrag\n");
     if (!hasRunningProcess())
         return;
 
@@ -3797,6 +3814,7 @@ void WebPageProxy::didStartDrag()
 
 void WebPageProxy::dragCancelled()
 {
+    fprintf(stderr, "WebPageProxy::dragCancelled\n");
     if (hasRunningProcess())
         send(Messages::WebPage::DragCancelled());
 }

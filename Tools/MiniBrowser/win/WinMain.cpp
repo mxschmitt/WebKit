@@ -35,6 +35,7 @@
 
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow)
 {
+    fprintf(stderr, "MiniBrowser: %s\n", __DATE__ " " __TIME__);
     hInst = hInstance;
 #ifdef _CRTDBG_MAP_ALLOC
     _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);

@@ -56,7 +56,6 @@ namespace WebCore {
 #if USE(CAIRO)
 GDIObject<HBITMAP> allocImage(HDC, IntSize, PlatformGraphicsContext** targetRef);
 void deallocContext(PlatformGraphicsContext* target);
-#endif
 
 IntSize dragImageSize(DragImageRef image)
 {
@@ -72,6 +71,20 @@ void deleteDragImage(DragImageRef image)
     if (image)
         ::DeleteObject(image);
 }
+#else
+IntSize dragImageSize(DragImageRef image)
+{
+    if (image)
+        return { image->width(), image->height() };
+    return { 0, 0 };
+}
+
+void deleteDragImage(DragImageRef)
+{
+    // Since this is a RefPtr, there's nothing additional we need to do to
+    // delete it. It will be released when it falls out of scope.
+}
+#endif
 
 DragImageRef dissolveDragImageToFraction(DragImageRef image, float)
 {
@@ -79,6 +92,7 @@ DragImageRef dissolveDragImageToFraction(DragImageRef image, float)
     return image;
 }
         
+#if USE(CAIRO)
 DragImageRef createDragImageIconForCachedImageFilename(const String& filename)
 {
     SHFILEINFO shfi { };
@@ -98,7 +112,6 @@ DragImageRef createDragImageIconForCachedImageFilename(const String& filename)
     return iconInfo.hbmColor;
 }
 
-#if USE(CAIRO)
 const float DragLabelBorderX = 4;
 // Keep border_y in synch with DragController::LinkDragBorderInset.
 const float DragLabelBorderY = 2;
@@ -209,6 +222,11 @@ DragImageRef createDragImageForLink(Element&, URL& url, const String& inLabel, T
     return image.leak();
 }
 #else
+DragImageRef createDragImageIconForCachedImageFilename(const String&)
+{
+    return nullptr;
+}
+
 DragImageRef createDragImageForLink(Element&, URL&, const String&, TextIndicatorData&, float)
 {
     return nullptr;
@@ -221,9 +239,9 @@ DragImageRef createDragImageForColor(const Color&, const FloatRect&, float, Path
 }
 
 #if USE(SKIA)
-DragImageRef createDragImageFromImage(Image*, ImageOrientation, GraphicsClient*, float)
+DragImageRef createDragImageFromImage(Image* image, ImageOrientation, GraphicsClient*, float)
 {
-    return nullptr;
+    return image->currentNativeImage()->platformImage();
 }
 
 DragImageRef scaleDragImage(DragImageRef, FloatSize)

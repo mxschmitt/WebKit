@@ -128,6 +128,7 @@ class DragData;
 class Exception;
 class FloatPoint;
 class FloatQuad;
+typedef UncheckedKeyHashMap<unsigned, Vector<String>> DragDataMap;
 class FloatRect;
 class FloatSize;
 class FontAttributeChanges;
@@ -1624,6 +1625,9 @@ public:
 #endif
 #if PLATFORM(GTK)
     void startDrag(WebCore::SelectionData&&, OptionSet<WebCore::DragOperation>, std::optional<WebCore::ShareableBitmapHandle>&& dragImage, WebCore::IntPoint&& dragImageHotspot);
+#endif
+#if PLATFORM(WIN)
+    void startDrag(WebCore::DragDataMap&& dragDataMap);
 #endif
 #endif
 

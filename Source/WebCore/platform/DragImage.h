@@ -60,7 +60,7 @@ class Node;
 typedef RetainPtr<CGImageRef> DragImageRef;
 #elif PLATFORM(MAC)
 typedef RetainPtr<NSImage> DragImageRef;
-#elif PLATFORM(WIN)
+#elif PLATFORM(WIN) && USE(CAIRO)
 typedef HBITMAP DragImageRef;
 #elif USE(CAIRO)
 typedef RefPtr<cairo_surface_t> DragImageRef;

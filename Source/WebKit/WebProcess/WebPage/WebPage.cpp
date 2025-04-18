@@ -5460,6 +5460,7 @@ void WebPage::performDragControllerAction(DragControllerAction action, const Int
 #else
 void WebPage::performDragControllerAction(std::optional<FrameIdentifier> frameID, DragControllerAction action, DragData&& dragData, CompletionHandler<void(std::optional<DragOperation>, DragHandlingMethod, bool, unsigned, IntRect, IntRect, std::optional<RemoteUserInputEventData>)>&& completionHandler)
 {
+    fprintf(stderr, "WebPage::performDragControllerAction\n");
     if (!m_page)
         return completionHandler(std::nullopt, DragHandlingMethod::None, false, 0, { }, { }, std::nullopt);
 
@@ -5495,6 +5496,7 @@ void WebPage::performDragControllerAction(std::optional<FrameIdentifier> frameID
 
 void WebPage::performDragOperation(WebCore::DragData&& dragData, SandboxExtension::Handle&& sandboxExtensionHandle, Vector<SandboxExtension::Handle>&& sandboxExtensionsHandleArray, CompletionHandler<void(bool)>&& completionHandler)
 {
+    fprintf(stderr, "WebPage::performDragOperation\n");
     ASSERT(!m_pendingDropSandboxExtension);
 
     m_pendingDropSandboxExtension = SandboxExtension::create(WTFMove(sandboxExtensionHandle));
@@ -5516,6 +5518,7 @@ void WebPage::performDragOperation(WebCore::DragData&& dragData, SandboxExtensio
 
 void WebPage::dragEnded(std::optional<FrameIdentifier> frameID, IntPoint clientPosition, IntPoint globalPosition, OptionSet<DragOperation> dragOperationMask, CompletionHandler<void(std::optional<RemoteUserInputEventData>)>&& completionHandler)
 {
+    fprintf(stderr, "WebPage::dragEnded\n");
     IntPoint adjustedClientPosition(clientPosition.x() + m_page->dragController().dragOffset().x(), clientPosition.y() + m_page->dragController().dragOffset().y());
     IntPoint adjustedGlobalPosition(globalPosition.x() + m_page->dragController().dragOffset().x(), globalPosition.y() + m_page->dragController().dragOffset().y());
 

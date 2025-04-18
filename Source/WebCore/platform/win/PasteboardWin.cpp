@@ -1181,4 +1181,25 @@ void Pasteboard::write(const Color&)
 {
 }
 
+DragDataMap Pasteboard::createDragDataMap() {
+    DragDataMap dragDataMap;
+    auto dragObject = dataObject();
+    if (!dragObject)
+        return dragDataMap;
+    // Enumerate clipboard content and load it in the map.
+    COMPtr<IEnumFORMATETC> itr;
+
+    if (FAILED(dragObject->EnumFormatEtc(DATADIR_GET, &itr)) || !itr)
+        return dragDataMap;
+
+    FORMATETC dataFormat;
+    while (itr->Next(1, &dataFormat, 0) == S_OK) {
+        Vector<String> dataStrings;
+        getClipboardData(dragObject.get(), &dataFormat, dataStrings);
+        if (!dataStrings.isEmpty())
+            dragDataMap.set(dataFormat.cfFormat, dataStrings);
+    }
+    return dragDataMap;
+}
+
 } // namespace WebCore
